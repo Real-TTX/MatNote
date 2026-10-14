@@ -30,7 +30,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 
 # postgresql-client: pg_dump / pg_restore for the backups. fontconfig + fonts: the PDF export draws text.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends postgresql-client libfontconfig1 fonts-dejavu-core fonts-liberation \
+    && apt-get install -y --no-install-recommends postgresql-client libfontconfig1 fonts-dejavu-core fonts-liberation fonts-droid-fallback \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

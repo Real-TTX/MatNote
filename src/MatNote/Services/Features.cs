@@ -1,3 +1,5 @@
+using MatNote.Services.Export;
+
 namespace MatNote.Services;
 
 /// <summary>Registers what the features of the app need (notes, sharing, export, backup). Each feature adds one line here.</summary>
@@ -12,9 +14,7 @@ public static class FeatureRegistration
         services.AddScoped<NoteService>();
         services.AddScoped<ShareService>();
         services.AddScoped<PublicShareAccess>();
-        services.AddSingleton<Export.TemporaryStub>();
-        services.AddSingleton<Export.INoteExporter>(sp => sp.GetRequiredService<Export.TemporaryStub>());
-        services.AddSingleton<Export.INotePreview>(sp => sp.GetRequiredService<Export.TemporaryStub>());
+        services.AddExport();
         return services;
     }
 }
