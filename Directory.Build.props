@@ -1,0 +1,42 @@
+<Project>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <Deterministic>true</Deterministic>
+    <Company>Matthias Schmoldt</Company>
+    <Product>MatNotes</Product>
+    <Authors>Matthias Schmoldt</Authors>
+  </PropertyGroup>
+
+  <!-- Versioning (single source of truth: Major/Minor below). CI overrides Channel / BuildNumber / BuildDate:
+         release : <major>.<minor>.<build>-<date>   e.g. 0.1.42-20261014   (branch main)
+         nightly : nightly-<build>-<date>                                  (branch dev)
+         local   : local-<date>                                            (everything else, the dev stack) -->
+  <PropertyGroup>
+    <MatNoteMajor>0</MatNoteMajor>
+    <MatNoteMinor>1</MatNoteMinor>
+
+    <BuildNumber Condition="'$(BuildNumber)' == ''">0</BuildNumber>
+    <Channel Condition="'$(Channel)' == ''">local</Channel>
+    <BuildDate Condition="'$(BuildDate)' == ''">$([System.DateTime]::UtcNow.ToString('yyyyMMdd'))</BuildDate>
+
+    <Version>$(MatNoteMajor).$(MatNoteMinor).$(BuildNumber)</Version>
+    <AssemblyVersion>$(MatNoteMajor).$(MatNoteMinor).0.0</AssemblyVersion>
+    <FileVersion>$(MatNoteMajor).$(MatNoteMinor).0.0</FileVersion>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Channel)' == 'release'">
+    <InformationalVersion>$(MatNoteMajor).$(MatNoteMinor).$(BuildNumber)-$(BuildDate)</InformationalVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Channel)' == 'nightly'">
+    <InformationalVersion>nightly-$(BuildNumber)-$(BuildDate)</InformationalVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Channel)' == 'local'">
+    <InformationalVersion>local-$(BuildDate)</InformationalVersion>
+  </PropertyGroup>
+
+</Project>

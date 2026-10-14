@@ -1,0 +1,155 @@
+@page "/Account/Security"
+@model MatNote.Pages.Account.SecurityModel
+@inject Clock Clock
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Security";
+    ViewData["PageSub"] = "Two-step verification and the devices that are signed in.";
+    ViewData["Width"] = "narrow";
+}
+
+<mn-tabs label="Account">
+    <mn-tab href="/Account">Profile</mn-tab>
+    <mn-tab href="/Account/Security" active>Security</mn-tab>
+</mn-tabs>
+
+<partial name="_FormSummary" model="ViewData.ModelState" />
+
+@if (Model.NewCodes is { } codes)
+{
+    <div class="mat-card mat-card--accent">
+        <div class="mat-card__head">@Ui.Icon("key")<span class="mat-card__title">Your recovery codes</span></div>
+        <div class="mat-card__body mat-stack">
+            <p>Keep these codes somewhere safe, for example in a password manager. Each one works <strong>once</strong>, when you cannot use your authenticator app. They are shown only now.</p>
+            <pre class="mn-codes mat-mono" id="recovery-codes">@string.Join(Environment.NewLine, codes)</pre>
+            <div class="mat-btn-row mat-btn-row--plain">
+                <button type="button" class="mat-btn mat-btn--secondary" data-copy="#recovery-codes">@Ui.Icon("copy")<span>Copy the codes</span></button>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="mat-card">
+    <div class="mat-card__head">
+        @Ui.Icon("smartphone")<span class="mat-card__title">Two-step verification</span>
+        @if (Model.Enabled)
+        {
+            <span class="mat-pill mat-pill--ok">On</span>
+        }
+        else if (Model.Pending)
+        {
+            <span class="mat-pill mat-pill--warn">Not finished</span>
+        }
+        else
+        {
+            <span class="mat-pill">Off</span>
+        }
+    </div>
+    <div class="mat-card__body mat-stack">
+        @if (Model.Enabled)
+        {
+            <p>Signing in asks for a code from your authenticator app after the password. You have <strong>@Model.CodesLeft</strong> recovery @(Model.CodesLeft == 1 ? "code" : "codes") left.</p>
+        }
+        else if (Model.Pending)
+        {
+            <ol class="mn-steps">
+                <li>Open an authenticator app (any app that does TOTP: your password manager, Aegis, Google or Microsoft Authenticator).</li>
+                <li>Scan this code, or type the key by hand.</li>
+                <li>Type the six digits the app shows to finish.</li>
+            </ol>
+            <div class="mn-qr">@Html.Raw(Model.QrSvg)</div>
+            <div class="mat-field">
+                <span class="mat-label">Key for typing it by hand</span>
+                <span class="mat-mono mn-key">@Model.Secret</span>
+            </div>
+            <form class="mat-form" method="post" asp-page-handler="Confirm" novalidate>
+                <div class="mat-field">
+                    <label class="mat-label" for="Code">Code from the app <span class="mat-req" aria-hidden="true">*</span></label>
+                    <div class="mat-otp" data-otp data-length="6" data-chars="digits" data-submit="#totp-confirm">
+                        <input class="mat-otp__input" id="Code" name="Code" inputmode="numeric" autocomplete="one-time-code" required pattern="[0-9]{6}" data-msg-required="Please enter the six digits of the code." data-msg-pattern="The code has six digits." />
+                    </div>
+                    <span class="mat-error" aria-live="polite">@Model.ErrorFor("Code")</span>
+                </div>
+                <div class="mat-btn-row">
+                    <button type="submit" id="totp-confirm" class="mat-btn mat-btn--primary">@Ui.Icon("shield-check")<span>Turn on</span></button>
+                    <button type="submit" class="mat-btn mat-btn--secondary" formnovalidate formaction="?handler=Cancel">@Ui.Icon("x")<span>Cancel</span></button>
+                </div>
+            </form>
+        }
+        else
+        {
+            <p>Protect your account with a second step: after the password, a code from an app on your phone. Nobody gets in with a stolen password alone.</p>
+            <form method="post" asp-page-handler="Start">
+                <div class="mat-btn-row">
+                    <button type="submit" class="mat-btn mat-btn--primary">@Ui.Icon("qr-code")<span>Set up an authenticator app</span></button>
+                </div>
+            </form>
+        }
+    </div>
+</div>
+
+@if (Model.Enabled)
+{
+    <form class="mat-form" method="post" asp-page-handler="NewCodes" novalidate>
+        <div class="mat-card">
+            <div class="mat-card__head">@Ui.Icon("key")<span class="mat-card__title">New recovery codes</span></div>
+            <div class="mat-card__body">
+                <p class="mat-muted">Makes ten new codes. The old ones stop working.</p>
+                <mn-field name="CurrentPassword" id="NewCodesPassword" kind="password" label="Your password" required autocomplete="current-password" msg-required="Please enter your password." />
+            </div>
+        </div>
+        <mn-buttons save="Make new codes" save-icon="refresh" />
+    </form>
+
+    <form class="mat-form" method="post" asp-page-handler="Disable" novalidate>
+        <div class="mat-card">
+            <div class="mat-card__head">@Ui.Icon("unlock")<span class="mat-card__title">Turn off two-step verification</span></div>
+            <div class="mat-card__body">
+                <div class="mat-form__grid">
+                    <mn-field name="CurrentPassword" id="DisablePassword" kind="password" label="Your password" required autocomplete="current-password" msg-required="Please enter your password." />
+                    <mn-field name="Code" id="DisableCode" label="A code from the app, or a recovery code" required autocomplete="one-time-code" mono msg-required="Please enter a code." />
+                </div>
+            </div>
+        </div>
+        <div class="mat-btn-row">
+            <button type="submit" class="mat-btn mat-btn--danger" data-confirm="Turn off two-step verification? Your account will be protected by the password alone." data-confirm-ok="Turn off">@Ui.Icon("unlock")<span>Turn off</span></button>
+        </div>
+    </form>
+}
+
+<div class="mat-card mat-card--flush">
+    <div class="mat-card__head">@Ui.Icon("monitor")<span class="mat-card__title">Signed-in devices</span></div>
+    <div class="mat-card__body">
+        <mn-table caption="Signed-in devices">
+            <thead><tr><th scope="col">Device</th><th scope="col" class="mat-hide-sm">Address</th><th scope="col">Last seen</th><th scope="col"><span class="mat-sr-only">Actions</span></th></tr></thead>
+            <tbody>
+                @foreach (var s in Model.Sessions)
+                {
+                    <tr>
+                        <td data-label="Device"><div class="mat-table__name"><span>@s.Device</span>@if (s.IsCurrent) { <span class="mat-pill mat-pill--accent">This device</span> }</div></td>
+                        <td data-label="Address" class="mat-hide-sm mat-mono">@s.Address</td>
+                        <td data-label="Last seen" class="mat-mono">@Clock.Format(s.LastSeen)</td>
+                        <td class="mat-table__cell-actions">
+                            @if (!s.IsCurrent)
+                            {
+                                <form method="post" asp-page-handler="Revoke" class="mat-table__actions">
+                                    <input type="hidden" name="id" value="@s.Id" />
+                                    <button type="submit" class="mat-btn mat-btn--ghost mat-btn--icon mat-btn--sm" aria-label="Sign out this device" data-tip="Sign out" data-confirm="Sign out this device?" data-confirm-ok="Sign out">@Ui.Icon("logout")</button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </mn-table>
+    </div>
+</div>
+
+@if (Model.Sessions.Count > 1)
+{
+    <form method="post" asp-page-handler="RevokeOthers">
+        <div class="mat-btn-row">
+            <button type="submit" class="mat-btn mat-btn--secondary" data-confirm="Sign out every other device?" data-confirm-ok="Sign out">@Ui.Icon("logout")<span>Sign out all other devices</span></button>
+        </div>
+    </form>
+}

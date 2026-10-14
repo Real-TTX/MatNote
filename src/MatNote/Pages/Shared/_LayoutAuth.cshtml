@@ -1,0 +1,33 @@
+@inject Assets Toolkit
+@{
+    // A page without a menu: sign-in, setup, a shared link. A centred card on the plain page background (SHELL-11).
+    var title = ViewData["Title"] as string ?? Ui.AppName;
+}
+<!DOCTYPE html>
+<html lang="en" data-app="@Ui.AppId">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#c34f00" />
+    <meta name="robots" content="noindex" />
+    <title>@title · @Ui.AppName</title>
+    <link rel="icon" type="image/svg+xml" href="~/favicon.svg" />
+    <script src="~/matui/matui.boot.js" asp-append-version="true"></script>
+    <link rel="stylesheet" href="~/matui/matui.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/app.css" asp-append-version="true" />
+</head>
+<body>
+    <a class="mat-skip" href="#main">Skip to the content</a>
+    @Html.Raw(Toolkit.Sprite)
+    <main class="mat-auth" id="main">
+        @RenderBody()
+        <footer class="mat-footer mat-footer--plain">
+            <p class="mat-footer__text">@Ui.AppName · @AppInfo.Version</p>
+        </footer>
+    </main>
+    <script src="~/matui/matui.js" asp-append-version="true"></script>
+    <script src="~/js/app.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

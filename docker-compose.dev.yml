@@ -1,0 +1,89 @@
+# MatNotes - development stack: builds the image from the source in this folder, and adds pgAdmin.
+#   ./scripts/redeploy.ps1            (rebuilds the container and redeploys the stack: the way to test a change)
+#   docker compose -f docker-compose.dev.yml up -d --build
+#
+# App:     http://localhost:2301      (MATNOTE_PORT changes the host port)
+# pgAdmin: http://localhost:2302      (no sign-in; the database password is "matnote")
+name: matnote-dev
+
+services:
+  matnote:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        Channel: ${MATNOTE_CHANNEL:-local}
+        BuildNumber: ${MATNOTE_BUILD_NUMBER:-0}
+        BuildDate: ${MATNOTE_BUILD_DATE:-}
+    image: matnote:dev
+    container_name: matnote-dev
+    restart: unless-stopped
+    ports:
+      - "${MATNOTE_PORT:-2301}:2301"
+    environment:
+      TZ: Europe/Berlin
+      MATNOTE_DB: "Host=postgres;Port=5432;Database=matnote;Username=matnote;Password=matnote"
+    volumes:
+      - data:/data
+      - backups:/backups
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:17
+    container_name: matnote-dev-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: matnote
+      POSTGRES_USER: matnote
+      POSTGRES_PASSWORD: matnote
+    volumes:
+      - db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U matnote -d matnote"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: matnote-dev-pgadmin
+    restart: unless-stopped
+    ports:
+      - "${MATNOTE_PGADMIN_PORT:-2302}:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: dev@matnote.example.com
+      PGADMIN_DEFAULT_PASSWORD: matnote
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+    volumes:
+      - ./scripts/pgadmin-servers.json:/pgadmin4/servers.json:ro
+      - pgadmin:/var/lib/pgadmin
+    depends_on:
+      - postgres
+
+volumes:
+  data:
+    name: matnote-dev-data
+  backups:
+    name: matnote-dev-backups
+  db:
+    name: matnote-dev-db
+  pgadmin:
+    name: matnote-dev-pgadmin
+
+# An explicit subnet: on a machine with many stacks Docker can run out of its default address pools
+# ("all predefined address pools have been fully subnetted"). Override with MATNOTE_DEV_SUBNET if this range collides.
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: ${MATNOTE_DEV_SUBNET:-10.253.23.0/24}

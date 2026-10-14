@@ -1,0 +1,154 @@
+@inject Assets Toolkit
+@inject CurrentUser Me
+@inject MenuService Menus
+@{
+    // A page fills these in: Title, PageSub (one line under it), Crumbs (the breadcrumb: a list of (Text, Url?) after the name of the app),
+    // Width ("narrow" or "wide"), OwnHead (the page draws its own head). ActiveFolder / ActiveNav name the item of the menu the page belongs to.
+    var user = Me.Snapshot!;
+    var title = ViewData["Title"] as string ?? Ui.AppName;
+    var sub = ViewData["PageSub"] as string;
+    var crumbs = ViewData["Crumbs"] as IReadOnlyList<(string Text, string? Url)> ?? [];
+    var width = ViewData["Width"] as string;
+    var ownHead = ViewData["OwnHead"] is true;
+    var menu = await Menus.GetAsync();
+    var themeAttr = user.Theme is "light" or "dark" ? $" data-theme=\"{user.Theme}\"" : string.Empty;
+}
+<!DOCTYPE html>
+<html lang="en" data-app="@Ui.AppId" data-scheme="@user.Scheme"@Html.Raw(themeAttr)>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#c34f00" />
+    <title>@title · @Ui.AppName</title>
+    <link rel="icon" type="image/svg+xml" href="~/favicon.svg" />
+    <script src="~/matui/matui.boot.js" asp-append-version="true"></script>
+    <link rel="stylesheet" href="~/matui/matui.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/app.css" asp-append-version="true" />
+</head>
+<body>
+    <a class="mat-skip" href="#main">Skip to the content</a>
+    @Html.Raw(Toolkit.Sprite)
+
+    <div class="mat-app">
+        <aside class="mat-nav" id="mat-nav">
+            <div class="mat-nav__brand">
+                <a href="/" aria-label="@Ui.AppName, start page">
+                    @Ui.Logo()
+                    <span>
+                        <span class="mat-nav__name">@Ui.AppName</span>
+                        <span class="mat-nav__tagline">Notes, folders, sharing</span>
+                    </span>
+                </a>
+                <button type="button" class="mat-btn mat-btn--ghost mat-btn--icon mat-nav__close" data-nav-close aria-label="Close the menu">@Ui.Icon("x")</button>
+            </div>
+
+            <partial name="_Menu" model="menu" />
+
+            <div class="mat-nav__foot">
+                <div class="mat-nav__account">
+                    <button type="button" class="mat-user" data-menu-toggle="user-menu" aria-haspopup="menu" aria-expanded="false">
+                        <span class="mat-avatar" aria-hidden="true">@Ui.Initials(user.DisplayName)</span>
+                        <span class="mat-user__text">
+                            <span class="mat-user__name">@user.DisplayName</span>
+                            <span class="mat-user__role">@Me.RoleName</span>
+                        </span>
+                        @Ui.Icon("chevron-up", "mat-user__chev")
+                    </button>
+                    <button type="button" class="mat-theme" data-theme-toggle data-theme-state="@user.Theme" data-theme-save-url="/Account?handler=Theme" aria-label="Theme" title="Theme">
+                        <svg class="mat-icon" data-theme-icon="system" aria-hidden="true" focusable="false"><use href="#mat-i-monitor"></use></svg>
+                        <svg class="mat-icon" data-theme-icon="light" aria-hidden="true" focusable="false"><use href="#mat-i-sun"></use></svg>
+                        <svg class="mat-icon" data-theme-icon="dark" aria-hidden="true" focusable="false"><use href="#mat-i-moon"></use></svg>
+                    </button>
+                </div>
+                <div class="mat-nav__version">@AppInfo.Version</div>
+            </div>
+        </aside>
+
+        <div class="mat-main">
+            <header class="mat-topbar">
+                <button type="button" class="mat-burger" data-nav-toggle aria-label="Open the menu" aria-controls="mat-nav" aria-expanded="false">@Ui.Icon("menu")</button>
+                <nav class="mat-crumbs" aria-label="Breadcrumb">
+                    <ol>
+                        @if (crumbs.Count == 0)
+                        {
+                            <li aria-current="page">@Ui.AppName</li>
+                        }
+                        else
+                        {
+                            <li><a href="/">@Ui.AppName</a></li>
+                            @for (var i = 0; i < crumbs.Count; i++)
+                            {
+                                var c = crumbs[i];
+                                if (i == crumbs.Count - 1 || c.Url is null)
+                                {
+                                    <li aria-current="page">@c.Text</li>
+                                }
+                                else
+                                {
+                                    <li><a href="@c.Url">@c.Text</a></li>
+                                }
+                            }
+                        }
+                    </ol>
+                </nav>
+                @if (IsSectionDefined("TopActions"))
+                {
+                    <div class="mat-topbar__actions">@await RenderSectionAsync("TopActions")</div>
+                }
+            </header>
+
+            <main class="mat-page @(width == "narrow" ? "mat-page--narrow" : width == "wide" ? "mat-page--wide" : "")" id="main">
+                @if (!ownHead)
+                {
+                    <div class="mat-page__head">
+                        <div class="mat-page__title">
+                            <h1>@title</h1>
+                            @if (!string.IsNullOrEmpty(sub))
+                            {
+                                <p class="mat-page__sub">@sub</p>
+                            }
+                        </div>
+                    </div>
+                }
+
+                @RenderBody()
+            </main>
+
+            <footer class="mat-footer">
+                <p class="mat-footer__text">@Ui.AppName · your notes stay yours</p>
+            </footer>
+        </div>
+    </div>
+
+    <div class="mat-menu" id="user-menu" role="menu" aria-label="@user.DisplayName" hidden>
+        <div class="mat-menu__head">
+            <span class="mat-avatar" aria-hidden="true">@Ui.Initials(user.DisplayName)</span>
+            <div><strong>@user.DisplayName</strong><small>@user.Username</small></div>
+        </div>
+        <a class="mat-menu__item" role="menuitem" href="/Account">@Ui.Icon("user")<span>Account</span></a>
+        <a class="mat-menu__item" role="menuitem" href="/Account/Security">@Ui.Icon("shield")<span>Security</span></a>
+        <div class="mat-menu__sep" role="separator"></div>
+        <form method="post" action="/Account/Logout">
+            <button type="submit" class="mat-menu__item mat-menu__item--danger" role="menuitem">@Ui.Icon("logout")<span>Sign out</span></button>
+        </form>
+    </div>
+
+    @* the anti-forgery token of the page: the scripts (theme button, share dialogs) send it with their requests *@
+    <form hidden>@Html.AntiForgeryToken()</form>
+
+    @if (TempData["Flash"] is string flash)
+    {
+        <div data-toast="@flash" data-tone="success" hidden></div>
+    }
+
+    @if (TempData["FlashError"] is string flashError)
+    {
+        <div data-toast="@flashError" data-tone="danger" hidden></div>
+    }
+
+    <script src="~/matui/matui.js" asp-append-version="true"></script>
+    <script src="~/js/app.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

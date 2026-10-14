@@ -1,0 +1,93 @@
+/* ==========================================================================
+   MatNotes: the colour of the app, and the few styles that only this app has (prefix mn-).
+   Everything else is the toolkit (matui.css). No literal colours here except the accent: the rest are --mat-* tokens.
+   ========================================================================== */
+
+/* The accent: orange. White text on it reaches 4.5:1 (AA); the toolkit derives hover, soft tints and the dark mode from it. */
+[data-app="matnote"] { --mat-app-accent: #c34f00; }
+
+/* ---- Menu: the folder tree ---------------------------------------------------------------------------------------- */
+.mn-folder-row { display: flex; align-items: center; gap: 2px; }
+.mn-folder-row > .mat-nav__item { flex: 1 1 auto; min-width: 0; }
+.mn-folder-row > .mat-nav__item > span:not(.mat-nav__badge) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mn-folder-toggle {
+  flex: none;
+  display: inline-grid; place-items: center;
+  width: var(--mat-control-h-sm); height: var(--mat-control-h-sm);
+  border: 0; border-radius: var(--mat-radius-sm); background: transparent; color: var(--mat-text-muted); cursor: pointer;
+}
+.mn-folder-toggle:hover { background: var(--mat-surface-3); color: var(--mat-text); }
+.mn-folder-toggle .mat-nav__chev { margin: 0; }
+.mn-branch.is-open > .mn-folder-row .mn-folder-toggle .mat-nav__chev { transform: rotate(180deg); }
+.mn-muted { color: var(--mat-text-muted); }
+
+/* ---- Two-step verification ---------------------------------------------------------------------------------------- */
+.mn-qr { display: inline-block; align-self: flex-start; padding: var(--mat-space-3); background: var(--mat-thumb); border: 1px solid var(--mat-border); border-radius: var(--mat-radius); }
+.mn-qr svg { display: block; width: 200px; height: 200px; }
+.mn-key { letter-spacing: .08em; overflow-wrap: anywhere; }
+.mn-codes { margin: 0; padding: var(--mat-space-3) var(--mat-space-4); background: var(--mat-surface-2); border: 1px solid var(--mat-border); border-radius: var(--mat-radius); columns: 2; column-gap: var(--mat-space-6); }
+.mn-steps { margin: 0; padding-left: 1.25rem; display: grid; gap: var(--mat-space-2); }
+
+/* ---- Notes in lists ----------------------------------------------------------------------------------------------- */
+.mn-note-title { display: flex; align-items: center; gap: var(--mat-space-2); min-width: 0; }
+.mn-note-title a { font-weight: 560; overflow: hidden; text-overflow: ellipsis; }
+.mn-star { color: var(--mat-warning); }
+.mn-star .mat-icon { fill: currentColor; }
+.mn-tags { display: flex; flex-wrap: wrap; gap: var(--mat-space-1); }
+.mn-subfolders { display: flex; flex-wrap: wrap; gap: var(--mat-space-2); }
+.mn-meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--mat-space-2) var(--mat-space-4); color: var(--mat-text-muted); font-size: var(--mat-fs-sm); }
+.mn-meta .mat-icon { vertical-align: -3px; }
+
+/* ---- A note on the page: the text, as the author wrote it --------------------------------------------------------- */
+.mn-doc { max-width: 78ch; overflow-wrap: anywhere; line-height: 1.65; }
+.mn-doc > :first-child { margin-top: 0; }
+.mn-doc h1, .mn-doc h2, .mn-doc h3, .mn-doc h4 { line-height: 1.25; margin: 1.4em 0 .5em; }
+.mn-doc h1 { font-size: 1.6rem; } .mn-doc h2 { font-size: 1.3rem; } .mn-doc h3 { font-size: 1.1rem; }
+.mn-doc p, .mn-doc ul, .mn-doc ol, .mn-doc pre, .mn-doc blockquote, .mn-doc table { margin: 0 0 .9em; }
+.mn-doc ul, .mn-doc ol { padding-left: 1.5rem; }
+.mn-doc blockquote { padding: .2rem 1rem; border-left: 3px solid var(--mat-border-strong); color: var(--mat-text-muted); }
+.mn-doc code { font-family: var(--mat-font-mono); font-size: .9em; padding: .1em .35em; background: var(--mat-surface-3); border-radius: var(--mat-radius-sm); }
+.mn-doc pre { padding: var(--mat-space-3) var(--mat-space-4); background: var(--mat-surface-2); border: 1px solid var(--mat-border); border-radius: var(--mat-radius); overflow-x: auto; }
+.mn-doc pre code { padding: 0; background: transparent; }
+.mn-doc table { border-collapse: collapse; }
+.mn-doc th, .mn-doc td { border: 1px solid var(--mat-border); padding: .35rem .6rem; text-align: left; }
+.mn-doc hr { border: 0; border-top: 1px solid var(--mat-border); margin: 1.5em 0; }
+.mn-doc img { max-width: 100%; height: auto; }
+.mn-doc a.mn-note-link { display: inline-flex; align-items: center; gap: .25em; }
+.mn-plain { margin: 0; white-space: pre-wrap; font-family: var(--mat-font-mono); font-size: var(--mat-fs-sm); line-height: 1.6; overflow-wrap: anywhere; }
+.mn-pdf { display: block; width: 100%; height: min(78vh, 900px); border: 1px solid var(--mat-border); border-radius: var(--mat-radius); background: var(--mat-surface-2); }
+.mn-sheet { overflow: auto; max-height: 70vh; border: 1px solid var(--mat-border); border-radius: var(--mat-radius); }
+.mn-sheet table { border-collapse: collapse; font-size: var(--mat-fs-sm); }
+.mn-sheet td, .mn-sheet th { border: 1px solid var(--mat-border); padding: .25rem .6rem; white-space: nowrap; }
+.mn-sheet th { background: var(--mat-surface-2); position: sticky; top: 0; }
+.mn-linked { margin-top: var(--mat-space-4); }
+
+/* ---- The editor of a rich text note ------------------------------------------------------------------------------- */
+.mn-editor { border: 1px solid var(--mat-border-strong); border-radius: var(--mat-radius); background: var(--mat-surface); overflow: hidden; }
+.mn-editor:focus-within { border-color: var(--mat-accent); outline: 2px solid var(--mat-accent-ring, var(--mat-accent)); outline-offset: -1px; }
+.mn-editor__bar { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; padding: var(--mat-space-1) var(--mat-space-2); border-bottom: 1px solid var(--mat-border); background: var(--mat-surface-2); }
+.mn-editor__bar .mat-btn.is-on { background: var(--mat-accent-soft-strong); color: var(--mat-accent-text); }
+.mn-editor__sep { width: 1px; align-self: stretch; margin: 4px var(--mat-space-1); background: var(--mat-border); }
+.mn-editor__area { min-height: 18rem; padding: var(--mat-space-4); outline: none; }
+.mn-editor__area:empty::before { content: attr(data-placeholder); color: var(--mat-text-faint); }
+.mn-editor__source { display: none; }
+.mn-source { width: 100%; min-height: 18rem; font-family: var(--mat-font-mono); }
+
+/* ---- Sharing ------------------------------------------------------------------------------------------------------ */
+.mn-linkbox { display: flex; gap: var(--mat-space-2); align-items: center; }
+.mn-linkbox .mat-input { flex: 1 1 auto; min-width: 0; }
+.mn-public { max-width: 60rem; margin: 0 auto; padding: var(--mat-space-6) var(--mat-space-4); display: grid; gap: var(--mat-space-4); }
+.mn-public__head { display: flex; align-items: center; gap: var(--mat-space-3); }
+
+/* ---- Home --------------------------------------------------------------------------------------------------------- */
+.mn-stats { display: grid; gap: var(--mat-space-3); grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); }
+.mn-stat { display: grid; gap: var(--mat-space-1); padding: var(--mat-space-4); border: 1px solid var(--mat-border); border-radius: var(--mat-radius); background: var(--mat-surface); color: inherit; text-decoration: none; }
+a.mn-stat:hover { border-color: var(--mat-border-strong); }
+.mn-stat__value { font-size: 1.6rem; font-weight: 650; line-height: 1.1; }
+.mn-stat__label { color: var(--mat-text-muted); font-size: var(--mat-fs-sm); }
+
+/* ---- Backups ------------------------------------------------------------------------------------------------------ */
+.mn-path { font-family: var(--mat-font-mono); font-size: var(--mat-fs-sm); overflow-wrap: anywhere; }
+
+/* [hidden] must win over any display set above */
+.mn-editor__source[hidden], .mn-editor__area[hidden] { display: none; }

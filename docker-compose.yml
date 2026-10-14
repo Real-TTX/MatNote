@@ -1,0 +1,47 @@
+# MatNotes - start it with:  docker compose up -d
+# Then open http://localhost:2301. On the first visit the setup assistant asks you to create the administrator.
+#
+# Two services: the app and its PostgreSQL database. The database is reachable only from the app (no published port).
+# Everything lives in two volumes: matnote-data (configuration, keys) and matnote-db (the database). Back both up: the app can do it
+# by itself on a schedule, see Administration > Backups (to a folder, or straight to a NAS over SMB).
+name: matnote
+
+services:
+  matnote:
+    image: ghcr.io/real-ttx/matnote:latest
+    container_name: matnote
+    restart: unless-stopped
+    ports:
+      - "2301:2301"
+    environment:
+      # The time zone of dates and of the backup schedules.
+      TZ: Europe/Berlin
+      MATNOTE_DB: "Host=postgres;Port=5432;Database=matnote;Username=matnote;Password=${MATNOTE_DB_PASSWORD:-matnote}"
+    volumes:
+      - matnote-data:/data
+      # Backups to a folder of this machine or a NAS mounted on it: uncomment and choose "Folder" as the target (path /backups).
+      # (A NAS can also be reached directly over SMB, without a mount: choose "SMB share" as the target.)
+      # - /srv/matnote-backups:/backups
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:17
+    container_name: matnote-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: matnote
+      POSTGRES_USER: matnote
+      POSTGRES_PASSWORD: ${MATNOTE_DB_PASSWORD:-matnote}
+    volumes:
+      - matnote-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U matnote -d matnote"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  matnote-data:
+  matnote-db:

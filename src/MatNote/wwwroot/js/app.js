@@ -1,0 +1,4 @@
+/* MatNotes */
+(function () {
+  "use strict";
+})();

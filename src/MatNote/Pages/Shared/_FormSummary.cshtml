@@ -1,0 +1,27 @@
+@using Microsoft.AspNetCore.Mvc.ModelBinding
+@model ModelStateDictionary
+@*
+    The summary at the top of a form (FORM-03): what the server refused, each message a link to its field. It is only there when there is something to say.
+    The script of the toolkit writes the same box for what the browser finds (data-validation-summary).
+*@
+@{
+    var errors = Model.Where(kv => kv.Value?.Errors.Count > 0).ToList();
+}
+@if (errors.Count > 0)
+{
+    <div class="mat-alert mat-alert--danger" role="alert" data-validation-summary>
+        @Ui.Icon("x-circle")
+        <div class="mat-alert__body">
+            <strong>Please check the form.</strong>
+            <ul class="mat-alert__list">
+                @foreach (var kv in errors)
+                {
+                    foreach (var e in kv.Value!.Errors)
+                    {
+                        <li>@if (!string.IsNullOrEmpty(kv.Key)) { <a href="#@kv.Key.Replace('.', '_')">@e.ErrorMessage</a> } else { @e.ErrorMessage }</li>
+                    }
+                }
+            </ul>
+        </div>
+    </div>
+}

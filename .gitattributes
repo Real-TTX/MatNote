@@ -1,0 +1,6 @@
+# Text files use LF everywhere (generated files such as the icon sprite are written with LF, and CI compares them).
+* text=auto eol=lf
+
+*.png binary
+*.ico binary
+*.zip binary

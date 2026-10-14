@@ -1,0 +1,26 @@
+@page "/Account/Setup"
+@model MatNote.Pages.Account.SetupModel
+@{
+    ViewData["Title"] = "Set up MatNotes";
+}
+
+<div class="mat-auth__card">
+    <div class="mat-auth__brand">
+        @Ui.Logo("lg")
+        <h1>Set up MatNotes</h1>
+        <p class="mat-muted">You are the first one here. Create the administrator account; you can add the other people afterwards.</p>
+    </div>
+
+    <form class="mat-form" method="post" novalidate>
+        <partial name="_FormSummary" model="ViewData.ModelState" />
+        <mn-field name="DisplayName" label="Your name" required autocomplete="name" value="@Model.DisplayName" autofocus msg-required="Please tell us your name." />
+        <mn-field name="Username" label="User name" required autocomplete="username" value="@Model.Username" hint="You sign in with it. Letters, digits, dots, dashes." msg-required="Please choose a user name." />
+        <mn-field name="Email" kind="email" label="E-mail" optional autocomplete="email" value="@Model.Email" />
+        <mn-field name="Password" kind="password" label="Password" required autocomplete="new-password" minlength="@PasswordService.MinLength" hint="At least @PasswordService.MinLength characters." msg-required="Please choose a password." />
+        <mn-field name="Repeat" kind="password" label="Password again" required autocomplete="new-password" msg-required="Please type the password again." />
+        <div class="mat-btn-row mat-btn-row--plain">
+            <button type="submit" class="mat-btn mat-btn--primary mat-btn--block">@Ui.Icon("check")<span>Create the administrator</span></button>
+        </div>
+        <p class="mat-muted">Whoever opens this page first becomes the administrator, so do it right after the start.</p>
+    </form>
+</div>

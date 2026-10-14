@@ -1,0 +1,69 @@
+@model MenuModel
+@inject CurrentUser Me
+@*
+    The menu on the left (SHELL-01 .. SHELL-19): the main action first, then the lists of notes, the folders of the person as a tree (with an icon to manage them), the
+    tags and the trash, and for an administrator the administration. A page can name what it belongs to: ViewData["ActiveFolder"] (the id of a folder) or ViewData["ActiveNav"].
+*@
+@{
+    var path = Context.Request.Path.Value ?? "/";
+    var query = Context.Request.Query;
+    var scope = query["scope"].ToString();
+    long? folder = ViewData["ActiveFolder"] as long? ?? (long.TryParse(query["folder"], out var f) && path.Equals("/Notes", StringComparison.OrdinalIgnoreCase) ? f : null);
+    var nav = ViewData["ActiveNav"] as string ?? string.Empty;
+    var onNotes = path.Equals("/Notes", StringComparison.OrdinalIgnoreCase);
+
+    bool Under(string prefix) => path.Equals(prefix, StringComparison.OrdinalIgnoreCase) || path.StartsWith(prefix + "/", StringComparison.OrdinalIgnoreCase);
+    string Cls(bool active) => "mat-nav__item" + (active ? " is-active" : string.Empty);
+    string Cur(bool active) => active ? "page" : null!;
+}
+<nav class="mat-nav__scroll" aria-label="Main">
+    <ul class="mat-nav__list">
+        <li>
+            <a class="mat-nav__item mat-nav__item--primary @(nav == "new" || path.Equals("/Notes/Edit", StringComparison.OrdinalIgnoreCase) && !query.ContainsKey("id") ? "is-active" : "")" href="/Notes/Edit">@Ui.Icon("file-plus")<span>New note</span></a>
+        </li>
+
+        <li class="mat-nav__group" role="presentation">Notes</li>
+        <li><a class="@Cls(path == "/")" href="/" aria-current="@Cur(path == "/")">@Ui.Icon("home")<span>Home</span></a></li>
+        <li>
+            @{ var all = onNotes && scope == string.Empty && folder is null || nav == "all"; }
+            <a class="@Cls(all)" href="/Notes" aria-current="@Cur(all)">@Ui.Icon("file-text")<span>All notes</span>@if (Model.Notes > 0) { <span class="mat-nav__badge mat-nav__badge--plain">@Model.Notes</span> }</a>
+        </li>
+        <li>
+            @{ var fav = onNotes && scope == "favorites"; }
+            <a class="@Cls(fav)" href="/Notes?scope=favorites" aria-current="@Cur(fav)">@Ui.Icon("star")<span>Favorites</span>@if (Model.Favorites > 0) { <span class="mat-nav__badge mat-nav__badge--plain">@Model.Favorites</span> }</a>
+        </li>
+        <li>
+            @{ var shares = Under("/Shares") || nav == "shares"; }
+            <a class="@Cls(shares)" href="/Shares" aria-current="@Cur(shares)">@Ui.Icon("share")<span>Shares</span>@if (Model.SharedWithMe > 0) { <span class="mat-nav__badge">@Model.SharedWithMe</span> }</a>
+        </li>
+
+        <li class="mat-nav__group mat-nav__group--action" role="presentation">
+            <span class="mat-nav__group-title">Folders</span>
+            <a class="mat-nav__group-action @(Under("/Folders") ? "is-active" : "")" href="/Folders" aria-label="Manage folders" title="Manage folders">@Ui.Icon("settings")</a>
+        </li>
+        @foreach (var node in Model.Folders)
+        {
+            <partial name="_FolderNode" model="(node, folder)" />
+        }
+        @if (Model.Folders.Count == 0)
+        {
+            <li><a class="mat-nav__item mn-muted" href="/Folders/Edit">@Ui.Icon("folder-plus")<span>Create a folder</span></a></li>
+        }
+
+        <li class="mat-nav__group" role="presentation">Organize</li>
+        <li>
+            <a class="@Cls(Under("/Tags"))" href="/Tags" aria-current="@Cur(Under("/Tags"))">@Ui.Icon("tag")<span>Tags</span>@if (Model.Tags > 0) { <span class="mat-nav__badge mat-nav__badge--plain">@Model.Tags</span> }</a>
+        </li>
+        <li>
+            <a class="@Cls(Under("/Trash"))" href="/Trash" aria-current="@Cur(Under("/Trash"))">@Ui.Icon("trash")<span>Trash</span>@if (Model.Trash > 0) { <span class="mat-nav__badge mat-nav__badge--plain">@Model.Trash</span> }</a>
+        </li>
+
+        @if (Me.IsAdmin)
+        {
+            <li class="mat-nav__group" role="presentation">Administration</li>
+            <li><a class="@Cls(Under("/Admin/Users"))" href="/Admin/Users" aria-current="@Cur(Under("/Admin/Users"))">@Ui.Icon("users")<span>Users</span></a></li>
+            <li><a class="@Cls(Under("/Admin/Backups"))" href="/Admin/Backups" aria-current="@Cur(Under("/Admin/Backups"))">@Ui.Icon("hard-drive")<span>Backups</span></a></li>
+            <li><a class="@Cls(Under("/Admin/System"))" href="/Admin/System" aria-current="@Cur(Under("/Admin/System"))">@Ui.Icon("settings")<span>System</span></a></li>
+        }
+    </ul>
+</nav>

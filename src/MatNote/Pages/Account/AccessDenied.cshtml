@@ -1,0 +1,16 @@
+@page "/Account/AccessDenied"
+@model MatNote.Pages.Account.AccessDeniedModel
+@{
+    ViewData["Title"] = "No access";
+}
+
+<div class="mat-auth__card">
+    <div class="mat-auth__brand">
+        @Ui.Logo("lg")
+        <h1>No access</h1>
+        <p class="mat-muted">This part is only for administrators.</p>
+    </div>
+    <div class="mat-btn-row mat-btn-row--plain">
+        <a class="mat-btn mat-btn--secondary mat-btn--block" href="/">@Ui.Icon("home")<span>Back to the start</span></a>
+    </div>
+</div>

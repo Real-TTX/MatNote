@@ -1,0 +1,54 @@
+@page "/Account/Verify"
+@model MatNote.Pages.Account.VerifyModel
+@{
+    ViewData["Title"] = "Two-step verification";
+}
+
+<div class="mat-auth__card">
+    <div class="mat-auth__brand">
+        @Ui.Logo("lg")
+        <h1>Two-step verification</h1>
+        @if (Model.Recovery)
+        {
+            <p class="mat-muted">Type one of your recovery codes. Each code works once.</p>
+        }
+        else
+        {
+            <p class="mat-muted">Open your authenticator app and type the code it shows.</p>
+        }
+    </div>
+
+    <form class="mat-form" method="post" novalidate>
+        <input type="hidden" name="ReturnUrl" value="@Model.ReturnUrl" />
+        <input type="hidden" name="Recovery" value="@(Model.Recovery ? "true" : "false")" />
+        <partial name="_FormSummary" model="ViewData.ModelState" />
+        @if (Model.Recovery)
+        {
+            <mn-field name="Code" label="Recovery code" required autocomplete="off" mono autofocus placeholder="XXXXX-XXXXX" msg-required="Please enter a recovery code." />
+        }
+        else
+        {
+            <div class="mat-field">
+                <label class="mat-label" for="Code">Code <span class="mat-req" aria-hidden="true">*</span></label>
+                <div class="mat-otp mat-otp--lg mat-otp--center" data-otp data-length="6" data-chars="digits" data-submit="#verify-go">
+                    <input class="mat-otp__input" id="Code" name="Code" inputmode="numeric" autocomplete="one-time-code" required pattern="[0-9]{6}" autofocus data-msg-required="Please enter the six digits of the code." data-msg-pattern="The code has six digits." />
+                </div>
+                <span class="mat-error" aria-live="polite">@Model.ErrorFor("Code")</span>
+            </div>
+        }
+        <div class="mat-btn-row mat-btn-row--plain">
+            <button type="submit" id="verify-go" class="mat-btn mat-btn--primary mat-btn--block">@Ui.Icon("shield-check")<span>Verify and sign in</span></button>
+        </div>
+        <p class="mat-muted">
+            @if (Model.Recovery)
+            {
+                <a href="/Account/Verify?ReturnUrl=@Uri.EscapeDataString(Model.ReturnUrl ?? string.Empty)">Use the app instead</a>
+            }
+            else
+            {
+                <a href="/Account/Verify?Recovery=true&ReturnUrl=@Uri.EscapeDataString(Model.ReturnUrl ?? string.Empty)">Use a recovery code instead</a>
+            }
+            · <a href="/Account/Login">Back to sign-in</a>
+        </p>
+    </form>
+</div>

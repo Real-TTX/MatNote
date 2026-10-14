@@ -1,0 +1,21 @@
+@page "/Tags/Edit"
+@model MatNote.Pages.Tags.EditModel
+@{
+    ViewData["Width"] = "narrow";
+}
+
+<form class="mat-form" method="post" novalidate>
+    <input type="hidden" name="Id" value="@Model.Id" />
+    <partial name="_FormSummary" model="ViewData.ModelState" />
+    <div class="mat-card">
+        <div class="mat-card__head">@Ui.Icon("tag")<span class="mat-card__title">Tag</span></div>
+        <div class="mat-card__body">
+            <div class="mat-form__grid">
+                <mn-field name="Name" label="Name" required full value="@Model.Name" maxlength="60" autofocus msg-required="Please enter a name." />
+                <mn-field name="Color" kind="colour" label="Colour" optional full value="@Model.Color" placeholder="No colour" picker="clearable" hint="A mark next to the name; the name is always shown too." />
+            </div>
+        </div>
+    </div>
+    <mn-buttons save="Save tag" back="/Tags" delete-handler="@(Model.IsNew ? null : "Delete")" delete-label="Delete tag"
+                delete-confirm="@(Model.NoteCount > 0 ? $"Delete this tag? It is removed from {Model.NoteCount} notes; the notes stay." : "Delete this tag?")" />
+</form>

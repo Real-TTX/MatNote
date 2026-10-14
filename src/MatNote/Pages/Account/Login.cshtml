@@ -1,0 +1,28 @@
+@page "/Account/Login"
+@model MatNote.Pages.Account.LoginModel
+@{
+    ViewData["Title"] = "Sign in";
+}
+
+<div class="mat-auth__card">
+    <div class="mat-auth__brand">
+        @Ui.Logo("lg")
+        <h1>@Ui.AppName</h1>
+        <p class="mat-muted">Sign in to your notes.</p>
+    </div>
+
+    <form class="mat-form" method="post" novalidate>
+        <input type="hidden" name="ReturnUrl" value="@Model.ReturnUrl" />
+        <partial name="_FormSummary" model="ViewData.ModelState" />
+        <mn-field name="Username" label="User name or e-mail" required autocomplete="username" value="@Model.Username" autofocus msg-required="Please enter your user name." />
+        <mn-field name="Password" kind="password" label="Password" required autocomplete="current-password" msg-required="Please enter your password." />
+        <mn-field name="Remember" kind="check" label="Stay signed in on this device" value="@Model.Remember.ToString()" />
+        <div class="mat-btn-row mat-btn-row--plain">
+            <button type="submit" class="mat-btn mat-btn--primary mat-btn--block">@Ui.Icon("login")<span>Sign in</span></button>
+        </div>
+        @if (Model.CanRegister)
+        {
+            <p class="mat-muted">No account yet? <a href="/Account/Register">Create one</a>.</p>
+        }
+    </form>
+</div>

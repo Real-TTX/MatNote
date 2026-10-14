@@ -1,0 +1,67 @@
+@page "/Account"
+@model MatNote.Pages.Account.IndexModel
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Account";
+    ViewData["PageSub"] = "Your name, your password and how the app looks.";
+    ViewData["Width"] = "narrow";
+}
+
+<mn-tabs label="Account">
+    <mn-tab href="/Account" active>Profile</mn-tab>
+    <mn-tab href="/Account/Security">Security</mn-tab>
+</mn-tabs>
+
+@if (Model.MustChange)
+{
+    <div class="mat-alert mat-alert--warning">@Ui.Icon("alert")<div class="mat-alert__body"><strong>Choose your own password.</strong> An administrator set the password of this account. Change it below to go on.</div></div>
+}
+
+<form class="mat-form" method="post" asp-page-handler="Profile" novalidate>
+    <partial name="_FormSummary" model="ViewData.ModelState" />
+    <div class="mat-card">
+        <div class="mat-card__head">@Ui.Icon("user")<span class="mat-card__title">Profile</span></div>
+        <div class="mat-card__body">
+            <div class="mat-form__grid">
+                <mn-field name="DisplayName" label="Name" required value="@Model.DisplayName" autocomplete="name" msg-required="Please enter your name." />
+                <mn-field name="Email" kind="email" label="E-mail" optional value="@Model.Email" autocomplete="email" />
+                <div class="mat-field mat-field--full">
+                    <span class="mat-label">User name</span>
+                    <span class="mat-mono">@Model.Username</span>
+                    <span class="mat-hint">The name you sign in with. An administrator can change it.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <mn-buttons save="Save profile" />
+</form>
+
+<form class="mat-form" method="post" asp-page-handler="Password" novalidate>
+    <div class="mat-card">
+        <div class="mat-card__head">@Ui.Icon("key")<span class="mat-card__title">Password</span></div>
+        <div class="mat-card__body">
+            <div class="mat-form__grid">
+                <mn-field name="CurrentPassword" kind="password" label="Current password" required full autocomplete="current-password" msg-required="Please enter your current password." />
+                <mn-field name="NewPassword" kind="password" label="New password" required autocomplete="new-password" minlength="@PasswordService.MinLength" hint="At least @PasswordService.MinLength characters." msg-required="Please choose a new password." />
+                <mn-field name="Repeat" kind="password" label="New password again" required autocomplete="new-password" msg-required="Please type the new password again." />
+            </div>
+        </div>
+    </div>
+    <mn-buttons save="Change password" save-icon="key" />
+</form>
+
+<div class="mat-card">
+    <div class="mat-card__head">@Ui.Icon("palette")<span class="mat-card__title">Appearance</span></div>
+    <div class="mat-card__body mat-stack">
+        <div class="mat-field">
+            <span class="mat-label" id="scheme-label">Colour scheme</span>
+            <div class="mat-seg" role="group" aria-labelledby="scheme-label" data-scheme-save-url="/Account?handler=Scheme">
+                <button type="button" class="mat-seg__btn" data-scheme-set="standard" aria-pressed="@(Model.Scheme == "standard" ? "true" : "false")">Standard</button>
+                <button type="button" class="mat-seg__btn" data-scheme-set="paper" aria-pressed="@(Model.Scheme == "paper" ? "true" : "false")">Paper</button>
+                <button type="button" class="mat-seg__btn" data-scheme-set="contrast" aria-pressed="@(Model.Scheme == "contrast" ? "true" : "false")">High contrast</button>
+                <button type="button" class="mat-seg__btn" data-scheme-set="oled" aria-pressed="@(Model.Scheme == "oled" ? "true" : "false")">Black (OLED)</button>
+            </div>
+            <span class="mat-hint">Light, dark or the system setting is the button at the bottom of the menu.</span>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,54 @@
+@page "/Tags"
+@model MatNote.Pages.Tags.IndexModel
+@inject Clock Clock
+@{
+    ViewData["Title"] = "Tags";
+    ViewData["PageSub"] = "Labels that cut across your folders, for example prompts, ideas or invoices.";
+}
+
+<div class="mat-list">
+    <partial name="_Toolbar" model="Model.Toolbar" />
+
+    @if (Model.Items.Count == 0)
+    {
+        <div class="mat-empty">
+            <span class="mat-empty__icon">@Ui.Icon("tag")</span>
+            <div class="mat-empty__title">@(Model.Toolbar.SearchActive ? "No tag matches" : "No tags yet")</div>
+            <p>@(Model.Toolbar.SearchActive ? "Change the search or reset it." : "A tag is a label you put on notes. You can also make one while you edit a note.")</p>
+            @if (Model.Toolbar.SearchActive)
+            {
+                <a class="mat-btn mat-btn--secondary" href="/Tags">@Ui.Icon("refresh")<span>Reset the search</span></a>
+            }
+        </div>
+    }
+    else
+    {
+        <mn-table caption="Tags">
+            <thead>
+                <tr><th scope="col">Tag</th><th scope="col" class="mat-num">Notes</th><th scope="col" class="mat-hide-sm">Last changed</th><th scope="col"><span class="mat-sr-only">Actions</span></th></tr>
+            </thead>
+            <tbody>
+                @foreach (var t in Model.Items)
+                {
+                    <tr>
+                        <td data-label="Tag"><div class="mat-table__name"><span class="mat-tag" data-colour="@t.Color"><a href="/Notes?tag=@t.Id">@t.Name</a></span></div></td>
+                        <td data-label="Notes" class="mat-num mat-mono">@t.Notes</td>
+                        <td data-label="Last changed" class="mat-hide-sm mat-mono">@Clock.Format(t.Updated)</td>
+                        <td class="mat-table__cell-actions">
+                            <div class="mat-table__actions">
+                                <a class="mat-btn mat-btn--ghost mat-btn--icon mat-btn--sm" href="/Notes?tag=@t.Id" aria-label="Notes with @t.Name" data-tip="Show the notes">@Ui.Icon("file-text")</a>
+                                <a class="mat-btn mat-btn--ghost mat-btn--icon mat-btn--sm" href="/Tags/Edit?id=@t.Id" aria-label="Edit @t.Name" data-tip="Edit">@Ui.Icon("edit")</a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </mn-table>
+    }
+
+    <partial name="_Pager" model="Model.Pager" />
+
+    <div class="mat-actions">
+        <a class="mat-btn mat-btn--primary" href="/Tags/Edit">@Ui.Icon("plus")<span>New tag</span></a>
+    </div>
+</div>

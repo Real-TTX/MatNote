@@ -1,0 +1,40 @@
+@model (FolderNode Node, long? Active)
+@*
+    One folder of the menu. A folder with subfolders is a branch: the name is a link (it opens the folder), the small chevron beside it opens and closes the subfolders
+    (data-nav-branch: the script of the toolkit remembers what was opened). The branch that holds the current folder is open.
+*@
+@{
+    var node = Model.Node;
+    var active = Model.Active == node.Id;
+    var open = Model.Active is { } a && node.Children.Any(c => c.Contains(a));
+}
+@if (node.Children.Count == 0)
+{
+    <li>
+        <a class="mat-nav__item @(active ? "is-active" : "")" href="/Notes?folder=@node.Id" aria-current="@(active ? "page" : null)">
+            @Ui.Icon("folder", colour: node.Color)<span>@node.Name</span>
+            @if (node.Count > 0) { <span class="mat-nav__badge mat-nav__badge--plain">@node.Count</span> }
+        </a>
+    </li>
+}
+else
+{
+    var subId = $"nav-sub-f{node.Id}";
+    <li class="mat-nav__branch mn-branch @(open ? "is-open" : "")">
+        <div class="mn-folder-row">
+            <a class="mat-nav__item @(active ? "is-active" : "")" href="/Notes?folder=@node.Id" aria-current="@(active ? "page" : null)">
+                @Ui.Icon("folder", colour: node.Color)<span>@node.Name</span>
+                @if (node.Count > 0) { <span class="mat-nav__badge mat-nav__badge--plain">@node.Count</span> }
+            </a>
+            <button type="button" class="mn-folder-toggle" data-nav-branch="f@(node.Id)" aria-expanded="@(open ? "true" : "false")" aria-controls="@subId" aria-label="Subfolders of @node.Name">@Ui.Icon("chevron-down", "mat-nav__chev")</button>
+        </div>
+        <div class="mat-nav__sub" id="@subId">
+            <ul class="mat-nav__list">
+                @foreach (var child in node.Children)
+                {
+                    <partial name="_FolderNode" model="(child, Model.Active)" />
+                }
+            </ul>
+        </div>
+    </li>
+}
