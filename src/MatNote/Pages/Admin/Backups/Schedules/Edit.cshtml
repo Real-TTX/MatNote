@@ -6,7 +6,7 @@
 
 <partial name="_Tabs" model='"schedules"' />
 
-<form class="mat-form" method="post" novalidate>
+<form class="mat-form" method="post" asp-page="/Admin/Backups/Schedules/Edit" novalidate>
     <input type="hidden" name="Id" value="@Model.Id" />
     <partial name="_FormSummary" model="ViewData.ModelState" />
 

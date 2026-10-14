@@ -28,9 +28,17 @@ RUN BUILD_DATE="${BuildDate:-$(date -u +%Y%m%d)}" && \
 # ---------------------------------------------------------------------------
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 
-# postgresql-client: pg_dump / pg_restore for the backups. fontconfig + fonts: the PDF export draws text.
+# postgresql-client-17: pg_dump / pg_restore for the backups. The base image is Ubuntu, whose own package is version 16, and pg_dump refuses a server that is newer than itself:
+# the client comes from the PostgreSQL project's repository (PGDG), like the server image (postgres:17). fontconfig + fonts: the PDF export draws text.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends postgresql-client libfontconfig1 fonts-dejavu-core fonts-liberation \
+    && apt-get install -y --no-install-recommends ca-certificates curl \
+    && install -d /usr/share/postgresql-common/pgdg \
+    && curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+    && . /etc/os-release \
+    && echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt ${VERSION_CODENAME}-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends postgresql-client-17 libfontconfig1 fonts-dejavu-core fonts-liberation \
+    && apt-get purge -y --auto-remove curl \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

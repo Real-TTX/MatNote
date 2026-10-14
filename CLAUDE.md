@@ -40,7 +40,9 @@ src/MatNote
   Services/Auth/             CurrentUser, PasswordService, TotpService (RFC 6238 + recovery codes + QR), SessionService (sessions in the DB, cookie carries the token), LoginService, UserService
   Services/AccessService.cs  who may see/change what (owner, shared read/edit, link shares), FolderTree
   Services/Export/           contracts of the exporter/preview (Contracts.cs) and their implementation
-  Services/Backup/           backups: targets (folder, SMB), schedules, retention, scheduler, restore
+  Services/Backup/           backups: BackupConfig (config/backup.json: targets, schedules), IBackupTarget (FolderTarget, SmbTarget over SMBLibrary), Retention (pure), ScheduleCalculator (friendly fields -> cron,
+                             next run), BackupArchive (zip: manifest.json, database.dump, config/, keys/), BackupService (one gate for backups AND restore), BackupScheduler (30 s loop), RestoreService
+                             (pg_restore --single-transaction); registered by BackupRegistration.AddBackup(); pages in Pages/Admin/Backups (Backups, Runs, Schedules/, Targets/, Restore)
   Services/                  Ui (icons, logo, helpers), MenuService (folder tree of the menu), Assets (sprites, hash), ListModels (toolbar, pager), Features.cs (DI registration)
   Controls/                  ONE code base per control: <mn-field>, <mn-buttons>, <mn-table>, <mn-tabs>/<mn-tab>; partials _Toolbar, _Pager, _FormSummary in Pages/Shared
   Pages/                     Razor Pages: Account/ (sign-in, TOTP step, setup, account, security), Notes/, Folders/, Tags/, Shares/, Trash/, Public/ (link shares, anonymous), Admin/ (users, backups, system)
@@ -70,6 +72,12 @@ tests/MatNote.Tests          unit tests
 - Dependent fields only appear when needed (`show-if` / `data-show-if`). Account, sign out and the theme button are at the bottom left of the menu.
 - Controls have one code base and can appear several times on a page (ids come from the model: `ToolbarModel.Id`, `mn-field id=`).
 - Mobile first: check 390 px. Scrollbars are the toolkit's (visible only while scrolling).
+
+**Backups**
+- A backup file is `matnote_<scheduleId>_<yyyyMMdd-HHmmssZ>.zip` (`BackupFileName`; every name from a page is checked against it). Retention only touches the files of its own schedule. The archive can hold the
+  data protection keys (`IncludeKeys`): then it holds everything and the target must be protected like the server. A restore makes a safety backup first (schedule id `prerestore`, never deleted by retention).
+- `pg_dump`/`pg_restore` are version 17 from the PGDG repository (the Ubuntu base image only has 16, which refuses a 17 server). Non-default SMB ports work through a subclass of `SMB2Client`.
+- A form with a second submit handler (`formaction="?handler=Test"`) needs `asp-page="..."` on the form: otherwise after that post the form's own action keeps the handler.
 
 **Code**
 - Microsoft C# guidelines, file-scoped namespaces, `.editorconfig`. Not too many nested types; several business functions in one class are fine. English identifiers and comments.

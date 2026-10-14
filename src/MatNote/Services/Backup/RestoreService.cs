@@ -179,6 +179,19 @@ public sealed class RestoreService(
             result.Warnings.Add($"The tables could not be updated to this version: {ex.Message} Restart the container; the update runs at the start.");
         }
 
+        // The dump was made while its own run was still "Running" (the row is written first): in the restored history that run is the one that made this file, and it succeeded.
+        try
+        {
+            using var scope = scopes.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            await db.BackupRuns.Where(r => r.Status == BackupStatus.Running)
+                .ExecuteUpdateAsync(s => s.SetProperty(r => r.Status, BackupStatus.Succeeded).SetProperty(r => r.EndDate, r => r.StartDate).SetProperty(r => r.Message, "Restored: the state when the backup was made."), ct);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "The history of the runs could not be tidied after the restore.");
+        }
+
         // 4. the configuration files
         var written = 0;
         foreach (var entry in configEntries)
