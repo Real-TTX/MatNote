@@ -1,0 +1,144 @@
+@page "/Notes/View"
+@model MatNote.Pages.Notes.ViewModel
+@inject Clock Clock
+@using MatNote.Services.Export
+@{
+    var note = Model.Note;
+    ViewData["PageSub"] = $"{Ui.TypeName(note.Type)} · changed {Clock.Format(note.UpdateDate)}" + (Model.IsOwner ? string.Empty : $" · shared by {Model.OwnerName}");
+    var canEdit = Model.Access >= Access.Edit;
+    var copyable = Ui.IsText(note.Type);
+}
+
+<div class="mn-meta">
+    <span>@Ui.Icon(Ui.TypeIcon(note.Type))<span> @Ui.TypeName(note.Type)@(note.FileSize > 0 ? " · " + Ui.Size(note.FileSize) : "")</span></span>
+    @if (Model.FolderName is not null)
+    {
+        <a href="/Notes?folder=@note.FolderId">@Ui.Icon("folder")<span> @Model.FolderName</span></a>
+    }
+    @if (Model.Tags.Count > 0)
+    {
+        <span class="mn-tags">@foreach (var t in Model.Tags) { <a class="mat-tag" data-colour="@t.Color" href="/Notes?tag=@t.Id">@t.Name</a> }</span>
+    }
+    @if (note.IsFavorite && Model.IsOwner)
+    {
+        <span class="mn-star">@Ui.Icon("star")<span> Favorite</span></span>
+    }
+</div>
+
+<div class="mat-card">
+    <div class="mat-card__body">
+        @if (Model.BodyHtml is not null)
+        {
+            <div class="mn-doc" id="note-body">@Html.Raw(Model.BodyHtml)</div>
+            if (note.Type != NoteType.RichText)
+            {
+                <textarea id="note-raw" hidden readonly>@note.Content</textarea>
+            }
+        }
+        else if (note.Type == NoteType.Pdf)
+        {
+            <iframe class="mn-pdf" src="/Notes/File?id=@note.Id&inline=1" title="@note.Title"></iframe>
+        }
+        else if (Model.FileHtml is not null)
+        {
+            <div class="mn-doc mn-preview" id="note-body">@Html.Raw(Model.FileHtml)</div>
+        }
+        else
+        {
+            <div class="mat-empty">
+                <span class="mat-empty__icon">@Ui.Icon("paperclip")</span>
+                <div class="mat-empty__title">@note.FileName</div>
+                <p>There is no preview for this kind of file. Download it to open it.</p>
+            </div>
+        }
+    </div>
+</div>
+
+@if (Model.LinksTo.Count > 0 || Model.LinkedFrom.Count > 0)
+{
+    <div class="mat-card mn-linked">
+        <div class="mat-card__head">@Ui.Icon("note-link")<span class="mat-card__title">Linked notes</span></div>
+        <div class="mat-card__body mat-stack">
+            @if (Model.LinksTo.Count > 0)
+            {
+                <div class="mat-field">
+                    <span class="mat-label">This note links to</span>
+                    <ul class="mat-stack mat-stack--sm">@foreach (var l in Model.LinksTo) { <li>@Ui.Icon(Ui.TypeIcon(l.Type)) <a href="/Notes/View?id=@l.Id">@l.Title</a></li> }</ul>
+                </div>
+            }
+            @if (Model.LinkedFrom.Count > 0)
+            {
+                <div class="mat-field">
+                    <span class="mat-label">Linked from</span>
+                    <ul class="mat-stack mat-stack--sm">@foreach (var l in Model.LinkedFrom) { <li>@Ui.Icon(Ui.TypeIcon(l.Type)) <a href="/Notes/View?id=@l.Id">@l.Title</a></li> }</ul>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+<div class="mat-btn-row">
+    @if (canEdit)
+    {
+        <a class="mat-btn mat-btn--primary" href="/Notes/Edit?id=@note.Id">@Ui.Icon("edit")<span>Edit</span></a>
+    }
+    @if (copyable)
+    {
+        @if (note.Type == NoteType.RichText)
+        {
+            <button type="button" class="mat-btn mat-btn--secondary" data-copy-inner="#note-body">@Ui.Icon("copy")<span>Copy</span></button>
+        }
+        else
+        {
+            <button type="button" class="mat-btn mat-btn--secondary" data-copy="#note-raw">@Ui.Icon("copy")<span>Copy</span></button>
+        }
+    }
+    else
+    {
+        <a class="mat-btn mat-btn--secondary" href="/Notes/File?id=@note.Id">@Ui.Icon("download")<span>Download</span></a>
+    }
+    <button type="button" class="mat-btn mat-btn--secondary" data-dialog-open="export-dialog" aria-haspopup="dialog">@Ui.Icon("upload")<span>Export</span></button>
+    @if (Model.IsOwner)
+    {
+        <a class="mat-btn mat-btn--secondary" href="/Shares/Edit?noteId=@note.Id">@Ui.Icon("share")<span>Share</span></a>
+        <form method="post" asp-page-handler="Favorite" asp-route-id="@note.Id">
+            <button type="submit" class="mat-btn mat-btn--secondary">@Ui.Icon("star")<span>@(note.IsFavorite ? "Remove favorite" : "Favorite")</span></button>
+        </form>
+    }
+    <a class="mat-btn mat-btn--secondary" href="@(note.FolderId is { } f && Model.IsOwner ? $"/Notes?folder={f}" : "/Notes")">@Ui.Icon("back")<span>Back</span></a>
+</div>
+
+<dialog class="mat-dialog mat-dialog--sm" id="export-dialog" aria-labelledby="export-title">
+    <form class="mat-dialog__form" method="get" action="/Notes/Export">
+        <input type="hidden" name="id" value="@note.Id" />
+        <div class="mat-dialog__head">
+            @Ui.Icon("upload")
+            <h2 class="mat-dialog__title" id="export-title">Export this note</h2>
+            <button type="button" class="mat-btn mat-btn--ghost mat-btn--icon mat-dialog__close" data-dialog-close aria-label="Close">@Ui.Icon("x")</button>
+        </div>
+        <div class="mat-dialog__body mat-form">
+            <fieldset class="mat-field mat-fieldset">
+                <legend class="mat-label">Format</legend>
+                <div class="mat-options">
+                    @for (var i = 0; i < Model.Formats.Count; i++)
+                    {
+                        var format = Model.Formats[i];
+                        <label class="mat-option"><input type="radio" name="format" value="@format" checked="@(i == 0)" /><span>@ViewModel.FormatName(format)</span></label>
+                    }
+                </div>
+            </fieldset>
+            @if (Ui.IsText(note.Type))
+            {
+                <div class="mat-field">
+                    <label class="mat-check"><input type="checkbox" name="linked" value="true" checked /><span class="mat-check__text"><strong>Copy the linked notes into the export</strong><small class="mat-muted">@(Model.LinksTo.Count > 0 ? $"{Model.LinksTo.Count} linked note{(Model.LinksTo.Count == 1 ? "" : "s")}, as sections at the place of the link." : "This note has no links to other notes.")</small></span></label>
+                </div>
+            }
+        </div>
+        <div class="mat-dialog__foot">
+            <div class="mat-btn-row mat-btn-row--plain">
+                <button type="submit" class="mat-btn mat-btn--primary">@Ui.Icon("download")<span>Export</span></button>
+                <button type="button" class="mat-btn mat-btn--secondary" data-dialog-close>Cancel</button>
+            </div>
+        </div>
+    </form>
+</dialog>

@@ -1,0 +1,5 @@
+@model string
+<mn-tabs label="Shares">
+    <mn-tab href="/Shares" active="@(Model == "with-me")">Shared with me</mn-tab>
+    <mn-tab href="/Shares/Mine" active="@(Model == "mine")">Shared by me</mn-tab>
+</mn-tabs>

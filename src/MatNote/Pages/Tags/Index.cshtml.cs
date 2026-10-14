@@ -31,7 +31,7 @@ public sealed class IndexModel(AppDbContext db, CurrentUser me) : AppPageModel
             tags = tags.Where(t => EF.Functions.ILike(t.Name, "%" + q.Replace("%", "\\%").Replace("_", "\\_") + "%"));
         }
 
-        var rows = tags.Select(t => new TagRow(t.Id, t.Name, t.Color, db.NoteTags.Count(nt => nt.TagId == t.Id && nt.Note!.OwnerId == id), t.UpdateDate));
+        var rows = tags.Select(t => new { t.Id, t.Name, t.Color, Notes = db.NoteTags.Count(nt => nt.TagId == t.Id && nt.Note!.OwnerId == id), Updated = t.UpdateDate });
         rows = (sort, descending) switch
         {
             ("notes", false) => rows.OrderBy(r => r.Notes).ThenBy(r => r.Name),
@@ -44,7 +44,7 @@ public sealed class IndexModel(AppDbContext db, CurrentUser me) : AppPageModel
 
         var matching = await rows.CountAsync();
         var page = Math.Min(ListQuery.Page(Request), Math.Max(1, (int)Math.Ceiling(matching / (double)PageSize)));
-        Items = await rows.Skip((page - 1) * PageSize).Take(PageSize).ToListAsync();
+        Items = (await rows.Skip((page - 1) * PageSize).Take(PageSize).ToListAsync()).Select(r => new TagRow(r.Id, r.Name, r.Color, r.Notes, r.Updated)).ToList();
 
         Toolbar = new ToolbarModel
         {

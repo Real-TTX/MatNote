@@ -1,0 +1,122 @@
+@page "/Notes/Edit"
+@model MatNote.Pages.Notes.EditModel
+@{
+    ViewData["Width"] = "wide";
+    var isFile = Model.IsNew ? Model.Kind == "File" : !Ui.IsText(Model.Type);
+    var back = Model.IsNew ? (string.IsNullOrEmpty(Model.Folder) ? "/Notes" : $"/Notes?folder={Model.Folder}") : $"/Notes/View?id={Model.Id}";
+    var canLink = Model.IsNew || Ui.IsText(Model.Type);
+}
+
+<form class="mat-form" method="post" enctype="multipart/form-data" novalidate>
+    <input type="hidden" name="Id" value="@Model.Id" />
+    @if (Model.IsNew && !Model.IsOwner)
+    {
+        @* a new note in a folder that was shared with edit rights: the folder is fixed *@
+        <input type="hidden" name="Folder" value="@Model.Folder" />
+    }
+    <partial name="_FormSummary" model="ViewData.ModelState" />
+
+    @if (!Model.IsOwner)
+    {
+        <div class="mat-alert mat-alert--info">@Ui.Icon("share")<div class="mat-alert__body">This note was shared with you. You can change its title and its text.</div></div>
+    }
+
+    <div class="mat-card">
+        <div class="mat-card__head">@Ui.Icon(Model.IsNew ? "file-plus" : Ui.TypeIcon(Model.Type))<span class="mat-card__title">@(Model.IsNew ? "New note" : Ui.TypeName(Model.Type))</span></div>
+        <div class="mat-card__body">
+            <div class="mat-form__grid">
+                <mn-field name="Title" label="Title" required full value="@Model.Title" maxlength="250" autofocus msg-required="Please give the note a title." />
+
+                @if (Model.IsNew)
+                {
+                    <mn-field name="Kind" kind="select" label="Type" full value="@Model.Kind" options="EditModel.Kinds" hint="The type is chosen once. A text file you upload becomes a text note." />
+                }
+
+                @if (Model.IsOwner)
+                {
+                    <mn-field name="Folder" kind="picker" label="Folder" optional value="@Model.Folder" options="Model.FolderChoices" placeholder="No folder" picker="search clearable" />
+                    <mn-field name="Tags" kind="tags" label="Tags" optional value="@Model.Tags" options="Model.TagChoices" placeholder="Add a tag" hint="Press Enter or a comma to add one; a new name makes a new tag." />
+                }
+
+                @* ---- the text: the editor for rich text, a plain field for plain text and markdown; a new note shows the one of the chosen type ---- *@
+                @if (Model.IsNew || Model.Type == NoteType.RichText)
+                {
+                    <div class="mat-field mat-field--full@(Model.ErrorFor("Content") is null ? "" : " is-invalid")" @Html.Raw(Model.IsNew ? "data-show-if=\"#Kind\" data-show-value=\"RichText\"" : "")>
+                        <label class="mat-label" for="RichContent">Text</label>
+                        <div class="mn-editor" data-editor>
+                            <textarea class="mat-textarea mn-editor__source mat-mono" id="RichContent" name="Content" rows="14" aria-label="Text of the note">@Model.Content</textarea>
+                        </div>
+                        <span class="mat-hint">Use the link button in the bar to add another note: when you export this note, the linked note is copied into it.</span>
+                        <span class="mat-error" aria-live="polite">@Model.ErrorFor("Content")</span>
+                    </div>
+                }
+
+                @if (Model.IsNew || Model.Type is NoteType.PlainText or NoteType.Markdown)
+                {
+                    <div class="mat-field mat-field--full@(Model.ErrorFor("Content") is null ? "" : " is-invalid")" @Html.Raw(Model.IsNew ? "data-show-if=\"#Kind\" data-show-value=\"PlainText,Markdown\"" : "")>
+                        <label class="mat-label" for="TextContent">Text</label>
+                        <textarea class="mat-textarea mat-mono" id="TextContent" name="Content" rows="16" aria-label="Text of the note">@Model.Content</textarea>
+                        <span class="mat-hint">
+                            Add a link to another note with <code>[Title](note:ID)</code>, or
+                            <button type="button" class="mat-btn mat-btn--ghost mat-btn--sm" data-note-link-open="#TextContent">@Ui.Icon("note-link")<span>choose a note</span></button>
+                        </span>
+                        <span class="mat-error" aria-live="polite">@Model.ErrorFor("Content")</span>
+                    </div>
+                }
+
+                @if (isFile || Model.IsNew)
+                {
+                    <div class="mat-field mat-field--full@(Model.ErrorFor("Upload") is null ? "" : " is-invalid")" @Html.Raw(Model.IsNew ? "data-show-if=\"#Kind\" data-show-value=\"File\"" : "")>
+                        <label class="mat-label" for="Upload">@(Model.IsNew ? "File" : "Replace the file") @if (Model.IsNew) { <span class="mat-req" aria-hidden="true">*</span> } else { <span class="mat-opt">(optional)</span> }</label>
+                        <input class="mat-input" type="file" id="Upload" name="Upload" aria-describedby="Upload-hint Upload-error" />
+                        <span class="mat-hint" id="Upload-hint">
+                            @if (!Model.IsNew && Model.Existing is { FileName: not null } existing)
+                            {
+                                <text>Now: <strong>@existing.FileName</strong> (@Ui.Size(existing.FileSize)). </text>
+                            }
+                            Word (.docx), Excel (.xlsx), PDF or any other file, up to the limit of this server.
+                        </span>
+                        <span class="mat-error" id="Upload-error" aria-live="polite">@Model.ErrorFor("Upload")</span>
+                    </div>
+                }
+
+                @if (Model.IsOwner)
+                {
+                    <mn-field name="Favorite" kind="switch" label="Favorite" full value="@Model.Favorite.ToString()" />
+                }
+            </div>
+        </div>
+    </div>
+
+    <mn-buttons save="Save note" back="@back" delete-handler="@(Model.IsNew || !Model.IsOwner ? null : "Delete")" delete-label="Delete note" delete-ok="Move to trash"
+                delete-confirm="Move this note to the trash? You can restore it from there." />
+</form>
+
+@if (canLink)
+{
+    <dialog class="mat-dialog mat-dialog--sm" id="note-link-dialog" aria-labelledby="note-link-title" data-note-link-dialog data-lookup-url="/Notes/Lookup" data-exclude="@Model.Id">
+        <div class="mat-dialog__form">
+            <div class="mat-dialog__head">
+                @Ui.Icon("note-link")
+                <h2 class="mat-dialog__title" id="note-link-title">Link to a note</h2>
+                <button type="button" class="mat-btn mat-btn--ghost mat-btn--icon mat-dialog__close" data-dialog-close aria-label="Close">@Ui.Icon("x")</button>
+            </div>
+            <div class="mat-dialog__body">
+                <div class="mat-field">
+                    <label class="mat-label" for="note-link-q">Search your notes</label>
+                    <input class="mat-input" type="search" id="note-link-q" autocomplete="off" placeholder="A title" />
+                </div>
+                <ul class="mn-lookup__list" aria-label="Notes"></ul>
+            </div>
+            <div class="mat-dialog__foot">
+                <div class="mat-btn-row mat-btn-row--plain">
+                    <button type="button" class="mat-btn mat-btn--secondary" data-dialog-close>Cancel</button>
+                </div>
+            </div>
+        </div>
+    </dialog>
+}
+
+@section Scripts {
+    <script src="~/js/editor.js" asp-append-version="true"></script>
+}

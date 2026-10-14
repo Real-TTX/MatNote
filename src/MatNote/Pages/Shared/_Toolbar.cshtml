@@ -10,7 +10,7 @@
     var form = id + "-form";
     // With the search in a field the field shows what is searched: no chip for it.
     var hasChips = (!Model.SearchField && Model.SearchActive) || Model.ActiveFilters > 0;
-    var count = Model.Matching == Model.Total ? $"{Model.Total} {Model.Noun}" : $"{Model.Matching} of {Model.Total} {Model.Noun}";
+    var count = Model.Matching == Model.Total ? Model.Counted(Model.Total) : $"{Model.Matching} of {Model.Counted(Model.Total)}";
 
     void FilterAndSort()
     {

@@ -44,7 +44,8 @@ builder.Services.AddScoped<SessionService>();
 builder.Services.AddScoped<LoginService>();
 builder.Services.AddScoped<AccessService>();
 builder.Services.AddSingleton<SetupState>();
-builder.Services.AddHostedService<MaintenanceService>();
+builder.Services.AddSingleton<MaintenanceService>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<MaintenanceService>());
 builder.Services.AddMatNoteFeatures();
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

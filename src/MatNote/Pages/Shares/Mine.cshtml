@@ -1,0 +1,72 @@
+@page "/Shares/Mine"
+@model MatNote.Pages.Shares.MineModel
+@inject Clock Clock
+@{
+    ViewData["PageSub"] = "Notes and folders you shared. Change or stop a share on its page.";
+}
+
+<partial name="_ShareTabs" model="@("mine")" />
+
+<div class="mat-list">
+    <partial name="_Toolbar" model="Model.Toolbar" />
+
+    @if (Model.Items.Count == 0)
+    {
+        <div class="mat-empty">
+            <span class="mat-empty__icon">@Ui.Icon(Model.Toolbar.SearchActive || Model.Toolbar.ActiveFilters > 0 ? "search" : "share")</span>
+            @if (Model.Toolbar.SearchActive || Model.Toolbar.ActiveFilters > 0)
+            {
+                <div class="mat-empty__title">Nothing matches</div>
+                <p>Change the search or the filters, or reset them.</p>
+                <a class="mat-btn mat-btn--secondary" href="@Model.Toolbar.UrlReset()">@Ui.Icon("refresh")<span>Reset the tools</span></a>
+            }
+            else
+            {
+                <div class="mat-empty__title">You have not shared anything</div>
+                <p>Open a note or a folder and choose <strong>Share</strong>: with one person, or with anyone who has the link.</p>
+                <a class="mat-btn mat-btn--primary" href="/Notes">@Ui.Icon("file-text")<span>Go to your notes</span></a>
+            }
+        </div>
+    }
+    else
+    {
+        <mn-table caption="Shared by me">
+            <thead>
+                <tr><th scope="col">Name</th><th scope="col">With</th><th scope="col" class="mat-hide-sm">Access</th><th scope="col" class="mat-hide-md">Until</th><th scope="col" class="mat-num mat-hide-md">Views</th><th scope="col"><span class="mat-sr-only">Actions</span></th></tr>
+            </thead>
+            <tbody>
+                @foreach (var s in Model.Items)
+                {
+                    var expired = s.Expires is { } end && end <= DateTime.UtcNow;
+                    <tr>
+                        <td data-label="Name"><div class="mat-table__name">@Ui.Icon(s.Type is { } t ? Ui.TypeIcon(t) : "folder")<span><a href="/Shares/Edit?id=@s.Id">@s.Name</a><small>@s.TargetKind</small></span></div></td>
+                        <td data-label="With">
+                            @if (s.Kind == ShareKind.Link)
+                            {
+                                <span class="mat-pill mat-pill--info">Link</span> @if (s.HasPassword) { <span class="mat-pill mat-pill--plain">Password</span> }
+                            }
+                            else
+                            {
+                                <span>@s.WithDisplayName</span> <small class="mat-muted mat-mono">@s.WithUser</small>
+                            }
+                        </td>
+                        <td data-label="Access" class="mat-hide-sm">@(s.Kind == ShareKind.Link ? "Read" : s.Permission == SharePermission.Edit ? "Read and edit" : "Read")</td>
+                        <td data-label="Until" class="mat-mono mat-hide-md">@if (expired) { <span class="mat-pill mat-pill--warn">Ended</span> } else { @(s.Expires is null ? "No end" : Clock.FormatDate(s.Expires)) }</td>
+                        <td data-label="Views" class="mat-num mat-mono mat-hide-md">@(s.Kind == ShareKind.Link ? s.Views.ToString() : "")</td>
+                        <td class="mat-table__cell-actions">
+                            <div class="mat-table__actions">
+                                @if (s.Kind == ShareKind.Link)
+                                {
+                                    <button type="button" class="mat-btn mat-btn--ghost mat-btn--icon mat-btn--sm" data-copy="@Model.LinkUrl(s)" aria-label="Copy the link to @s.Name" data-tip="Copy the link">@Ui.Icon("link")</button>
+                                }
+                                <a class="mat-btn mat-btn--ghost mat-btn--icon mat-btn--sm" href="/Shares/Edit?id=@s.Id" aria-label="Edit the share of @s.Name" data-tip="Edit">@Ui.Icon("edit")</a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </mn-table>
+    }
+
+    <partial name="_Pager" model="Model.Pager" />
+</div>

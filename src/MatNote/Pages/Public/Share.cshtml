@@ -1,0 +1,161 @@
+@page "/s/{token}/{noteId:long?}"
+@model MatNote.Pages.Public.ShareModel
+@using MatNote.Services.Export
+@{
+    Layout = "_LayoutPublic";
+    var note = Model.Note;
+}
+
+@if (Model.Share.FolderId is not null && Model.Path.Count > 0)
+{
+    <nav class="mat-crumbs" aria-label="Folders">
+        <ol>
+            @for (var i = 0; i < Model.Path.Count; i++)
+            {
+                var p = Model.Path[i];
+                if (i == Model.Path.Count - 1 && note is null)
+                {
+                    <li aria-current="page">@p.Name</li>
+                }
+                else
+                {
+                    <li><a href="@Model.BaseUrl?folder=@p.Id">@p.Name</a></li>
+                }
+            }
+        </ol>
+    </nav>
+}
+
+@if (note is not null)
+{
+    <div class="mat-card">
+        <div class="mat-card__body">
+            @if (Model.BodyHtml is not null)
+            {
+                <div class="mn-doc" id="note-body">@Html.Raw(Model.BodyHtml)</div>
+                if (note.Type != NoteType.RichText)
+                {
+                    <textarea id="note-raw" hidden readonly>@note.Content</textarea>
+                }
+            }
+            else if (note.Type == NoteType.Pdf)
+            {
+                <iframe class="mn-pdf" src="@Model.BaseUrl/file/@note.Id?inline=1" title="@note.Title"></iframe>
+            }
+            else if (Model.FileHtml is not null)
+            {
+                <div class="mn-doc mn-preview">@Html.Raw(Model.FileHtml)</div>
+            }
+            else
+            {
+                <div class="mat-empty">
+                    <span class="mat-empty__icon">@Ui.Icon("paperclip")</span>
+                    <div class="mat-empty__title">@note.FileName</div>
+                    <p>@(Model.Share.AllowExport ? "There is no preview for this kind of file. Download it to open it." : "There is no preview for this kind of file.")</p>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="mat-btn-row">
+        @if (Ui.IsText(note.Type))
+        {
+            if (note.Type == NoteType.RichText)
+            {
+                <button type="button" class="mat-btn mat-btn--secondary" data-copy-inner="#note-body">@Ui.Icon("copy")<span>Copy</span></button>
+            }
+            else
+            {
+                <button type="button" class="mat-btn mat-btn--secondary" data-copy="#note-raw">@Ui.Icon("copy")<span>Copy</span></button>
+            }
+        }
+
+        @if (Model.Share.AllowExport)
+        {
+            if (!Ui.IsText(note.Type))
+            {
+                <a class="mat-btn mat-btn--secondary" href="@Model.BaseUrl/file/@note.Id">@Ui.Icon("download")<span>Download</span></a>
+            }
+
+            <button type="button" class="mat-btn mat-btn--secondary" data-dialog-open="export-dialog" aria-haspopup="dialog">@Ui.Icon("upload")<span>Export</span></button>
+        }
+
+        @if (Model.Share.FolderId is not null)
+        {
+            <a class="mat-btn mat-btn--secondary" href="@Model.BaseUrl?folder=@Model.Folder">@Ui.Icon("back")<span>Back to the folder</span></a>
+        }
+    </div>
+
+    @if (Model.Share.AllowExport && Model.Formats.Count > 0)
+    {
+        <dialog class="mat-dialog mat-dialog--sm" id="export-dialog" aria-labelledby="export-title">
+            <form class="mat-dialog__form" method="get" action="@Model.BaseUrl/export/@note.Id">
+                <div class="mat-dialog__head">
+                    @Ui.Icon("upload")
+                    <h2 class="mat-dialog__title" id="export-title">Export this note</h2>
+                    <button type="button" class="mat-btn mat-btn--ghost mat-btn--icon mat-dialog__close" data-dialog-close aria-label="Close">@Ui.Icon("x")</button>
+                </div>
+                <div class="mat-dialog__body mat-form">
+                    <fieldset class="mat-field mat-fieldset">
+                        <legend class="mat-label">Format</legend>
+                        <div class="mat-options">
+                            @for (var i = 0; i < Model.Formats.Count; i++)
+                            {
+                                var format = Model.Formats[i];
+                                <label class="mat-option"><input type="radio" name="format" value="@format" checked="@(i == 0)" /><span>@MatNote.Pages.Notes.ViewModel.FormatName(format)</span></label>
+                            }
+                        </div>
+                    </fieldset>
+                    @if (Ui.IsText(note.Type))
+                    {
+                        <div class="mat-field">
+                            <label class="mat-check"><input type="checkbox" name="linked" value="true" checked /><span class="mat-check__text"><strong>Copy linked notes into the export</strong><small class="mat-muted">Only notes that are part of this share.</small></span></label>
+                        </div>
+                    }
+                </div>
+                <div class="mat-dialog__foot">
+                    <div class="mat-btn-row mat-btn-row--plain">
+                        <button type="submit" class="mat-btn mat-btn--primary">@Ui.Icon("download")<span>Export</span></button>
+                        <button type="button" class="mat-btn mat-btn--secondary" data-dialog-close>Cancel</button>
+                    </div>
+                </div>
+            </form>
+        </dialog>
+    }
+}
+else
+{
+    @if (Model.Subfolders.Count > 0)
+    {
+        <div class="mn-subfolders" role="group" aria-label="Subfolders">
+            @foreach (var sub in Model.Subfolders)
+            {
+                <a class="mat-btn mat-btn--secondary mat-btn--sm" href="@Model.BaseUrl?folder=@sub.Id">@Ui.Icon("folder")<span>@sub.Name</span></a>
+            }
+        </div>
+    }
+
+    @if (Model.Notes.Count == 0)
+    {
+        <div class="mat-empty">
+            <span class="mat-empty__icon">@Ui.Icon("file-text")</span>
+            <div class="mat-empty__title">No notes in this folder</div>
+        </div>
+    }
+    else
+    {
+        <mn-table caption="Notes in this folder">
+            <thead><tr><th scope="col">Note</th><th scope="col" class="mat-hide-sm">Type</th><th scope="col">Changed</th></tr></thead>
+            <tbody>
+                @foreach (var n in Model.Notes)
+                {
+                    <tr>
+                        <td data-label="Note"><div class="mat-table__name">@Ui.Icon(Ui.TypeIcon(n.Type))<span><a href="@Model.BaseUrl/@n.Id">@n.Title</a></span></div></td>
+                        <td data-label="Type" class="mat-hide-sm"><span class="mat-pill mat-pill--plain">@Ui.TypeName(n.Type)</span></td>
+                        <td data-label="Changed" class="mat-mono">@n.Updated.ToString("yyyy-MM-dd")</td>
+                    </tr>
+                }
+            </tbody>
+        </mn-table>
+    }
+}

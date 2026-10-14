@@ -1,0 +1,97 @@
+@page "/Shares/Edit"
+@model MatNote.Pages.Shares.EditModel
+@inject Clock Clock
+@{
+    ViewData["Width"] = "narrow";
+    ViewData["PageSub"] = Model.IsNew ? "Choose who gets access." : "Change who has access, or stop sharing.";
+    var delete = Model.IsNew ? null : "Delete";
+    var userIsChosen = Model.Kind == "User";
+}
+
+<form class="mat-form" method="post" novalidate>
+    <input type="hidden" name="Id" value="@Model.Id" />
+    <input type="hidden" name="NoteId" value="@Model.NoteId" />
+    <input type="hidden" name="FolderId" value="@Model.FolderId" />
+    <partial name="_FormSummary" model="ViewData.ModelState" />
+
+    <div class="mat-card">
+        <div class="mat-card__head">@Ui.Icon(Model.ItemIcon)<span class="mat-card__title">@Model.ItemName</span><span class="mat-pill mat-pill--plain">@Model.ItemKind</span></div>
+        <div class="mat-card__body">
+            @if (Model.LinkUrl is { } url)
+            {
+                <div class="mat-field">
+                    <label class="mat-label" for="link-url">The link</label>
+                    <div class="mn-linkbox">
+                        <input class="mat-input mat-mono" id="link-url" value="@url" readonly />
+                        <button type="button" class="mat-btn mat-btn--secondary" data-copy="#link-url">@Ui.Icon("copy")<span>Copy</span></button>
+                    </div>
+                    <span class="mat-hint">Anyone who has this address can read what you shared@(Model.HasPassword ? ", after they type the password" : "").</span>
+                </div>
+            }
+            <div class="mat-form__grid">
+                @if (Model.KindIsFixed)
+                {
+                    <div class="mat-field mat-field--full">
+                        <span class="mat-label">Shared with</span>
+                        <span>@(Model.Kind == "Link" ? "Anyone with the link" : "The user")@if (Model.Kind == "User") { <text> <strong class="mat-mono">@Model.UserName</strong></text> }</span>
+                    </div>
+                }
+                else
+                {
+                    <mn-field name="Kind" kind="select" label="Share with" full value="@Model.Kind" options="EditModel.Kinds" />
+                    <mn-field name="UserName" label="User name" required full value="@Model.UserName" autocomplete="off" show-if="#Kind" show-value="User"
+                              hint="The exact user name of the person. MatNotes does not list its users, so ask them." msg-required="Please enter the user name of the person." />
+                }
+
+                @if (Model.Kind == "User" || !Model.KindIsFixed)
+                {
+                    <mn-field name="Permission" kind="select" label="What they can do" full value="@Model.Permission" options="EditModel.Permissions"
+                              show-if="@(Model.KindIsFixed ? null : "#Kind")" show-value="@(Model.KindIsFixed ? null : "User")" />
+                }
+
+                @if (Model.Kind == "Link" || !Model.KindIsFixed)
+                {
+                    <mn-field name="Password" kind="password" label="Password" optional full autocomplete="new-password" minlength="4"
+                              show-if="@(Model.KindIsFixed ? null : "#Kind")" show-value="@(Model.KindIsFixed ? null : "Link")"
+                              hint="@(Model.HasPassword ? "A password is set. Leave this empty to keep it, or type a new one." : "Visitors have to type it before they can read. Leave it empty for no password.")" />
+                    @if (Model.HasPassword)
+                    {
+                        <mn-field name="RemovePassword" kind="check" label="Remove the password" full value="@Model.RemovePassword.ToString()" />
+                    }
+
+                    <mn-field name="AllowExport" kind="switch" label="Visitors can download and export" full value="@Model.AllowExport.ToString()"
+                              show-if="@(Model.KindIsFixed ? null : "#Kind")" show-value="@(Model.KindIsFixed ? null : "Link")" />
+                }
+
+                <mn-field name="Until" kind="date" label="Works until" optional full value="@Model.Until" hint="The last day. Empty: no end." />
+                <mn-field name="Label" label="Note for yourself" optional full value="@Model.Label" maxlength="120" hint="Only you see it, for example “Sent to the agency”." />
+            </div>
+        </div>
+    </div>
+
+    <mn-buttons save="@(Model.IsNew ? "Share" : "Save")" save-icon="share" back="@Model.BackUrl" delete-handler="@delete" delete-label="Stop sharing" delete-ok="Stop sharing"
+                delete-confirm="Stop sharing? The link or the access stops working at once." />
+</form>
+
+@if (Model.Others.Count > 0)
+{
+    <div class="mat-card mat-card--flush">
+        <div class="mat-card__head">@Ui.Icon("share")<span class="mat-card__title">Other shares of this item</span></div>
+        <div class="mat-card__body">
+            <mn-table caption="Other shares of this item">
+                <thead><tr><th scope="col">With</th><th scope="col">Access</th><th scope="col" class="mat-hide-sm">Until</th><th scope="col"><span class="mat-sr-only">Actions</span></th></tr></thead>
+                <tbody>
+                    @foreach (var o in Model.Others)
+                    {
+                        <tr>
+                            <td data-label="With">@if (o.Kind == ShareKind.Link) { <span class="mat-pill mat-pill--info">Link</span> } else { <span>@o.WithName</span> <small class="mat-muted mat-mono">@o.WithUser</small> }</td>
+                            <td data-label="Access">@(o.Kind == ShareKind.Link || o.Permission == SharePermission.Read ? "Read" : "Read and edit")</td>
+                            <td data-label="Until" class="mat-hide-sm mat-mono">@(o.Expires is null ? "No end" : Clock.FormatDate(o.Expires))</td>
+                            <td class="mat-table__cell-actions"><div class="mat-table__actions"><a class="mat-btn mat-btn--ghost mat-btn--icon mat-btn--sm" href="/Shares/Edit?id=@o.Id" aria-label="Edit this share" data-tip="Edit">@Ui.Icon("edit")</a></div></td>
+                        </tr>
+                    }
+                </tbody>
+            </mn-table>
+        </div>
+    </div>
+}

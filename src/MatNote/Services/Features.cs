@@ -8,6 +8,13 @@ public static class FeatureRegistration
         services.AddSingleton<Assets>();
         services.AddScoped<MenuService>();
         services.AddScoped<UserService>();
+        services.AddScoped<FolderService>();
+        services.AddScoped<NoteService>();
+        services.AddScoped<ShareService>();
+        services.AddScoped<PublicShareAccess>();
+        services.AddSingleton<Export.TemporaryStub>();
+        services.AddSingleton<Export.INoteExporter>(sp => sp.GetRequiredService<Export.TemporaryStub>());
+        services.AddSingleton<Export.INotePreview>(sp => sp.GetRequiredService<Export.TemporaryStub>());
         return services;
     }
 }

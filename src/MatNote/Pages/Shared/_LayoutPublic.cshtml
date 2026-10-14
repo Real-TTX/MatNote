@@ -1,0 +1,53 @@
+@inject Assets Toolkit
+@{
+    // A shared link, seen by someone without an account (the role "anonymous"): the name of the app, who shared it, the content. No menu, no account.
+    var title = ViewData["Title"] as string ?? Ui.AppName;
+}
+<!DOCTYPE html>
+<html lang="en" data-app="@Ui.AppId">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#c34f00" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="referrer" content="no-referrer" />
+    <title>@title · @Ui.AppName</title>
+    <link rel="icon" type="image/svg+xml" href="~/favicon.svg" />
+    <script src="~/matui/matui.boot.js" asp-append-version="true"></script>
+    <link rel="stylesheet" href="~/matui/matui.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/app.css" asp-append-version="true" />
+</head>
+<body>
+    <a class="mat-skip" href="#main">Skip to the content</a>
+    @Html.Raw(Toolkit.Sprite)
+    <div class="mn-public">
+        <header class="mn-public__head">
+            <a href="/" aria-label="@Ui.AppName">@Ui.Logo()</a>
+            <div>
+                <strong>@Ui.AppName</strong>
+                @if (ViewData["SharedBy"] is string sharedBy)
+                {
+                    <div class="mat-muted">Shared with you by @sharedBy</div>
+                }
+            </div>
+            <span class="mn-grow"></span>
+            <button type="button" class="mat-theme" data-theme-toggle data-theme-state="system" aria-label="Theme" title="Theme">
+                <svg class="mat-icon" data-theme-icon="system" aria-hidden="true" focusable="false"><use href="#mat-i-monitor"></use></svg>
+                <svg class="mat-icon" data-theme-icon="light" aria-hidden="true" focusable="false"><use href="#mat-i-sun"></use></svg>
+                <svg class="mat-icon" data-theme-icon="dark" aria-hidden="true" focusable="false"><use href="#mat-i-moon"></use></svg>
+            </button>
+        </header>
+        <main id="main" class="mat-stack">
+            @if (ViewData["Title"] is string heading && ViewData["OwnHead"] is not true)
+            {
+                <div class="mat-page__head"><div class="mat-page__title"><h1>@heading</h1>@if (ViewData["PageSub"] is string sub) { <p class="mat-page__sub">@sub</p> }</div></div>
+            }
+            @RenderBody()
+        </main>
+        <footer class="mat-footer mat-footer--plain"><p class="mat-footer__text">@Ui.AppName · notes you can share</p></footer>
+    </div>
+    <script src="~/matui/matui.js" asp-append-version="true"></script>
+    <script src="~/js/app.js" asp-append-version="true"></script>
+</body>
+</html>

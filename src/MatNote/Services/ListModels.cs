@@ -42,6 +42,9 @@ public sealed class ToolbarModel
 
     public string DefaultSort { get; init; } = string.Empty;
 
+    /// <summary>The direction the list has when nothing was chosen (a list of notes starts with the newest).</summary>
+    public bool DefaultDescending { get; init; }
+
     public int Total { get; init; }
 
     public int Matching { get; init; }
@@ -56,11 +59,14 @@ public sealed class ToolbarModel
     /// <summary>Query values that are neither search, filter nor sort (for example the id of an app) and must survive an "Apply".</summary>
     public IReadOnlyDictionary<string, string?> Keep { get; init; } = new Dictionary<string, string?>();
 
+    /// <summary>"1 note", "3 notes": the noun is given in the plural.</summary>
+    public string Counted(int n) => n == 1 && Noun.EndsWith('s') ? $"1 {Noun[..^1]}" : $"{n} {Noun}";
+
     public bool SearchActive => !string.IsNullOrWhiteSpace(Search);
 
     public int ActiveFilters => Filters.Count(f => !string.IsNullOrEmpty(f.Selected));
 
-    public bool SortActive => !string.IsNullOrEmpty(Sort) && (Sort != DefaultSort || Descending);
+    public bool SortActive => !string.IsNullOrEmpty(Sort) && (Sort != DefaultSort || Descending != DefaultDescending);
 
     public string SortLabel => SortOptions.FirstOrDefault(o => o.Value == (Sort ?? DefaultSort))?.Label ?? string.Empty;
 
@@ -69,6 +75,13 @@ public sealed class ToolbarModel
     {
         var url = UrlWithout(string.Empty);
         return page <= 1 ? url : url + (url.Contains('?') ? "&" : "?") + "page=" + page;
+    }
+
+    /// <summary>The address of the list with no tool in effect (search, filters, sort and view are dropped; what the list is about, <see cref="Keep"/>, stays).</summary>
+    public string UrlReset()
+    {
+        var query = string.Join("&", Keep.Where(p => !string.IsNullOrEmpty(p.Value)).Select(p => $"{HttpUtility.UrlEncode(p.Key)}={HttpUtility.UrlEncode(p.Value)}"));
+        return query.Length == 0 ? Action : $"{Action}?{query}";
     }
 
     /// <summary>The address of the list with every tool in effect except <paramref name="remove"/>.</summary>
@@ -93,9 +106,9 @@ public sealed class ToolbarModel
         if (remove != "sort" && SortActive)
         {
             pairs.Add(("sort", Sort));
-            if (Descending)
+            if (Descending != DefaultDescending)
             {
-                pairs.Add(("dir", "desc"));
+                pairs.Add(("dir", Descending ? "desc" : "asc"));
             }
         }
 
@@ -168,7 +181,14 @@ public static class ListQuery
         return value.Length == 0 ? null : value;
     }
 
-    public static bool Descending(HttpRequest request) => string.Equals(request.Query["dir"], "desc", StringComparison.OrdinalIgnoreCase);
+    /// <summary>The direction asked for (<c>dir=desc</c> or <c>dir=asc</c>); without one, <paramref name="byDefault"/>.</summary>
+    public static bool Descending(HttpRequest request, bool byDefault = false)
+        => request.Query["dir"].ToString() switch
+        {
+            var d when string.Equals(d, "desc", StringComparison.OrdinalIgnoreCase) => true,
+            var d when string.Equals(d, "asc", StringComparison.OrdinalIgnoreCase) => false,
+            _ => byDefault,
+        };
 
     public static IEnumerable<T> Slice<T>(IEnumerable<T> source, int page, int pageSize)
         => source.Skip((page - 1) * pageSize).Take(pageSize);

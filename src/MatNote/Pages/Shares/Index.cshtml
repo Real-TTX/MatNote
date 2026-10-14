@@ -1,0 +1,57 @@
+@page "/Shares"
+@model MatNote.Pages.Shares.IndexModel
+@inject Clock Clock
+@{
+    ViewData["Title"] = "Shares";
+    ViewData["PageSub"] = "Notes and folders that other people shared with you, and what you shared.";
+}
+
+<partial name="_ShareTabs" model="@("with-me")" />
+
+<div class="mat-list">
+    <partial name="_Toolbar" model="Model.Toolbar" />
+
+    @if (Model.Items.Count == 0)
+    {
+        <div class="mat-empty">
+            <span class="mat-empty__icon">@Ui.Icon(Model.Toolbar.SearchActive || Model.Toolbar.ActiveFilters > 0 ? "search" : "share")</span>
+            @if (Model.Toolbar.SearchActive || Model.Toolbar.ActiveFilters > 0)
+            {
+                <div class="mat-empty__title">Nothing matches</div>
+                <p>Change the search or the filter, or reset them.</p>
+                <a class="mat-btn mat-btn--secondary" href="@Model.Toolbar.UrlReset()">@Ui.Icon("refresh")<span>Reset the tools</span></a>
+            }
+            else
+            {
+                <div class="mat-empty__title">Nothing was shared with you yet</div>
+                <p>When someone shares a note or a folder with you, it shows up here.</p>
+            }
+        </div>
+    }
+    else
+    {
+        <mn-table caption="Shared with me">
+            <thead>
+                <tr><th scope="col">Name</th><th scope="col">Shared by</th><th scope="col">You can</th><th scope="col" class="mat-hide-md">Shared on</th><th scope="col" class="mat-hide-md">Until</th><th scope="col"><span class="mat-sr-only">Actions</span></th></tr>
+            </thead>
+            <tbody>
+                @foreach (var s in Model.Items)
+                {
+                    var href = s.NoteId is { } n ? $"/Notes/View?id={n}" : $"/Notes?folder={s.FolderId}";
+                    <tr>
+                        <td data-label="Name"><div class="mat-table__name">@Ui.Icon(s.Type is { } t ? Ui.TypeIcon(t) : "folder")<span><a href="@href">@s.Name</a><small>@(s.Type is { } tt ? Ui.TypeName(tt) : "Folder")</small></span></div></td>
+                        <td data-label="Shared by">@s.OwnerName</td>
+                        <td data-label="You can"><span class="mat-pill @(s.Permission == SharePermission.Edit ? "mat-pill--accent" : "mat-pill--plain")">@(s.Permission == SharePermission.Edit ? "Read and edit" : "Read")</span></td>
+                        <td data-label="Shared on" class="mat-mono mat-hide-md">@Clock.FormatDate(s.Created)</td>
+                        <td data-label="Until" class="mat-mono mat-hide-md">@(s.Expires is null ? "No end" : Clock.FormatDate(s.Expires))</td>
+                        <td class="mat-table__cell-actions">
+                            <div class="mat-table__actions"><a class="mat-btn mat-btn--ghost mat-btn--icon mat-btn--sm" href="@href" aria-label="Open @s.Name" data-tip="Open">@Ui.Icon("eye")</a></div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </mn-table>
+    }
+
+    <partial name="_Pager" model="Model.Pager" />
+</div>

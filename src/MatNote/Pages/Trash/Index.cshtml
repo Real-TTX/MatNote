@@ -1,0 +1,59 @@
+@page "/Trash"
+@model MatNote.Pages.Trash.IndexModel
+@inject Clock Clock
+@{
+    ViewData["Title"] = "Trash";
+    ViewData["PageSub"] = $"Deleted notes stay here for {Model.Days} days. Restore a note, or delete it for good.";
+}
+
+<div class="mat-list">
+    <partial name="_Toolbar" model="Model.Toolbar" />
+
+    @if (Model.Items.Count == 0)
+    {
+        <div class="mat-empty">
+            <span class="mat-empty__icon">@Ui.Icon(Model.Toolbar.SearchActive ? "search" : "trash")</span>
+            <div class="mat-empty__title">@(Model.Toolbar.SearchActive ? "No note matches" : "The trash is empty")</div>
+            <p>@(Model.Toolbar.SearchActive ? "Change the search or reset it." : "Notes you delete wait here before they are removed for good.")</p>
+            @if (Model.Toolbar.SearchActive)
+            {
+                <a class="mat-btn mat-btn--secondary" href="/Trash">@Ui.Icon("refresh")<span>Reset the search</span></a>
+            }
+        </div>
+    }
+    else
+    {
+        <mn-table caption="Deleted notes">
+            <thead>
+                <tr><th scope="col">Note</th><th scope="col" class="mat-hide-sm">Type</th><th scope="col">Deleted</th><th scope="col" class="mat-hide-md">Removed for good in</th><th scope="col"><span class="mat-sr-only">Actions</span></th></tr>
+            </thead>
+            <tbody>
+                @foreach (var n in Model.Items)
+                {
+                    <tr>
+                        <td data-label="Note"><div class="mat-table__name">@Ui.Icon(Ui.TypeIcon(n.Type))<span>@n.Title</span></div></td>
+                        <td data-label="Type" class="mat-hide-sm"><span class="mat-pill mat-pill--plain">@Ui.TypeName(n.Type)</span></td>
+                        <td data-label="Deleted" class="mat-mono">@Clock.Format(n.Deleted)</td>
+                        <td data-label="Removed in" class="mat-mono mat-hide-md">@Model.DaysLeft(n) days</td>
+                        <td class="mat-table__cell-actions">
+                            <div class="mat-table__actions">
+                                <form method="post" asp-page-handler="Restore"><input type="hidden" name="id" value="@n.Id" /><button type="submit" class="mat-btn mat-btn--ghost mat-btn--icon mat-btn--sm" aria-label="Restore @n.Title" data-tip="Restore">@Ui.Icon("restore")</button></form>
+                                <form method="post" asp-page-handler="Purge" class="mn-sep" data-confirm="Delete “@n.Title” for good? This cannot be undone." data-confirm-ok="Delete for good"><input type="hidden" name="id" value="@n.Id" /><button type="submit" class="mat-btn mat-btn--ghost mat-btn--icon mat-btn--sm" aria-label="Delete @n.Title for good" data-tip="Delete for good">@Ui.Icon("trash")</button></form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </mn-table>
+    }
+
+    <partial name="_Pager" model="Model.Pager" />
+
+    @if (Model.Total > 0)
+    {
+        <form method="post" asp-page-handler="Empty" class="mat-actions">
+            <span class="mat-btn-row__spacer"></span>
+            <button type="submit" class="mat-btn mat-btn--danger" data-confirm="Delete all @Model.Total notes in the trash for good? This cannot be undone." data-confirm-ok="Empty the trash">@Ui.Icon("trash")<span>Empty the trash</span></button>
+        </form>
+    }
+</div>

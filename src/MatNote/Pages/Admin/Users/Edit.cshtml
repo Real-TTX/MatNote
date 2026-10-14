@@ -1,0 +1,55 @@
+@page "/Admin/Users/Edit"
+@model MatNote.Pages.Admin.Users.EditModel
+@{
+    ViewData["Width"] = "narrow";
+    var deleteText = $"Delete this account? Its {Model.NoteCount} notes, its folders, tags and shares are deleted with it.";
+}
+
+<form class="mat-form" method="post" novalidate>
+    <input type="hidden" name="Id" value="@Model.Id" />
+    <partial name="_FormSummary" model="ViewData.ModelState" />
+
+    <div class="mat-card">
+        <div class="mat-card__head">@Ui.Icon("user")<span class="mat-card__title">Account</span></div>
+        <div class="mat-card__body">
+            <div class="mat-form__grid">
+                <mn-field name="DisplayName" label="Name" required full value="@Model.DisplayName" maxlength="120" autofocus msg-required="Please enter a name." />
+                <mn-field name="Username" label="User name" required value="@Model.Username" autocomplete="off" hint="Used to sign in and to share a note with this person." msg-required="Please enter a user name." />
+                <mn-field name="Email" kind="email" label="E-mail" optional value="@Model.Email" autocomplete="off" />
+                <mn-field name="Role" kind="select" label="Role" full value="@Model.Role" options="EditModel.Roles" />
+                <mn-field name="IsActive" kind="switch" label="The account is active" full value="@Model.IsActive.ToString()" hint="A disabled account cannot sign in; its notes stay." />
+            </div>
+        </div>
+    </div>
+
+    <div class="mat-card">
+        <div class="mat-card__head">@Ui.Icon("key")<span class="mat-card__title">Password</span></div>
+        <div class="mat-card__body">
+            <div class="mat-form__grid">
+                @if (!Model.IsNew)
+                {
+                    <mn-field name="SetPassword" kind="switch" label="Choose a new password for this person" full value="@Model.SetPassword.ToString()" />
+                }
+
+                <mn-field name="Password" kind="password" label="@(Model.IsNew ? "Password" : "New password")" required full autocomplete="new-password" minlength="@PasswordService.MinLength"
+                          show-if="@(Model.IsNew ? null : "#SetPassword")" show-value="@(Model.IsNew ? null : "true")"
+                          hint="@($"At least {PasswordService.MinLength} characters. Tell the person in a safe way.")" msg-required="Please enter a password." />
+                <mn-field name="MustChange" kind="switch" label="They must choose their own password at the next sign-in" full value="@Model.MustChange.ToString()"
+                          show-if="@(Model.IsNew ? null : "#SetPassword")" show-value="@(Model.IsNew ? null : "true")" />
+            </div>
+        </div>
+    </div>
+
+    <mn-buttons save="Save user" back="/Admin/Users" delete-handler="@(Model.IsNew || Model.IsMe ? null : "Delete")" delete-label="Delete user" delete-confirm="@deleteText">
+        @if (!Model.IsNew && Model.Totp)
+        {
+            <button type="submit" class="mat-btn mat-btn--secondary" formnovalidate formaction="?handler=ResetTotp" data-confirm="Turn off two-step verification for this account? The person can set it up again." data-confirm-ok="Turn it off">@Ui.Icon("shield")<span>Reset two-step</span></button>
+        }
+
+        @if (!Model.IsNew)
+        {
+            <button type="submit" class="mat-btn mat-btn--secondary" formnovalidate formaction="?handler=Unlock">@Ui.Icon("unlock")<span>Unlock</span></button>
+            <button type="submit" class="mat-btn mat-btn--secondary" formnovalidate formaction="?handler=SignOut" data-confirm="Sign this account out of every device?" data-confirm-ok="Sign out">@Ui.Icon("logout")<span>Sign out everywhere</span></button>
+        }
+    </mn-buttons>
+</form>

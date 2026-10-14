@@ -1,0 +1,76 @@
+@page "/"
+@model MatNote.Pages.IndexModel
+@inject Clock Clock
+@inject CurrentUser Me
+@{
+    ViewData["PageSub"] = $"Welcome back, {Me.DisplayName}.";
+}
+
+<div class="mn-stats">
+    <a class="mn-stat" href="/Notes"><span class="mn-stat__value">@Model.Counts.Notes</span><span class="mn-stat__label">Notes</span></a>
+    <a class="mn-stat" href="/Folders"><span class="mn-stat__value">@Model.Folders</span><span class="mn-stat__label">Folders</span></a>
+    <a class="mn-stat" href="/Tags"><span class="mn-stat__value">@Model.Counts.Tags</span><span class="mn-stat__label">Tags</span></a>
+    <a class="mn-stat" href="/Shares"><span class="mn-stat__value">@Model.Counts.SharedWithMe</span><span class="mn-stat__label">Shared with you</span></a>
+</div>
+
+<div class="mat-cols">
+    <div class="mat-col-12 mat-col-lg-7">
+        <div class="mat-card mat-card--flush">
+            <div class="mat-card__head">@Ui.Icon("clock")<span class="mat-card__title">Recently changed</span></div>
+            @if (Model.Recent.Count == 0)
+            {
+                <div class="mat-card__body">
+                    <div class="mat-empty">
+                        <span class="mat-empty__icon">@Ui.Icon("file-text")</span>
+                        <div class="mat-empty__title">No notes yet</div>
+                        <p>Write your first note, paste a prompt, or upload a document.</p>
+                        <a class="mat-btn mat-btn--primary" href="/Notes/Edit">@Ui.Icon("file-plus")<span>New note</span></a>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <ul class="mat-itemlist mat-itemlist--lines-inset">
+                    @foreach (var n in Model.Recent)
+                    {
+                        <li class="mat-item">
+                            <a class="mat-item__main" href="/Notes/View?id=@n.Id">
+                                <span class="mat-item__lead">@Ui.Icon(Ui.TypeIcon(n.Type))</span>
+                                <span class="mat-item__body"><span class="mat-item__title">@n.Title</span><span class="mat-item__text">@Ui.TypeName(n.Type)@(n.Own ? "" : " · shared by " + n.OwnerName)</span></span>
+                                <span class="mat-item__end mat-mono">@Clock.FormatDate(n.Updated)</span>
+                            </a>
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+    </div>
+    <div class="mat-col-12 mat-col-lg-5">
+        <div class="mat-card mat-card--flush">
+            <div class="mat-card__head">@Ui.Icon("star")<span class="mat-card__title">Favorites</span></div>
+            @if (Model.Favorites.Count == 0)
+            {
+                <div class="mat-card__body mn-pad"><p class="mat-muted">Star a note and it appears here, one click away. A good place for the prompts you use every day.</p></div>
+            }
+            else
+            {
+                <ul class="mat-itemlist mat-itemlist--lines-inset">
+                    @foreach (var n in Model.Favorites)
+                    {
+                        <li class="mat-item">
+                            <a class="mat-item__main" href="/Notes/View?id=@n.Id">
+                                <span class="mat-item__lead">@Ui.Icon(Ui.TypeIcon(n.Type))</span>
+                                <span class="mat-item__body"><span class="mat-item__title">@n.Title</span></span>
+                            </a>
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="mat-actions">
+    <a class="mat-btn mat-btn--primary" href="/Notes/Edit">@Ui.Icon("file-plus")<span>New note</span></a>
+    <a class="mat-btn mat-btn--secondary" href="/Folders/Edit">@Ui.Icon("folder-plus")<span>New folder</span></a>
+</div>

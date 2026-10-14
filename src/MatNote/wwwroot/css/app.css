@@ -35,6 +35,9 @@
 .mn-star .mat-icon { fill: currentColor; }
 .mn-tags { display: flex; flex-wrap: wrap; gap: var(--mat-space-1); }
 .mn-subfolders { display: flex; flex-wrap: wrap; gap: var(--mat-space-2); }
+.mat-list > .mn-subfolders { order: 1; }
+/* a destructive action in a row of actions stands apart from the others (LIST-08) */
+.mn-sep { margin-left: var(--mat-space-3); }
 .mn-meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--mat-space-2) var(--mat-space-4); color: var(--mat-text-muted); font-size: var(--mat-fs-sm); }
 .mn-meta .mat-icon { vertical-align: -3px; }
 
@@ -68,15 +71,22 @@
 .mn-editor__bar { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; padding: var(--mat-space-1) var(--mat-space-2); border-bottom: 1px solid var(--mat-border); background: var(--mat-surface-2); }
 .mn-editor__bar .mat-btn.is-on { background: var(--mat-accent-soft-strong); color: var(--mat-accent-text); }
 .mn-editor__sep { width: 1px; align-self: stretch; margin: 4px var(--mat-space-1); background: var(--mat-border); }
+.mn-editor__area.mn-doc { max-width: none; }
 .mn-editor__area { min-height: 18rem; padding: var(--mat-space-4); outline: none; }
 .mn-editor__area:empty::before { content: attr(data-placeholder); color: var(--mat-text-faint); }
 .mn-editor__source { display: none; }
 .mn-source { width: 100%; min-height: 18rem; font-family: var(--mat-font-mono); }
 
+.mn-lookup__list { list-style: none; margin: var(--mat-space-2) 0 0; padding: 0; max-height: 50vh; overflow: auto; display: grid; gap: 2px; }
+.mn-lookup__list .mat-menu__item { width: 100%; }
+.mn-lookup__none { padding: var(--mat-space-3); }
+
 /* ---- Sharing ------------------------------------------------------------------------------------------------------ */
 .mn-linkbox { display: flex; gap: var(--mat-space-2); align-items: center; }
 .mn-linkbox .mat-input { flex: 1 1 auto; min-width: 0; }
 .mn-public { max-width: 60rem; margin: 0 auto; padding: var(--mat-space-6) var(--mat-space-4); display: grid; gap: var(--mat-space-4); }
+.mn-grow { flex: 1 1 auto; }
+.mn-public .mat-footer { padding-inline: 0; }
 .mn-public__head { display: flex; align-items: center; gap: var(--mat-space-3); }
 
 /* ---- Home --------------------------------------------------------------------------------------------------------- */
@@ -91,3 +101,4 @@ a.mn-stat:hover { border-color: var(--mat-border-strong); }
 
 /* [hidden] must win over any display set above */
 .mn-editor__source[hidden], .mn-editor__area[hidden] { display: none; }
+.mn-pad { padding: var(--mat-space-4); }

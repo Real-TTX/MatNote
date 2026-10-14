@@ -1,0 +1,57 @@
+@page "/Folders"
+@model MatNote.Pages.Folders.IndexModel
+@inject Clock Clock
+@{
+    ViewData["Title"] = "Folders";
+    ViewData["PageSub"] = "Where your notes live. Folders can hold folders.";
+    ViewData["ActiveNav"] = "folders";
+}
+
+<div class="mat-list">
+    <partial name="_Toolbar" model="Model.Toolbar" />
+
+    @if (Model.Items.Count == 0)
+    {
+        <div class="mat-empty">
+            <span class="mat-empty__icon">@Ui.Icon("folder")</span>
+            <div class="mat-empty__title">@(Model.Toolbar.SearchActive ? "No folder matches" : "No folders yet")</div>
+            <p>@(Model.Toolbar.SearchActive ? "Change the search or reset it." : "Make a folder for a topic, a project or a collection of prompts.")</p>
+            @if (Model.Toolbar.SearchActive)
+            {
+                <a class="mat-btn mat-btn--secondary" href="/Folders">@Ui.Icon("refresh")<span>Reset the search</span></a>
+            }
+        </div>
+    }
+    else
+    {
+        <mn-table caption="Folders">
+            <thead>
+                <tr><th scope="col">Folder</th><th scope="col" class="mat-num">Notes</th><th scope="col" class="mat-num mat-hide-sm">Subfolders</th><th scope="col" class="mat-hide-sm">Sharing</th><th scope="col" class="mat-hide-md">Last changed</th><th scope="col"><span class="mat-sr-only">Actions</span></th></tr>
+            </thead>
+            <tbody>
+                @foreach (var f in Model.Items)
+                {
+                    <tr>
+                        <td data-label="Folder"><div class="mat-table__name">@Ui.Icon("folder", colour: f.Color)<span><a href="/Notes?folder=@f.Id">@f.Name</a>@if (f.Depth > 0) { <small>@f.Path</small> }</span></div></td>
+                        <td data-label="Notes" class="mat-num mat-mono">@f.Notes</td>
+                        <td data-label="Subfolders" class="mat-num mat-mono mat-hide-sm">@f.Subfolders</td>
+                        <td data-label="Sharing" class="mat-hide-sm">@if (f.Shared) { <span class="mat-pill mat-pill--info">Shared</span> } else { <span class="mat-muted">Private</span> }</td>
+                        <td data-label="Last changed" class="mat-mono mat-hide-md">@Clock.Format(f.Updated)</td>
+                        <td class="mat-table__cell-actions">
+                            <div class="mat-table__actions">
+                                <a class="mat-btn mat-btn--ghost mat-btn--icon mat-btn--sm" href="/Notes?folder=@f.Id" aria-label="Open @f.Name" data-tip="Open">@Ui.Icon("file-text")</a>
+                                <a class="mat-btn mat-btn--ghost mat-btn--icon mat-btn--sm" href="/Folders/Edit?id=@f.Id" aria-label="Edit @f.Name" data-tip="Edit">@Ui.Icon("edit")</a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </mn-table>
+    }
+
+    <partial name="_Pager" model="Model.Pager" />
+
+    <div class="mat-actions">
+        <a class="mat-btn mat-btn--primary" href="/Folders/Edit">@Ui.Icon("folder-plus")<span>New folder</span></a>
+    </div>
+</div>

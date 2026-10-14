@@ -1,0 +1,17 @@
+@page "/Error"
+@model MatNote.Pages.ErrorModel
+@{
+    Layout = "_LayoutAuth";
+    ViewData["Title"] = Model.Heading;
+}
+
+<div class="mat-auth__card">
+    <div class="mat-auth__brand">
+        @Ui.Logo("lg")
+        <h1>@Model.Heading</h1>
+        <p class="mat-muted">@Model.Text</p>
+    </div>
+    <div class="mat-btn-row mat-btn-row--plain">
+        <a class="mat-btn mat-btn--secondary mat-btn--block" href="/">@Ui.Icon("home")<span>Back to the start</span></a>
+    </div>
+</div>

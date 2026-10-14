@@ -1,0 +1,23 @@
+@page "/Folders/Export"
+@model MatNote.Pages.Folders.ExportModel
+@{
+    ViewData["Width"] = "narrow";
+    ViewData["PageSub"] = $"{Model.NoteCount} {(Model.NoteCount == 1 ? "note" : "notes")} in “{Model.FolderName}” and its subfolders, as one zip.";
+}
+
+<form class="mat-form" method="post" novalidate>
+    <input type="hidden" name="Id" value="@Model.Id" />
+    <div class="mat-card">
+        <div class="mat-card__head">@Ui.Icon("upload")<span class="mat-card__title">Export</span></div>
+        <div class="mat-card__body">
+            <div class="mat-form__grid">
+                <mn-field name="Format" kind="select" label="Format of the notes" full value="@Model.Format.ToString()" options="Model.FormatChoices" hint="Files (Word, Excel, PDF ...) are added as they are." />
+                <mn-field name="Linked" kind="switch" label="Copy linked notes into the notes that link to them" full value="@Model.Linked.ToString()" />
+            </div>
+        </div>
+    </div>
+    <div class="mat-btn-row">
+        <button type="submit" class="mat-btn mat-btn--primary">@Ui.Icon("download")<span>Export</span></button>
+        <a class="mat-btn mat-btn--secondary" href="/Notes?folder=@Model.Id">@Ui.Icon("back")<span>Back</span></a>
+    </div>
+</form>

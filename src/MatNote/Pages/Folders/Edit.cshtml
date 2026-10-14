@@ -1,0 +1,30 @@
+@page "/Folders/Edit"
+@model MatNote.Pages.Folders.EditModel
+@{
+    ViewData["Width"] = "narrow";
+    var deleteText = Model.NoteCount > 0 || Model.SubfolderCount > 0
+        ? $"Delete this folder with its {Model.SubfolderCount} subfolders and {Model.NoteCount} notes? The notes go to the trash, where you can restore them."
+        : "Delete this folder?";
+}
+
+<form class="mat-form" method="post" novalidate>
+    <input type="hidden" name="Id" value="@Model.Id" />
+    <partial name="_FormSummary" model="ViewData.ModelState" />
+    <div class="mat-card">
+        <div class="mat-card__head">@Ui.Icon("folder")<span class="mat-card__title">Folder</span></div>
+        <div class="mat-card__body">
+            <div class="mat-form__grid">
+                <mn-field name="Name" label="Name" required full value="@Model.Name" maxlength="120" autofocus msg-required="Please enter a name." />
+                <mn-field name="Parent" kind="picker" label="Inside" optional full value="@Model.Parent" options="Model.ParentChoices" placeholder="No folder (top level)" picker="search clearable" hint="Leave it empty for a folder of its own." />
+                <mn-field name="Color" kind="colour" label="Colour" optional full value="@Model.Color" placeholder="No colour" picker="clearable" hint="A mark next to the name in the menu." />
+            </div>
+        </div>
+    </div>
+    <mn-buttons save="Save folder" back="/Folders" delete-handler="@(Model.IsNew ? null : "Delete")" delete-label="Delete folder" delete-confirm="@deleteText">
+        @if (!Model.IsNew)
+        {
+            <a class="mat-btn mat-btn--secondary" href="/Shares/Edit?folderId=@Model.Id">@Ui.Icon("share")<span>Share</span></a>
+            <a class="mat-btn mat-btn--secondary" href="/Folders/Export?id=@Model.Id">@Ui.Icon("download")<span>Export as zip</span></a>
+        }
+    </mn-buttons>
+</form>

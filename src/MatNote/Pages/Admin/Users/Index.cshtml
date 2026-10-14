@@ -1,0 +1,49 @@
+@page "/Admin/Users"
+@model MatNote.Pages.Admin.Users.IndexModel
+@inject Clock Clock
+@{
+    ViewData["Title"] = "Users";
+    ViewData["PageSub"] = "Who can sign in. Notes stay private: administrators see how many a person has, never what is in them.";
+}
+
+<div class="mat-list">
+    <partial name="_Toolbar" model="Model.Toolbar" />
+
+    @if (Model.Items.Count == 0)
+    {
+        <div class="mat-empty">
+            <span class="mat-empty__icon">@Ui.Icon("search")</span>
+            <div class="mat-empty__title">No user matches</div>
+            <p>Change the search or the filters, or reset them.</p>
+            <a class="mat-btn mat-btn--secondary" href="@Model.Toolbar.UrlReset()">@Ui.Icon("refresh")<span>Reset the tools</span></a>
+        </div>
+    }
+    else
+    {
+        <mn-table caption="Users">
+            <thead>
+                <tr><th scope="col">User</th><th scope="col">Role</th><th scope="col">Status</th><th scope="col" class="mat-hide-md">Two-step</th><th scope="col" class="mat-hide-md">Last sign-in</th><th scope="col" class="mat-num mat-hide-sm">Notes</th><th scope="col"><span class="mat-sr-only">Actions</span></th></tr>
+            </thead>
+            <tbody>
+                @foreach (var u in Model.Items)
+                {
+                    <tr>
+                        <td data-label="User"><div class="mat-table__name"><span class="mat-avatar mat-avatar--sm" aria-hidden="true">@Ui.Initials(u.DisplayName)</span><span><a href="/Admin/Users/Edit?id=@u.Id">@u.DisplayName</a><small class="mat-mono">@u.Username</small></span></div></td>
+                        <td data-label="Role"><span class="mat-pill @(u.Role == UserRole.Admin ? "mat-pill--accent" : "mat-pill--plain")">@(u.Role == UserRole.Admin ? "Administrator" : "User")</span></td>
+                        <td data-label="Status">@if (!u.IsActive) { <span class="mat-pill mat-pill--error">Disabled</span> } else if (u.Locked) { <span class="mat-pill mat-pill--warn">Locked</span> } else { <span class="mat-pill mat-pill--ok">Active</span> }</td>
+                        <td data-label="Two-step" class="mat-hide-md">@if (u.Totp) { <span class="mat-pill mat-pill--ok">On</span> } else { <span class="mat-muted">Off</span> }</td>
+                        <td data-label="Last sign-in" class="mat-mono mat-hide-md">@(u.LastLogin is null ? "Never" : Clock.Format(u.LastLogin))</td>
+                        <td data-label="Notes" class="mat-num mat-mono mat-hide-sm">@u.Notes</td>
+                        <td class="mat-table__cell-actions"><div class="mat-table__actions"><a class="mat-btn mat-btn--ghost mat-btn--icon mat-btn--sm" href="/Admin/Users/Edit?id=@u.Id" aria-label="Edit @u.DisplayName" data-tip="Edit">@Ui.Icon("edit")</a></div></td>
+                    </tr>
+                }
+            </tbody>
+        </mn-table>
+    }
+
+    <partial name="_Pager" model="Model.Pager" />
+
+    <div class="mat-actions">
+        <a class="mat-btn mat-btn--primary" href="/Admin/Users/Edit">@Ui.Icon("plus")<span>New user</span></a>
+    </div>
+</div>

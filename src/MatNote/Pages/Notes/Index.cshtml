@@ -1,0 +1,99 @@
+@page "/Notes"
+@model MatNote.Pages.Notes.IndexModel
+@inject Clock Clock
+@{
+    ViewData["Title"] = Model.Heading;
+    ViewData["PageSub"] = Model.Subtitle;
+    var newNote = Model.FolderId is { } f && Model.CanAddHere ? $"/Notes/Edit?folder={f}" : "/Notes/Edit";
+}
+
+<div class="mat-list">
+    <partial name="_Toolbar" model="Model.Toolbar" />
+
+    @if (Model.Subfolders.Count > 0)
+    {
+        <div class="mn-subfolders" role="group" aria-label="Subfolders">
+            @foreach (var sub in Model.Subfolders)
+            {
+                <a class="mat-btn mat-btn--secondary mat-btn--sm" href="/Notes?folder=@sub.Id">@Ui.Icon("folder", colour: sub.Color)<span>@sub.Name</span></a>
+            }
+        </div>
+    }
+
+    @if (Model.Items.Count == 0)
+    {
+        <div class="mat-empty">
+            <span class="mat-empty__icon">@Ui.Icon(Model.Toolbar.SearchActive || Model.Toolbar.ActiveFilters > 0 ? "search" : "file-text")</span>
+            @if (Model.Toolbar.SearchActive || Model.Toolbar.ActiveFilters > 0)
+            {
+                <div class="mat-empty__title">No note matches</div>
+                <p>Change the search or the filters, or reset them.</p>
+                <a class="mat-btn mat-btn--secondary" href="@Model.Toolbar.UrlReset()">@Ui.Icon("refresh")<span>Reset the tools</span></a>
+            }
+            else if (Model.IsFavorites)
+            {
+                <div class="mat-empty__title">No favorites yet</div>
+                <p>Open a note and press the star to keep it close.</p>
+            }
+            else
+            {
+                <div class="mat-empty__title">Nothing here yet</div>
+                <p>Write a note, paste a prompt, or upload a document.</p>
+            }
+        </div>
+    }
+    else
+    {
+        <mn-table caption="Notes">
+            <thead>
+                <tr><th scope="col">Note</th><th scope="col" class="mat-hide-md">Folder</th><th scope="col" class="mat-hide-sm">Type</th><th scope="col">Changed</th><th scope="col"><span class="mat-sr-only">Actions</span></th></tr>
+            </thead>
+            <tbody>
+                @foreach (var n in Model.Items)
+                {
+                    <tr>
+                        <td data-label="Note">
+                            <div class="mat-table__name">
+                                @Ui.Icon(Ui.TypeIcon(n.Type))
+                                <span>
+                                    <span class="mn-note-title"><a href="/Notes/View?id=@n.Id">@n.Title</a>@if (n.Favorite) { <span class="mn-star" title="Favorite">@Ui.Icon("star")<span class="mat-sr-only">Favorite</span></span> }</span>
+                                    @if (!n.Own) { <small>Shared by @n.OwnerName</small> }
+                                    else if (n.Tags.Count > 0)
+                                    {
+                                        <span class="mn-tags">@foreach (var t in n.Tags) { <span class="mat-tag" data-colour="@t.Color">@t.Name</span> }</span>
+                                    }
+                                </span>
+                            </div>
+                        </td>
+                        <td data-label="Folder" class="mat-hide-md">@n.FolderName</td>
+                        <td data-label="Type" class="mat-hide-sm"><span class="mat-pill mat-pill--plain">@Ui.TypeName(n.Type)</span>@if (n.FileSize > 0) { <small class="mat-muted"> @Ui.Size(n.FileSize)</small> }</td>
+                        <td data-label="Changed" class="mat-mono">@Clock.Format(n.Updated)</td>
+                        <td class="mat-table__cell-actions">
+                            <div class="mat-table__actions">
+                                <a class="mat-btn mat-btn--ghost mat-btn--icon mat-btn--sm" href="/Notes/View?id=@n.Id" aria-label="Open @n.Title" data-tip="Open">@Ui.Icon("eye")</a>
+                                @if (n.Own)
+                                {
+                                    <a class="mat-btn mat-btn--ghost mat-btn--icon mat-btn--sm" href="/Notes/Edit?id=@n.Id" aria-label="Edit @n.Title" data-tip="Edit">@Ui.Icon("edit")</a>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </mn-table>
+    }
+
+    <partial name="_Pager" model="Model.Pager" />
+
+    <div class="mat-actions">
+        @if (Model.CanAddHere)
+        {
+            <a class="mat-btn mat-btn--primary" href="@newNote">@Ui.Icon("file-plus")<span>New note</span></a>
+        }
+        @if (Model.OwnFolder)
+        {
+            <a class="mat-btn mat-btn--secondary" href="/Folders/Edit?parent=@Model.FolderId">@Ui.Icon("folder-plus")<span>New subfolder</span></a>
+            <a class="mat-btn mat-btn--secondary" href="/Folders/Edit?id=@Model.FolderId">@Ui.Icon("edit")<span>Edit folder</span></a>
+        }
+    </div>
+</div>

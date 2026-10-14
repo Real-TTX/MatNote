@@ -1,0 +1,56 @@
+@page "/Admin/System"
+@model MatNote.Pages.Admin.System.IndexModel
+@inject Clock Clock
+@{
+    ViewData["Title"] = "System";
+    ViewData["PageSub"] = "The state of the app and its settings.";
+    ViewData["Width"] = "narrow";
+}
+
+<div class="mat-card">
+    <div class="mat-card__head">@Ui.Icon("server")<span class="mat-card__title">State</span>@if (Model.DatabaseOk) { <span class="mat-pill mat-pill--ok">Database connected</span> } else { <span class="mat-pill mat-pill--error">Database not reachable</span> }</div>
+    <div class="mat-card__body">
+        <dl class="mat-kv">
+            <dt>Version</dt><dd class="mat-mono">@Model.Version</dd>
+            <dt>Runtime</dt><dd>@Model.Runtime</dd>
+            <dt>System</dt><dd>@Model.System</dd>
+            <dt>Running for</dt><dd>@($"{(int)Model.Uptime.TotalDays}d {Model.Uptime.Hours}h {Model.Uptime.Minutes}m")</dd>
+            <dt>Time zone of the container</dt><dd class="mat-mono">@Model.ZoneInUse</dd>
+            <dt>Database</dt><dd>@(Model.DatabaseVersion ?? "-")@(Model.DatabaseSize is null ? "" : " · " + Model.DatabaseSize)</dd>
+            <dt>Data folder</dt><dd class="mn-path">@Model.DataDir</dd>
+            <dt>Users, notes, files</dt><dd>@Model.Users users · @Model.NoteCount notes · @Ui.Size(Model.FileBytes) of files</dd>
+            <dt>Last backup</dt>
+            <dd>
+                @if (Model.LastBackup is { } b)
+                {
+                    <span class="mat-pill @(b.Status == BackupStatus.Succeeded ? "mat-pill--ok" : b.Status == BackupStatus.Failed ? "mat-pill--error" : "mat-pill--busy")">@b.Status</span> <span class="mat-mono">@Clock.Format(b.StartDate)</span>
+                }
+                else
+                {
+                    <span class="mat-muted">No backup yet.</span>
+                }
+                <a href="/Admin/Backups">Backups</a>
+            </dd>
+        </dl>
+    </div>
+</div>
+
+<form class="mat-form" method="post" novalidate>
+    <partial name="_FormSummary" model="ViewData.ModelState" />
+    <div class="mat-card">
+        <div class="mat-card__head">@Ui.Icon("settings")<span class="mat-card__title">Settings</span></div>
+        <div class="mat-card__body">
+            <div class="mat-form__grid">
+                <mn-field name="AllowRegistration" kind="switch" label="People can create an account themselves" full value="@Model.AllowRegistration.ToString()" hint="Off: only administrators create accounts." />
+                <mn-field name="SessionDays" kind="number" label="Stay signed in for (days)" required min="1" max="365" value="@Model.SessionDays.ToString()" hint="For people who choose “Stay signed in”." />
+                <mn-field name="MaxUploadMb" kind="number" label="Largest file (MB)" required min="1" max="500" value="@Model.MaxUploadMb.ToString()" />
+                <mn-field name="TrashDays" kind="number" label="Keep deleted notes (days)" required min="1" max="3650" value="@Model.TrashDays.ToString()" hint="Then they are removed for good." />
+                <mn-field name="TimeZone" label="Time zone" optional value="@Model.TimeZone" placeholder="@Model.ZoneInUse" hint="For dates and for the backup schedules, for example Europe/Berlin. Empty: the zone of the container." />
+                <mn-field name="PublicBaseUrl" kind="url" label="Public address" optional full value="@Model.PublicBaseUrl" placeholder="https://notes.example.com" hint="The address of shared links. Empty: the address of the page on which the link is made." />
+            </div>
+        </div>
+    </div>
+    <mn-buttons save="Save settings">
+        <button type="submit" class="mat-btn mat-btn--secondary" formnovalidate formaction="?handler=Housekeeping">@Ui.Icon("broom")<span>Run the housekeeping</span></button>
+    </mn-buttons>
+</form>

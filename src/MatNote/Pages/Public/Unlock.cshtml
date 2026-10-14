@@ -1,0 +1,28 @@
+@page "/s/{token}/unlock"
+@model MatNote.Pages.Public.UnlockModel
+@{
+    Layout = "_LayoutPublic";
+    ViewData["Title"] = "Password needed";
+    ViewData["OwnHead"] = true;
+}
+
+<div class="mat-card">
+    <div class="mat-card__head">@Ui.Icon("lock")<span class="mat-card__title">This link is protected</span></div>
+    <div class="mat-card__body">
+        <form class="mat-form" method="post" novalidate>
+            @if (Model.Error is not null)
+            {
+                <div class="mat-alert mat-alert--danger" role="alert">@Ui.Icon("x-circle")<div class="mat-alert__body">@Model.Error</div></div>
+            }
+            <div class="mat-field">
+                <label class="mat-label" for="Password">Password <span class="mat-req" aria-hidden="true">*</span></label>
+                <input class="mat-input" type="password" id="Password" name="Password" required autofocus autocomplete="off" data-msg-required="Please enter the password." />
+                <span class="mat-error" aria-live="polite"></span>
+                <span class="mat-hint">The person who sent you the link can tell you the password.</span>
+            </div>
+            <div class="mat-btn-row">
+                <button type="submit" class="mat-btn mat-btn--primary">@Ui.Icon("unlock")<span>Open</span></button>
+            </div>
+        </form>
+    </div>
+</div>
