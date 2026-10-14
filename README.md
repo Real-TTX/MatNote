@@ -13,6 +13,15 @@ sharing with one person or by link, two-step verification, and backups straight 
 
 ---
 
+## A look
+
+| | |
+|---|---|
+| ![A note with a link to another note](docs/images/note.png) | ![The editor](docs/images/editor.png) |
+| ![Export a note](docs/images/export.png) | ![Share with one user or by link](docs/images/share.png) |
+| ![Two-step verification](docs/images/totp.png) | ![Backups](docs/images/backups.png) |
+| ![Dark mode](docs/images/note-dark.png) | ![On a phone](docs/images/phone-menu.png) |
+
 ## What it is
 
 MatNotes is a small multi-user notes app for your own server. It is made for things you want to find again and sometimes
