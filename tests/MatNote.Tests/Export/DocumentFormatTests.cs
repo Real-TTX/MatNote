@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.RegularExpressions;
+using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using MatNote.Data;
@@ -260,6 +261,25 @@ public class DocumentFormatTests
         Assert.Equal("<p>Hall\u00F6chen \"quoted\"</p>", root.GetProperty("content").GetString());
         Assert.StartsWith("2026-01-02T03:04:05", root.GetProperty("created").GetString());
         Assert.StartsWith("2026-02-03T04:05:06", root.GetProperty("updated").GetString());
-        Assert.Contains("Hall\u00F6chen", Kit.Utf8(r)); // not \u00f6 escaped
+        Assert.Contains("Hall\u00f6chen", Kit.Utf8(r)); // not \u00f6 escaped
+    }
+}
+
+/// <summary>Proof that the validator used above is not vacuous: it does reject a broken document.</summary>
+public class ValidatorControlTests
+{
+    [Fact]
+    public void The_validator_reports_a_document_with_misordered_properties()
+    {
+        using var ms = new MemoryStream();
+        using (var doc = WordprocessingDocument.Create(ms, WordprocessingDocumentType.Document))
+        {
+            var main = doc.AddMainDocumentPart();
+            main.Document = new Document(new Body(new Paragraph(new Run(
+                new RunProperties(new Underline { Val = UnderlineValues.Single }, new Bold()), // wrong order: the schema wants b before u
+                new Text("x")))));
+        }
+
+        Assert.NotEmpty(Kit.Validate(ms.ToArray()));
     }
 }

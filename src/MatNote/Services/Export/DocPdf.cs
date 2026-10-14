@@ -20,16 +20,23 @@ internal static class DocPdf
         QuestPDF.Settings.CheckIfAllTextGlyphsAreAvailable = false;
     }
 
+    // QuestPDF shares its font and glyph caches between documents; two documents made at the same moment produce broken text (missing characters in the
+    // extracted text), so one document is made at a time. A PDF takes milliseconds.
+    private static readonly object Gate = new();
+
     public static byte[] Render(Doc doc)
     {
-        try
+        lock (Gate)
         {
-            return Create(doc, Content).GeneratePdf();
-        }
-        catch (DocumentLayoutException)
-        {
-            // a layout that cannot be paged (e.g. an absurdly tall table row): fall back to the plain text, which always fits
-            return Create(doc, (d, col) => col.Item().Text(DocText.Render(d)).FontFamily(Mono).FontSize(9.5f)).GeneratePdf();
+            try
+            {
+                return Create(doc, Content).GeneratePdf();
+            }
+            catch (DocumentLayoutException)
+            {
+                // a layout that cannot be paged (e.g. an absurdly tall table row): fall back to the plain text, which always fits
+                return Create(doc, (d, col) => col.Item().Text(DocText.Render(d)).FontFamily(Mono).FontSize(9.5f)).GeneratePdf();
+            }
         }
     }
 

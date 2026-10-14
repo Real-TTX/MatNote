@@ -65,19 +65,21 @@ public sealed partial class NotePreview(INoteFileStore store) : INotePreview
         var document = new HtmlParser().ParseDocument("<body>" + sanitized);
         foreach (var a in document.QuerySelectorAll("a[data-note-id]"))
         {
-            var url = long.TryParse(a.GetAttribute("data-note-id"), out var id) ? SafeUrl(noteUrl, id) : null;
-            if (url is null)
+            var noteId = a.GetAttribute("data-note-id") ?? string.Empty;
+            var url = long.TryParse(noteId, out var id) ? SafeUrl(noteUrl, id) : null;
+
+            // one fixed order of the attributes, whatever the author or the markdown renderer wrote
+            foreach (var name in new[] { "class", "data-note-id", "href", "rel", "target" })
             {
-                a.RemoveAttribute("href");
-            }
-            else
-            {
-                a.SetAttribute("href", url);
+                a.RemoveAttribute(name);
             }
 
             a.SetAttribute("class", NoteSanitizer.NoteLinkClass);
-            a.RemoveAttribute("rel");
-            a.RemoveAttribute("target");
+            a.SetAttribute("data-note-id", noteId);
+            if (url is not null)
+            {
+                a.SetAttribute("href", url);
+            }
         }
 
         return document.Body!.InnerHtml;

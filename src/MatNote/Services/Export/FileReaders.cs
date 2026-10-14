@@ -174,7 +174,7 @@ internal static class DocxReader
                         if (link.Id?.Value is { } rid)
                         {
                             var rel = main.HyperlinkRelationships.FirstOrDefault(r => r.Id == rid);
-                            target = rel?.Uri.ToString();
+                            target = rel?.Uri.OriginalString;
                         }
 
                         result.AddRange(RunsOf(link, target));

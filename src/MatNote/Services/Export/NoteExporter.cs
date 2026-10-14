@@ -129,7 +129,7 @@ public sealed class NoteExporter(INoteFileStore store) : INoteExporter
             case (NoteType.Xlsx, ExportFormat.Csv):
             {
                 var sheet = XlsxReader.Read(data, SheetRows, SheetColumns, display: false, firstOnly: true).FirstOrDefault() ?? new SheetData(string.Empty, [], false);
-                var bytes = Utf8.GetPreamble().Concat(Utf8.GetBytes(XlsxReader.ToCsv(sheet))).ToArray();
+                var bytes = new byte[] { 0xEF, 0xBB, 0xBF }.Concat(Utf8.GetBytes(XlsxReader.ToCsv(sheet))).ToArray();
                 return new ExportResult(bytes, FileNames.WithExtension(title, ".csv"), "text/csv; charset=utf-8");
             }
 
