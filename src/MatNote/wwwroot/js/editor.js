@@ -100,6 +100,7 @@
       if (b.action === 'link') { askLink(); return; }
       if (b.action === 'note-link') { openNoteDialog(area); return; }
       area.focus();
+      try { doc.execCommand('styleWithCSS', false, false); } catch (e) { /* ignore */ }
       if (b.cmd === 'formatBlock') {
         var current = doc.queryCommandValue('formatBlock').toLowerCase().replace(/[<>]/g, '');
         doc.execCommand('formatBlock', false, current === b.arg ? 'p' : b.arg);
