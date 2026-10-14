@@ -21,7 +21,7 @@ public sealed class RunsModel(AppDbContext db) : AppPageModel
         var statusText = ListQuery.Text(Request, "status");
         var trigger = ListQuery.Text(Request, "trigger");
         var sort = ListQuery.Text(Request, "sort") ?? "start";
-        var descending = ListQuery.Text(Request, "sort") is null || ListQuery.Descending(Request);
+        var descending = ListQuery.Descending(Request, byDefault: true);
 
         var runs = db.BackupRuns.AsNoTracking();
         var total = await runs.CountAsync();
@@ -77,6 +77,7 @@ public sealed class RunsModel(AppDbContext db) : AppPageModel
             Sort = sort,
             Descending = descending,
             DefaultSort = "start",
+            DefaultDescending = true,
             SortOptions = [new("start", "Started"), new("schedule", "Schedule"), new("size", "Size")],
             Filters =
             [

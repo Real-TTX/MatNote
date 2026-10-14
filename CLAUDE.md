@@ -39,13 +39,15 @@ src/MatNote
   Services/Config/           AppPaths (/data/config, keys, tmp), ConfigStore<T> (one JSON file), AppConfig + SecretProtector + Clock
   Services/Auth/             CurrentUser, PasswordService, TotpService (RFC 6238 + recovery codes + QR), SessionService (sessions in the DB, cookie carries the token), LoginService, UserService
   Services/AccessService.cs  who may see/change what (owner, shared read/edit, link shares), FolderTree
-  Services/Export/           contracts of the exporter/preview (Contracts.cs) and their implementation
+  Services/Export/           contracts of the exporter/preview (Contracts.cs) and their implementation: every text note is read once into a small document model (Doc*.cs) and written to txt, md, html, rtf, docx, pdf;
+                             links to other notes are inlined on that model (only through the NoteResolver: never a note the person may not read); NotePreview = sanitizer (HtmlSanitizer), RenderText, Docx/Xlsx previews, search text;
+                             INoteFileStore reads file bytes and tag names; PDF generation is serialized by a lock (QuestPDF breaks when two run at once); registered by AddExport()
   Services/Backup/           backups: BackupConfig (config/backup.json: targets, schedules), IBackupTarget (FolderTarget, SmbTarget over SMBLibrary), Retention (pure), ScheduleCalculator (friendly fields -> cron,
                              next run), BackupArchive (zip: manifest.json, database.dump, config/, keys/), BackupService (one gate for backups AND restore), BackupScheduler (30 s loop), RestoreService
                              (pg_restore --single-transaction); registered by BackupRegistration.AddBackup(); pages in Pages/Admin/Backups (Backups, Runs, Schedules/, Targets/, Restore)
   Services/                  Ui (icons, logo, helpers), MenuService (folder tree of the menu), Assets (sprites, hash), ListModels (toolbar, pager), Features.cs (DI registration)
   Controls/                  ONE code base per control: <mn-field>, <mn-buttons>, <mn-table>, <mn-tabs>/<mn-tab>; partials _Toolbar, _Pager, _FormSummary in Pages/Shared
-  Pages/                     Razor Pages: Account/ (sign-in, TOTP step, setup, account, security), Notes/, Folders/, Tags/, Shares/, Trash/, Public/ (link shares, anonymous), Admin/ (users, backups, system)
+  Pages/                     Razor Pages: Account/ (sign-in, TOTP step, setup, account, security), Notes/, Folders/, Tags/, Shares/, Trash/, Public/ (link shares, anonymous), Admin/ (Users/, Backups/, Settings/ = the System page; the folder is not called System because the namespace would hide System.*)
   wwwroot/matui/             the toolkit (copied from MatDesign: never edit by hand, update by copying again)
   wwwroot/css/app.css        the accent (orange) and the few app-only styles (prefix mn-);  wwwroot/js/app.js, editor.js: the few app-only behaviours
 tests/MatNote.Tests          unit tests

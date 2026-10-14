@@ -45,7 +45,7 @@ public sealed class IndexModel(AppDbContext db, ConfigStore<BackupConfig> config
         var scheduleFilter = ListQuery.Text(Request, "schedule");
         var targetFilter = ListQuery.Text(Request, "target");
         var sort = ListQuery.Text(Request, "sort") ?? "created";
-        var descending = ListQuery.Text(Request, "sort") is null || ListQuery.Descending(Request);
+        var descending = ListQuery.Descending(Request, byDefault: true);
 
         var (all, errors) = await ListAllAsync();
         var rows = all.AsEnumerable();
@@ -100,6 +100,7 @@ public sealed class IndexModel(AppDbContext db, ConfigStore<BackupConfig> config
             Sort = sort,
             Descending = descending,
             DefaultSort = "created",
+            DefaultDescending = true,
             SortOptions = [new("created", "Created"), new("size", "Size"), new("schedule", "Schedule"), new("target", "Target")],
             Filters =
             [
