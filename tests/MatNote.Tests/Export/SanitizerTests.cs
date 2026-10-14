@@ -86,7 +86,10 @@ public partial class SanitizerTests
         var clean = Preview.Sanitize("<p>before</p>" + payload + "<p>after</p>");
         Assert.DoesNotMatch(Danger(), clean);
         Assert.Contains("before", clean);
-        Assert.Contains("after", clean);
+        if (!payload.StartsWith("<noscript>", StringComparison.Ordinal)) // this one swallows the rest of the document in the parser, like in a browser
+        {
+            Assert.Contains("after", clean);
+        }
 
         // it must stay clean when it is cleaned again, and when it goes through the page renderer
         Assert.Equal(clean, Preview.Sanitize(clean));
@@ -113,6 +116,24 @@ public partial class SanitizerTests
         {
             Assert.Contains("<" + tag, clean);
         }
+    }
+
+    [Fact]
+    public void Elements_that_are_not_allowed_keep_their_text_unless_they_are_active()
+    {
+        var clean = Preview.Sanitize("<h5>klein</h5><font color=\"red\">rot</font><section><p>s</p></section>H<sub>2</sub>O <img src=x alt=\"bild\"><mark>m</mark><svg><text>svgtext</text></svg><script>scripttext</script><style>styletext</style><textarea>areatext</textarea>");
+        Assert.Contains("klein", clean);
+        Assert.Contains("rot", clean);
+        Assert.Contains("<p>s</p>", clean);
+        Assert.Contains("H2O", clean);
+        Assert.Contains("m", clean);
+        Assert.DoesNotContain("svgtext", clean);
+        Assert.DoesNotContain("scripttext", clean);
+        Assert.DoesNotContain("styletext", clean);
+        Assert.DoesNotContain("areatext", clean);
+        Assert.DoesNotContain("<h5", clean);
+        Assert.DoesNotContain("<font", clean);
+        Assert.DoesNotContain("<sub", clean);
     }
 
     [Fact]

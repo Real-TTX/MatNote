@@ -22,6 +22,57 @@ internal static class DocText
         return string.Join("\n", lines).TrimEnd('\n') + "\n";
     }
 
+    /// <summary>All the words of the blocks, separated by spaces, without any decoration (what the search looks in).</summary>
+    public static string Flat(IEnumerable<Block> blocks)
+    {
+        var sb = new StringBuilder();
+        void Walk(IEnumerable<Block> list)
+        {
+            foreach (var block in list)
+            {
+                switch (block)
+                {
+                    case Para p:
+                        sb.Append(InlineText(p.Inlines, false)).Append(' ');
+                        break;
+                    case Heading h:
+                        sb.Append(InlineText(h.Inlines, false)).Append(' ');
+                        break;
+                    case CodeBlock c:
+                        sb.Append(c.Text).Append(' ');
+                        break;
+                    case MdSource m:
+                        sb.Append(m.Text).Append(' ');
+                        break;
+                    case Quote q:
+                        Walk(q.Blocks);
+                        break;
+                    case Section s:
+                        sb.Append(s.Title).Append(' ');
+                        Walk(s.Blocks);
+                        break;
+                    case ListBlock l:
+                        foreach (var item in l.Items)
+                        {
+                            Walk(item);
+                        }
+
+                        break;
+                    case TableBlock t:
+                        foreach (var cell in t.Rows.SelectMany(r => r))
+                        {
+                            sb.Append(InlineText(cell.Inlines, false)).Append(' ');
+                        }
+
+                        break;
+                }
+            }
+        }
+
+        Walk(blocks);
+        return sb.ToString();
+    }
+
     /// <summary>The text of inlines; a line break is a newline.</summary>
     public static string InlineText(IEnumerable<Inline> inlines, bool withLinks = true)
     {

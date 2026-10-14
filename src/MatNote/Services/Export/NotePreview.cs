@@ -198,7 +198,7 @@ public sealed partial class NotePreview(INoteFileStore store) : INotePreview
             case NoteType.Docx:
             {
                 var blocks = DocxReader.Read(data, SearchCap * 2, out _);
-                return DocText.Render(new Doc(string.Empty, blocks, ShowTitle: false));
+                return DocText.Flat(blocks);
             }
 
             case NoteType.Xlsx:

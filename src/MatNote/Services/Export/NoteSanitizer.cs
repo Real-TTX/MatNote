@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using AngleSharp.Dom;
+using AngleSharp.Html.Parser;
 using Ganss.Xss;
 
 namespace MatNote.Services.Export;
@@ -25,11 +26,28 @@ internal sealed partial class NoteSanitizer
     [GeneratedRegex("^(?:https?://|mailto:)", RegexOptions.IgnoreCase)]
     private static partial Regex External();
 
+    /// <summary>Elements that go away WITH what is inside them; any other element that is not allowed (h5, font, section, sub ...) is unwrapped: its text stays.</summary>
+    private const string Denied = "script,style,noscript,template,iframe,frame,frameset,object,embed,applet,svg,math,textarea,select,option,optgroup,audio,video,canvas,title,head,noembed,noframes,xmp,plaintext";
+
+    [GeneratedRegex("<\\s*(?:script|style|noscript|template|iframe|frame|frameset|object|embed|applet|svg|math|textarea|select|option|optgroup|audio|video|canvas|title|head|noembed|noframes|xmp|plaintext)\\b", RegexOptions.IgnoreCase)]
+    private static partial Regex HasDenied();
+
     public string Sanitize(string? html)
     {
         if (string.IsNullOrWhiteSpace(html))
         {
             return string.Empty;
+        }
+
+        if (HasDenied().IsMatch(html))
+        {
+            var document = new HtmlParser().ParseDocument(html);
+            foreach (var element in document.QuerySelectorAll(Denied).ToList())
+            {
+                element.Remove();
+            }
+
+            html = document.Body?.InnerHtml ?? string.Empty;
         }
 
         return (cached ??= Create()).Sanitize(html);
@@ -49,7 +67,7 @@ internal sealed partial class NoteSanitizer
         s.AllowedAtRules.Clear();
         s.AllowedClasses.Clear();
         s.AllowedClasses.Add(NoteLinkClass);
-        s.KeepChildNodes = false;
+        s.KeepChildNodes = true;
         s.PostProcessNode += (_, e) => Post(e.Node);
         return s;
     }

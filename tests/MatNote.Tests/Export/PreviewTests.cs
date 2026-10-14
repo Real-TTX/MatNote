@@ -330,6 +330,8 @@ public class PreviewTests
         Assert.Contains("Wort1", d);
         Assert.Contains("Absatz äöü", d);
         Assert.Contains("Zelle", d);
+        Assert.DoesNotContain("===", d); // no decoration of the text export in the search text
+        Assert.DoesNotContain(" | ", d);
         var x = await p.BuildSearchTextAsync(FileNote(1, NoteType.Xlsx), xlsx);
         Assert.Contains("Blatt Eins", x);
         Assert.Contains("Alpha", x);

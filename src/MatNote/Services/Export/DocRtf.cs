@@ -12,7 +12,7 @@ internal static class DocRtf
         var sb = new StringBuilder();
         sb.Append("{\\rtf1\\ansi\\ansicpg1252\\uc1\\deff0\\deflang1033");
         sb.Append("{\\fonttbl{\\f0\\fswiss\\fcharset0 Calibri;}{\\f1\\fmodern\\fcharset0 Courier New;}}");
-        sb.Append("{\\colortbl;\\red5\\green99\\blue193;\\red128\\green128\\blue128;\\red89\\green89\\blue89;}");
+        sb.Append("{\\colortbl;\\red5\\green99\\blue193;\\red128\\green128\\blue128;\\red89\\green89\\blue89;\\red237\\green237\\blue237;}");
         sb.Append("{\\info{\\title ").Append(Escape(doc.Title)).Append("}}");
         sb.Append("\\viewkind4\\paperw11906\\paperh16838\\margl1417\\margr1417\\margt1417\\margb1417\\f0\\fs22\n");
         if (doc.NeedsTitleHeading)
@@ -198,7 +198,7 @@ internal static class DocRtf
                 sb.Append("\\clbrdrt\\brdrs\\brdrw10\\clbrdrl\\brdrs\\brdrw10\\clbrdrb\\brdrs\\brdrw10\\clbrdrr\\brdrs\\brdrw10");
                 if (c < row.Count && row[c].Header)
                 {
-                    sb.Append("\\clcbpat3");
+                    sb.Append("\\clcbpat4");
                 }
 
                 sb.Append("\\cellx").Append(width * (c + 1));

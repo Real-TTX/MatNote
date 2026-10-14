@@ -11,7 +11,13 @@ namespace MatNote.Services.Export;
 /// </summary>
 internal static class DocPdf
 {
-    private static readonly string[] Sans = ["Liberation Sans", "DejaVu Sans", "Arial", "Segoe UI", "Lato"];
+    // The first font that has a character draws it: Latin from Liberation / Arial, then DejaVu (Greek, Cyrillic, Arabic, symbols), then CJK and emoji fonts if the machine has any.
+    private static readonly string[] Sans =
+    [
+        "Liberation Sans", "DejaVu Sans", "Arial", "Segoe UI",
+        "Droid Sans Fallback", "Noto Sans CJK SC", "Noto Sans CJK JP", "WenQuanYi Zen Hei", "Microsoft YaHei", "Yu Gothic", "Segoe UI Symbol", "Segoe UI Emoji", "Noto Color Emoji",
+        "Lato",
+    ];
     private static readonly string[] Mono = ["Liberation Mono", "DejaVu Sans Mono", "Consolas", "Courier New", "Lato"];
 
     static DocPdf()

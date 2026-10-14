@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using Markdig;
+using Markdig.Extensions.EmphasisExtras;
 using Markdig.Renderers.Html;
 using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
@@ -12,8 +13,7 @@ internal static partial class MarkdownService
     private static readonly MarkdownPipeline Pipeline = new MarkdownPipelineBuilder()
         .UsePipeTables()
         .UseAutoLinks()
-        .UseEmphasisExtras()
-        .UseTaskLists()
+        .UseEmphasisExtras(EmphasisExtraOptions.Strikethrough)
         .Build();
 
     /// <summary>The token of a link to a note in markdown and plain text: <c>[Title](note:42)</c>.</summary>
