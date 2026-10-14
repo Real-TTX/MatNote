@@ -1,0 +1,69 @@
+@page "/Admin/Backups/Schedules/Edit"
+@model MatNote.Pages.Admin.Backups.Schedules.EditModel
+@{
+    ViewData["Width"] = "narrow";
+}
+
+<partial name="_Tabs" model='"schedules"' />
+
+<form class="mat-form" method="post" novalidate>
+    <input type="hidden" name="Id" value="@Model.Id" />
+    <partial name="_FormSummary" model="ViewData.ModelState" />
+
+    <div class="mat-card">
+        <div class="mat-card__head">@Ui.Icon("calendar")<span class="mat-card__title">Schedule</span></div>
+        <div class="mat-card__body">
+            <div class="mat-form__grid">
+                <mn-field name="Name" label="Name" required full value="@Model.Name" maxlength="120" autofocus msg-required="Please enter a name." />
+                <mn-field name="TargetId" kind="select" label="Target" required full value="@Model.TargetId" options="@(new[] { new Choice("", "Choose a target") }.Concat(Model.Targets))" msg-required="Please choose a target."
+                          hint="@(Model.Targets.Count == 0 ? "There is no target yet. Add one on the Targets tab first." : "Where the backups of this schedule are written.")" />
+                <mn-field name="Enabled" kind="switch" label="Enabled" full value="@Model.Enabled" hint="A schedule that is off makes no backups by itself. You can still run it by hand." />
+            </div>
+        </div>
+    </div>
+
+    <div class="mat-card">
+        <div class="mat-card__head">@Ui.Icon("clock")<span class="mat-card__title">When</span></div>
+        <div class="mat-card__body">
+            <div class="mat-form__grid">
+                <partial name="_Radios" model='new RadioGroup("Frequency", "How often", Model.Frequencies, Model.Frequency.ToString())' />
+
+                <mn-field name="EveryHours" kind="select" label="Every" value="@Model.EveryHours" show-if="Frequency" show-value="Hourly" options="Model.HourSteps" hint="Counted from midnight, so the rhythm is the same every day." />
+                <mn-field name="Minute" kind="number" label="At minute" value="@Model.Minute" show-if="Frequency" show-value="Hourly" min="0" max="59" required msg-required="Please enter the minute." />
+
+                <div class="mat-field" data-show-if="Frequency" data-show-value="Daily,Weekly,Monthly">
+                    <label class="mat-label" for="Time">Time of day <span class="mat-req" aria-hidden="true">*</span></label>
+                    <div class="mat-picker" data-picker="time" data-step="5">
+                        <input class="mat-picker__input" id="Time" name="Time" value="@Model.Time" required data-msg-required="Please choose a time." aria-describedby="Time-hint Time-error" />
+                    </div>
+                    <span class="mat-hint" id="Time-hint">In the time zone @Model.ZoneName, also when the clocks change.</span>
+                    <span class="mat-error" id="Time-error" aria-live="polite">@Model.ErrorFor("Time")</span>
+                </div>
+
+                <mn-field name="DayOfWeek" kind="select" label="Day of the week" value="@Model.DayOfWeek" show-if="Frequency" show-value="Weekly" options="Model.Weekdays" />
+                <mn-field name="DayOfMonth" kind="select" label="Day of the month" value="@Model.DayOfMonth" show-if="Frequency" show-value="Monthly" options="Model.MonthDays" hint="Up to the 28th, so that every month has the day." />
+
+                <mn-field name="Cron" label="Cron expression" full mono value="@Model.Cron" show-if="Frequency" show-value="Cron" required msg-required="Please enter a cron expression." autocomplete="off" placeholder="30 2 * * 1-5"
+                          hint="@($"Five fields: minute, hour, day of the month, month, day of the week. 30 2 * * 1-5 is 02:30 on weekdays. Time zone: {Model.ZoneName}.")" />
+            </div>
+        </div>
+    </div>
+
+    <div class="mat-card">
+        <div class="mat-card__head">@Ui.Icon("archive")<span class="mat-card__title">What is kept</span></div>
+        <div class="mat-card__body mat-stack">
+            <p class="mat-muted">After every successful backup the older ones of this schedule are removed. A backup stays when <strong>any</strong> rule keeps it. 0 turns a rule off; with all four at 0 everything is kept.</p>
+            <div class="mat-form__grid">
+                <mn-field name="KeepLast" kind="number" label="Latest backups" value="@Model.KeepLast" min="0" max="10000" required msg-required="Please enter a number." hint="The newest N backups." />
+                <mn-field name="KeepDaily" kind="number" label="Daily" value="@Model.KeepDaily" min="0" max="10000" required msg-required="Please enter a number." hint="The newest backup of each of the last N days." />
+                <mn-field name="KeepWeekly" kind="number" label="Weekly" value="@Model.KeepWeekly" min="0" max="10000" required msg-required="Please enter a number." hint="The newest backup of each of the last N weeks." />
+                <mn-field name="KeepMonthly" kind="number" label="Monthly" value="@Model.KeepMonthly" min="0" max="10000" required msg-required="Please enter a number." hint="The newest backup of each of the last N months." />
+                <mn-field name="IncludeKeys" kind="switch" label="Include the encryption keys" full value="@Model.IncludeKeys"
+                          hint="The keys read the secrets of the app (authenticator codes, NAS passwords). Without them a restore on a new server cannot read those. With them the archive holds everything: protect the target like the server itself." />
+            </div>
+        </div>
+    </div>
+
+    <mn-buttons save="Save schedule" back="/Admin/Backups/Schedules" delete-handler="@(Model.IsNew ? null : "Delete")" delete-label="Delete schedule"
+                delete-confirm="Delete this schedule? No more backups are made by it. The backups it has made stay at the target (delete them in the list of backups)." />
+</form>

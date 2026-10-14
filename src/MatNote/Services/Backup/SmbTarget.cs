@@ -20,27 +20,27 @@ public sealed class SmbTarget(SmbSettings settings) : IBackupTarget
 
     private readonly string _folder = NormalizeFolder(settings.SubFolder);
 
-    /// <summary>Checks the settings (the page uses it before it saves them); <c>null</c> when they are fine, else a message.</summary>
-    public static string? Validate(SmbSettings s)
+    /// <summary>Checks the settings (the page uses it before it saves them); <c>null</c> when they are fine, else the field and a message.</summary>
+    public static (string Field, string Message)? Validate(SmbSettings s)
     {
         if (string.IsNullOrWhiteSpace(s.Host))
         {
-            return "Please enter the name or the address of the server.";
+            return ("Host", "Please enter the name or the address of the server.");
         }
 
         if (s.Host.Any(c => char.IsWhiteSpace(c) || c is '\\' or '/'))
         {
-            return "The server is a name or an address (nas.local, 192.168.1.20), without slashes.";
+            return ("Host", "The server is a name or an address (nas.local, 192.168.1.20), without slashes.");
         }
 
         if (s.Port is < 1 or > 65535)
         {
-            return "The port is between 1 and 65535 (SMB uses 445).";
+            return ("Port", "The port is between 1 and 65535 (SMB uses 445).");
         }
 
         if (string.IsNullOrWhiteSpace(s.Share) || s.Share.Any(c => c is '\\' or '/' || char.IsControl(c)))
         {
-            return "Please enter the name of the share, without slashes.";
+            return ("Share", "Please enter the name of the share, without slashes.");
         }
 
         try
@@ -49,7 +49,7 @@ public sealed class SmbTarget(SmbSettings settings) : IBackupTarget
         }
         catch (BackupTargetException ex)
         {
-            return ex.Message;
+            return ("SubFolder", ex.Message);
         }
 
         return null;

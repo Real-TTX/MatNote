@@ -1,0 +1,59 @@
+@page "/Admin/Backups/Targets"
+@model MatNote.Pages.Admin.Backups.Targets.IndexModel
+
+<partial name="_Tabs" model='"targets"' />
+
+<div class="mat-list">
+    <partial name="_Toolbar" model="Model.Toolbar" />
+
+    @if (Model.Items.Count == 0)
+    {
+        <div class="mat-empty">
+            <span class="mat-empty__icon">@Ui.Icon("server")</span>
+            <div class="mat-empty__title">@(Model.Toolbar.Total > 0 ? "No target matches" : "No target yet")</div>
+            <p>@(Model.Toolbar.Total > 0 ? "Change the search or the filter." : "A target is the place the backups are written to: a folder, or a share on your NAS.")</p>
+            @if (Model.Toolbar.Total > 0)
+            {
+                <a class="mat-btn mat-btn--secondary" href="/Admin/Backups/Targets">@Ui.Icon("refresh")<span>Reset the search</span></a>
+            }
+        </div>
+    }
+    else
+    {
+        <mn-table caption="Backup targets">
+            <thead>
+                <tr>
+                    <th scope="col">Target</th>
+                    <th scope="col">Type</th>
+                    <th scope="col">Location</th>
+                    <th scope="col" class="mat-num mat-hide-sm">Schedules</th>
+                    <th scope="col"><span class="mat-sr-only">Actions</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var t in Model.Items)
+                {
+                    <tr>
+                        <td data-label="Target"><div class="mat-table__name">@Ui.Icon(BackupUi.TypeIcon(t.Type))<a href="/Admin/Backups/Targets/Edit?id=@t.Id">@t.Name</a></div></td>
+                        <td data-label="Type">@BackupUi.TypeName(t.Type)</td>
+                        <td data-label="Location" class="mat-mono">@t.Location</td>
+                        <td data-label="Schedules" class="mat-num mat-mono mat-hide-sm">@t.Schedules</td>
+                        <td class="mat-table__cell-actions">
+                            <form method="post" asp-page-handler="Test" class="mat-table__actions">
+                                <input type="hidden" name="id" value="@t.Id" />
+                                <button type="submit" class="mat-btn mat-btn--ghost mat-btn--icon mat-btn--sm" aria-label="Test @t.Name" data-tip="Test the connection">@Ui.Icon("plug")</button>
+                                <a class="mat-btn mat-btn--ghost mat-btn--icon mat-btn--sm" href="/Admin/Backups/Targets/Edit?id=@t.Id" aria-label="Edit @t.Name" data-tip="Edit">@Ui.Icon("edit")</a>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </mn-table>
+    }
+
+    <partial name="_Pager" model="Model.Pager" />
+
+    <div class="mat-actions">
+        <a class="mat-btn mat-btn--primary" href="/Admin/Backups/Targets/Edit">@Ui.Icon("plus")<span>New target</span></a>
+    </div>
+</div>

@@ -1,0 +1,9 @@
+@model string
+@*
+    The three areas of the backups: the files and the history, the schedules, the targets. The model is the active one: backups, schedules or targets.
+*@
+<mn-tabs label="Backups">
+    <mn-tab href="/Admin/Backups" active="@(Model == "backups")">@Ui.Icon("archive")<span>Backups</span></mn-tab>
+    <mn-tab href="/Admin/Backups/Schedules" active="@(Model == "schedules")">@Ui.Icon("calendar")<span>Schedules</span></mn-tab>
+    <mn-tab href="/Admin/Backups/Targets" active="@(Model == "targets")">@Ui.Icon("server")<span>Targets</span></mn-tab>
+</mn-tabs>

@@ -1,0 +1,170 @@
+@page "/Admin/Backups"
+@model MatNote.Pages.Admin.Backups.IndexModel
+@inject Clock Clock
+
+<partial name="_Tabs" model='"backups"' />
+
+@foreach (var w in Model.Warnings)
+{
+    <div class="mat-alert mat-alert--warning" role="alert">
+        @Ui.Icon("alert")
+        <div class="mat-alert__body">
+            <strong>@w.Title</strong>
+            <p>@w.Text @if (w.Link is not null) { <a href="@w.Link">@w.LinkText</a> }</p>
+        </div>
+    </div>
+}
+
+@if (Model.Running is not null)
+{
+    <div class="mat-alert mat-alert--info" role="status">
+        @Ui.Icon("progress-play")
+        <div class="mat-alert__body">
+            <strong>A backup is running</strong>
+            <p>“@Model.Running” is being made. It appears below when it is done; reload this page to see it.</p>
+        </div>
+    </div>
+}
+
+<div class="mat-list">
+    <partial name="_Toolbar" model="Model.Toolbar" />
+
+    @if (Model.Items.Count == 0)
+    {
+        <div class="mat-empty">
+            <span class="mat-empty__icon">@Ui.Icon("archive")</span>
+            <div class="mat-empty__title">@(Model.Toolbar.Total > 0 ? "No backup matches" : "No backups yet")</div>
+            <p>@(Model.Toolbar.Total > 0 ? "Change the search or the filter." : "The backups made by your schedules appear here, newest first.")</p>
+            @if (Model.Toolbar.Total > 0)
+            {
+                <a class="mat-btn mat-btn--secondary" href="/Admin/Backups">@Ui.Icon("refresh")<span>Reset the search</span></a>
+            }
+        </div>
+    }
+    else
+    {
+        <mn-table caption="Backups">
+            <thead>
+                <tr>
+                    <th scope="col">Created</th>
+                    <th scope="col">Schedule</th>
+                    <th scope="col" class="mat-hide-sm">Target</th>
+                    <th scope="col" class="mat-num">Size</th>
+                    <th scope="col" class="mat-hide-sm">File</th>
+                    <th scope="col"><span class="mat-sr-only">Actions</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var b in Model.Items)
+                {
+                    <tr>
+                        <td data-label="Created" class="mat-mono">@Clock.Format(b.Created)</td>
+                        <td data-label="Schedule"><div class="mat-table__name">@Ui.Icon("archive")<span>@b.ScheduleName</span></div></td>
+                        <td data-label="Target" class="mat-hide-sm">@b.TargetName</td>
+                        <td data-label="Size" class="mat-num mat-mono">@Ui.Size(b.Size)</td>
+                        <td data-label="File" class="mat-hide-sm mat-mono">@b.File</td>
+                        <td class="mat-table__cell-actions">
+                            <form method="post" asp-page-handler="Delete" class="mat-table__actions">
+                                <input type="hidden" name="target" value="@b.TargetId" />
+                                <input type="hidden" name="file" value="@b.File" />
+                                <a class="mat-btn mat-btn--ghost mat-btn--icon mat-btn--sm" href="?handler=Download&target=@b.TargetId&file=@b.File" aria-label="Download @b.File" data-tip="Download">@Ui.Icon("download")</a>
+                                <a class="mat-btn mat-btn--ghost mat-btn--icon mat-btn--sm" href="/Admin/Backups/Restore?target=@b.TargetId&file=@b.File" aria-label="Restore @b.File" data-tip="Restore">@Ui.Icon("restore")</a>
+                                <button type="submit" class="mat-btn mat-btn--ghost mat-btn--icon mat-btn--sm" aria-label="Delete @b.File" data-tip="Delete"
+                                        data-confirm="Delete the backup @b.File from “@b.TargetName”? It cannot be brought back." data-confirm-ok="Delete">@Ui.Icon("trash")</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </mn-table>
+    }
+
+    <partial name="_Pager" model="Model.Pager" />
+
+    <div class="mat-actions">
+        @if (Model.HasSchedules)
+        {
+            <button type="button" class="mat-btn mat-btn--primary" data-dialog-open="run-dialog" aria-haspopup="dialog">@Ui.Icon("play")<span>Run a backup now</span></button>
+        }
+        else
+        {
+            <a class="mat-btn mat-btn--primary" href="/Admin/Backups/Schedules/Edit">@Ui.Icon("plus")<span>Add a schedule</span></a>
+        }
+    </div>
+</div>
+
+<div class="mat-card mat-card--flush">
+    <div class="mat-card__head">@Ui.Icon("history")<span class="mat-card__title">Latest runs</span></div>
+    <div class="mat-card__body">
+        @if (Model.RecentRuns.Count == 0)
+        {
+            <div class="mat-empty">
+                <span class="mat-empty__icon">@Ui.Icon("history")</span>
+                <div class="mat-empty__title">Nothing has run yet</div>
+                <p>Every run of a backup, scheduled or manual, is written down here.</p>
+            </div>
+        }
+        else
+        {
+            <mn-table caption="Latest runs">
+                <thead>
+                    <tr>
+                        <th scope="col">Started</th>
+                        <th scope="col">Schedule</th>
+                        <th scope="col" class="mat-hide-sm">Trigger</th>
+                        <th scope="col">Result</th>
+                        <th scope="col" class="mat-num mat-hide-sm">Size</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model.RecentRuns)
+                    {
+                        <tr>
+                            <td data-label="Started" class="mat-mono">@Clock.Format(r.StartDate)</td>
+                            <td data-label="Schedule"><div class="mat-table__name"><span>@r.ScheduleName</span></div><div class="mat-hint">@r.TargetName</div></td>
+                            <td data-label="Trigger" class="mat-hide-sm">@BackupUi.Trigger(r.Trigger)</td>
+                            <td data-label="Result">
+                                @BackupUi.Pill(r.Status)
+                                @if (!string.IsNullOrEmpty(r.Message))
+                                {
+                                    <div class="mat-hint">@r.Message</div>
+                                }
+                                else if (r.Status == BackupStatus.Succeeded && r.Removed > 0)
+                                {
+                                    <div class="mat-hint">@r.Removed old @(r.Removed == 1 ? "backup" : "backups") removed</div>
+                                }
+                            </td>
+                            <td data-label="Size" class="mat-num mat-mono mat-hide-sm">@(r.SizeBytes > 0 ? Ui.Size(r.SizeBytes) : "")</td>
+                        </tr>
+                    }
+                </tbody>
+            </mn-table>
+        }
+    </div>
+</div>
+
+<div class="mat-actions">
+    <a class="mat-btn mat-btn--secondary" href="/Admin/Backups/Runs">@Ui.Icon("history")<span>All runs</span></a>
+</div>
+
+@if (Model.HasSchedules)
+{
+    <dialog class="mat-dialog mat-dialog--sm" id="run-dialog" aria-labelledby="run-dialog-title">
+        <form class="mat-dialog__form" method="post" asp-page-handler="Run" novalidate>
+            <div class="mat-dialog__head">
+                @Ui.Icon("play")
+                <h2 class="mat-dialog__title" id="run-dialog-title">Run a backup now</h2>
+                <button type="button" class="mat-btn mat-btn--ghost mat-btn--icon mat-dialog__close" data-dialog-close aria-label="Close">@Ui.Icon("x")</button>
+            </div>
+            <div class="mat-dialog__body mat-form">
+                <mn-field name="ScheduleId" id="run-schedule" kind="select" label="Schedule" options="@Model.ScheduleChoices" hint="The backup goes to the target of this schedule, and its retention is applied afterwards." />
+            </div>
+            <div class="mat-dialog__foot">
+                <div class="mat-btn-row mat-btn-row--plain">
+                    <button type="submit" class="mat-btn mat-btn--primary">@Ui.Icon("play")<span>Run backup</span></button>
+                    <button type="button" class="mat-btn mat-btn--secondary" data-dialog-close>Cancel</button>
+                </div>
+            </div>
+        </form>
+    </dialog>
+}
