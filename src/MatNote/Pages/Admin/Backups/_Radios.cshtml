@@ -1,0 +1,23 @@
+@model RadioGroup
+@*
+    A group of radios (FORM-12: up to five choices are radios). The error of the server is shown under it; other fields depend on it with show-if="Name".
+*@
+@{
+    ViewData.ModelState.TryGetValue(Model.Name, out var state);
+    var error = state?.Errors.FirstOrDefault()?.ErrorMessage;
+    var value = state?.AttemptedValue ?? Model.Value;
+}
+<fieldset class="mat-field mat-fieldset @(error is null ? "" : "is-invalid")" id="@Model.Name">
+    <legend class="mat-label">@Model.Label</legend>
+    <div class="mat-options">
+        @foreach (var c in Model.Choices)
+        {
+            <label class="mat-option"><input type="radio" id="@Model.Name-@c.Value" name="@Model.Name" value="@c.Value" checked="@(c.Value == value)" /><span>@c.Label</span></label>
+        }
+    </div>
+    @if (Model.Hint is not null)
+    {
+        <span class="mat-hint">@Model.Hint</span>
+    }
+    <span class="mat-error" aria-live="polite">@error</span>
+</fieldset>

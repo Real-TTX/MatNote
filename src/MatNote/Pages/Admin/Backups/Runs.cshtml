@@ -1,0 +1,68 @@
+@page "/Admin/Backups/Runs"
+@model MatNote.Pages.Admin.Backups.RunsModel
+@inject Clock Clock
+
+<partial name="_Tabs" model='"backups"' />
+
+<div class="mat-list">
+    <partial name="_Toolbar" model="Model.Toolbar" />
+
+    @if (Model.Items.Count == 0)
+    {
+        <div class="mat-empty">
+            <span class="mat-empty__icon">@Ui.Icon("history")</span>
+            <div class="mat-empty__title">@(Model.Toolbar.Total > 0 ? "No run matches" : "Nothing has run yet")</div>
+            <p>@(Model.Toolbar.Total > 0 ? "Change the search or the filter." : "Every run of a backup, scheduled or manual, is written down here.")</p>
+            @if (Model.Toolbar.Total > 0)
+            {
+                <a class="mat-btn mat-btn--secondary" href="/Admin/Backups/Runs">@Ui.Icon("refresh")<span>Reset the search</span></a>
+            }
+        </div>
+    }
+    else
+    {
+        <mn-table caption="History of the backups">
+            <thead>
+                <tr>
+                    <th scope="col">Started</th>
+                    <th scope="col">Schedule</th>
+                    <th scope="col" class="mat-hide-sm">Trigger</th>
+                    <th scope="col">Result</th>
+                    <th scope="col" class="mat-num mat-hide-sm">Size</th>
+                    <th scope="col" class="mat-num mat-hide-sm">Took</th>
+                    <th scope="col" class="mat-num mat-hide-sm">Removed</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var r in Model.Items)
+                {
+                    <tr>
+                        <td data-label="Started" class="mat-mono">@Clock.Format(r.StartDate)</td>
+                        <td data-label="Schedule"><div class="mat-table__name"><span>@r.ScheduleName</span></div><div class="mat-hint">@r.TargetName</div></td>
+                        <td data-label="Trigger" class="mat-hide-sm">@BackupUi.Trigger(r.Trigger)</td>
+                        <td data-label="Result">
+                            @BackupUi.Pill(r.Status)
+                            @if (!string.IsNullOrEmpty(r.Message))
+                            {
+                                <div class="mat-hint">@r.Message</div>
+                            }
+                            @if (!string.IsNullOrEmpty(r.FileName))
+                            {
+                                <div class="mat-hint mat-mono">@r.FileName</div>
+                            }
+                        </td>
+                        <td data-label="Size" class="mat-num mat-mono mat-hide-sm">@(r.SizeBytes > 0 ? Ui.Size(r.SizeBytes) : "")</td>
+                        <td data-label="Took" class="mat-num mat-mono mat-hide-sm">@BackupUi.Duration(r)</td>
+                        <td data-label="Removed" class="mat-num mat-mono mat-hide-sm">@(r.Status == BackupStatus.Succeeded ? r.Removed.ToString() : "")</td>
+                    </tr>
+                }
+            </tbody>
+        </mn-table>
+    }
+
+    <partial name="_Pager" model="Model.Pager" />
+
+    <div class="mat-actions">
+        <a class="mat-btn mat-btn--secondary" href="/Admin/Backups">@Ui.Icon("back")<span>Back to the backups</span></a>
+    </div>
+</div>

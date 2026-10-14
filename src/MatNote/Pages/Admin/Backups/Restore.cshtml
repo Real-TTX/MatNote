@@ -1,0 +1,122 @@
+@page "/Admin/Backups/Restore"
+@model MatNote.Pages.Admin.Backups.RestoreModel
+@inject Clock Clock
+
+<partial name="_Tabs" model='"backups"' />
+
+@if (Model.Result is { } result)
+{
+    if (result.Succeeded)
+    {
+        <div class="mat-alert mat-alert--success" role="status">
+            @Ui.Icon("check-circle")
+            <div class="mat-alert__body">
+                <strong>@result.Summary</strong>
+                <p>The data of the app is now the state of the backup from @Clock.Format(Model.Created). Sessions and accounts are the ones of the backup: you may have to sign in again.</p>
+            </div>
+        </div>
+
+        if (result.NeedsRestart)
+        {
+            <div class="mat-alert mat-alert--warning" role="alert">
+                @Ui.Icon("alert")
+                <div class="mat-alert__body">
+                    <strong>Restart the container</strong>
+                    <p>The encryption keys of the backup are written, but the app reads them at its start. Restart the container (<code>docker restart</code> or <code>docker compose restart</code>) so that authenticator codes and NAS passwords are read with the restored keys.</p>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="mat-alert mat-alert--danger" role="alert">
+            @Ui.Icon("x-circle")
+            <div class="mat-alert__body">
+                <strong>The restore did not happen</strong>
+                <p>@result.Summary</p>
+            </div>
+        </div>
+    }
+
+    foreach (var w in result.Warnings)
+    {
+        <div class="mat-alert mat-alert--warning" role="alert">
+            @Ui.Icon("alert")
+            <div class="mat-alert__body"><p>@w</p></div>
+        </div>
+    }
+
+    if (result.Steps.Count > 0)
+    {
+        <div class="mat-card">
+            <div class="mat-card__head">@Ui.Icon("list")<span class="mat-card__title">What was done</span></div>
+            <div class="mat-card__body mat-stack">
+                <ol class="mn-steps">
+                    @foreach (var step in result.Steps)
+                    {
+                        <li>@step</li>
+                    }
+                </ol>
+                @if (result.SafetyFile is not null)
+                {
+                    <p class="mat-hint">The state before the restore is in the safety backup <span class="mat-mono">@result.SafetyFile</span> at “@Model.TargetName”. Restore that file to go back.</p>
+                }
+            </div>
+        </div>
+    }
+
+    if (!string.IsNullOrWhiteSpace(result.Log))
+    {
+        <div class="mat-card">
+            <div class="mat-card__head">@Ui.Icon("terminal")<span class="mat-card__title">Log of pg_restore</span></div>
+            <div class="mat-card__body"><pre class="mn-plain" id="restore-log">@result.Log</pre></div>
+        </div>
+    }
+
+    <div class="mat-actions">
+        <a class="mat-btn mat-btn--secondary" href="/Admin/Backups">@Ui.Icon("back")<span>Back to the backups</span></a>
+    </div>
+}
+else
+{
+    <div class="mat-alert mat-alert--danger" role="alert">
+        @Ui.Icon("alert")
+        <div class="mat-alert__body">
+            <strong>This replaces the data of the app</strong>
+            <p>Every note, folder, tag, share, account and setting in the database is replaced by the state of the backup from <strong>@Clock.Format(Model.Created)</strong>. Everything that was changed since then is lost. The app keeps running, and the restore is one transaction: if it fails, nothing changes.</p>
+        </div>
+    </div>
+
+    <form class="mat-form" method="post" novalidate>
+        <input type="hidden" name="target" value="@Model.TargetId" />
+        <input type="hidden" name="file" value="@Model.FileName" />
+
+        <div class="mat-card">
+            <div class="mat-card__head">@Ui.Icon("archive")<span class="mat-card__title">The backup</span></div>
+            <div class="mat-card__body">
+                <dl class="mat-stack">
+                    <div><dt class="mat-label">Made</dt><dd>@Clock.Format(Model.Created) by the schedule “@Model.ScheduleName”</dd></div>
+                    <div><dt class="mat-label">Target</dt><dd>@Model.TargetName</dd></div>
+                    <div><dt class="mat-label">File</dt><dd class="mat-mono">@Model.FileName</dd></div>
+                </dl>
+            </div>
+        </div>
+
+        <div class="mat-card">
+            <div class="mat-card__head">@Ui.Icon("settings")<span class="mat-card__title">Options</span></div>
+            <div class="mat-card__body">
+                <div class="mat-form__grid">
+                    <mn-field name="SafetyBackup" kind="switch" label="Back up the current data first" full value="@Model.SafetyBackup"
+                              hint="Recommended. The data as they are now go to the same target as a safety backup, so that you can go back. If that backup fails, nothing is restored." />
+                    <mn-field name="RestoreKeys" kind="switch" label="Also restore the encryption keys (needs a restart of the container)" full value="@Model.RestoreKeys"
+                              hint="Only when you restore onto a new server: the keys read the authenticator secrets and the NAS passwords. On the same server leave this off. The accounts, notes and settings are restored either way." />
+                </div>
+            </div>
+        </div>
+
+        <div class="mat-btn-row">
+            <button type="submit" class="mat-btn mat-btn--danger" data-confirm="Replace ALL data of the app with the backup from @Clock.Format(Model.Created)? Everything changed since then is lost. This cannot be undone, except through the safety backup if you chose one." data-confirm-ok="Restore">@Ui.Icon("restore")<span>Restore this backup</span></button>
+            <a class="mat-btn mat-btn--secondary" href="/Admin/Backups">@Ui.Icon("back")<span>Back</span></a>
+        </div>
+    </form>
+}

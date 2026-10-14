@@ -1,0 +1,93 @@
+@page "/Admin/Backups/Schedules"
+@model MatNote.Pages.Admin.Backups.Schedules.IndexModel
+@inject Clock Clock
+
+<partial name="_Tabs" model='"schedules"' />
+
+<div class="mat-list">
+    <partial name="_Toolbar" model="Model.Toolbar" />
+
+    @if (Model.Items.Count == 0)
+    {
+        <div class="mat-empty">
+            <span class="mat-empty__icon">@Ui.Icon("calendar")</span>
+            <div class="mat-empty__title">@(Model.Toolbar.Total > 0 ? "No schedule matches" : "No schedule yet")</div>
+            <p>@(Model.Toolbar.Total > 0 ? "Change the search or the filter." : "A schedule says when a backup is made, where it goes and how many backups are kept.")</p>
+            @if (Model.Toolbar.Total > 0)
+            {
+                <a class="mat-btn mat-btn--secondary" href="/Admin/Backups/Schedules">@Ui.Icon("refresh")<span>Reset the search</span></a>
+            }
+        </div>
+    }
+    else
+    {
+        <mn-table caption="Backup schedules">
+            <thead>
+                <tr>
+                    <th scope="col">Schedule</th>
+                    <th scope="col">When</th>
+                    <th scope="col" class="mat-hide-sm">Target</th>
+                    <th scope="col" class="mat-hide-sm">Keeps</th>
+                    <th scope="col">Next run</th>
+                    <th scope="col">Last run</th>
+                    <th scope="col"><span class="mat-sr-only">Actions</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var s in Model.Items)
+                {
+                    <tr>
+                        <td data-label="Schedule">
+                            <div class="mat-table__name">@Ui.Icon("calendar")<a href="/Admin/Backups/Schedules/Edit?id=@s.Schedule.Id">@s.Schedule.Name</a>@if (!s.Schedule.Enabled) { <span class="mat-pill mat-pill--plain">Disabled</span> }</div>
+                        </td>
+                        <td data-label="When">@ScheduleCalculator.Describe(s.Schedule)</td>
+                        <td data-label="Target" class="mat-hide-sm">@s.TargetName</td>
+                        <td data-label="Keeps" class="mat-hide-sm">@ScheduleCalculator.DescribeRetention(s.Schedule.Retention)</td>
+                        <td data-label="Next run" class="mat-mono">
+                            @if (!s.Schedule.Enabled)
+                            {
+                                <span class="mat-muted">Off</span>
+                            }
+                            else if (s.NextRunUtc is not { } next)
+                            {
+                                <span class="mat-muted">Never</span>
+                            }
+                            else if (next <= DateTime.UtcNow)
+                            {
+                                <span>Due now</span>
+                            }
+                            else
+                            {
+                                @Clock.Format(next)
+                            }
+                        </td>
+                        <td data-label="Last run">
+                            @if (s.LastRun is { } last)
+                            {
+                                @BackupUi.Pill(last.Status)
+                                <div class="mat-hint">@Clock.Format(last.StartDate)@if (last.Status == BackupStatus.Failed && !string.IsNullOrEmpty(last.Message)) { <text>: @last.Message</text> }</div>
+                            }
+                            else
+                            {
+                                <span class="mat-muted">Not yet</span>
+                            }
+                        </td>
+                        <td class="mat-table__cell-actions">
+                            <form method="post" asp-page-handler="Run" class="mat-table__actions">
+                                <input type="hidden" name="id" value="@s.Schedule.Id" />
+                                <button type="submit" class="mat-btn mat-btn--ghost mat-btn--icon mat-btn--sm" aria-label="Run @s.Schedule.Name now" data-tip="Run now">@Ui.Icon("play")</button>
+                                <a class="mat-btn mat-btn--ghost mat-btn--icon mat-btn--sm" href="/Admin/Backups/Schedules/Edit?id=@s.Schedule.Id" aria-label="Edit @s.Schedule.Name" data-tip="Edit">@Ui.Icon("edit")</a>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </mn-table>
+    }
+
+    <partial name="_Pager" model="Model.Pager" />
+
+    <div class="mat-actions">
+        <a class="mat-btn mat-btn--primary" href="/Admin/Backups/Schedules/Edit">@Ui.Icon("plus")<span>New schedule</span></a>
+    </div>
+</div>

@@ -1,0 +1,75 @@
+@page "/Admin/Backups/Targets/Edit"
+@model MatNote.Pages.Admin.Backups.Targets.EditModel
+@{
+    ViewData["Width"] = "narrow";
+    var types = new List<Choice> { new(nameof(BackupTargetType.Folder), "Folder"), new(nameof(BackupTargetType.Smb), "SMB share (NAS)") };
+}
+
+<partial name="_Tabs" model='"targets"' />
+
+<form class="mat-form" method="post" asp-page="/Admin/Backups/Targets/Edit" novalidate>
+    <input type="hidden" name="Id" value="@Model.Id" />
+    <partial name="_FormSummary" model="ViewData.ModelState" />
+
+    <div class="mat-card">
+        <div class="mat-card__head">@Ui.Icon("server")<span class="mat-card__title">Target</span></div>
+        <div class="mat-card__body">
+            <div class="mat-form__grid">
+                <mn-field name="Name" label="Name" required full value="@Model.Name" maxlength="120" autofocus msg-required="Please enter a name." hint="How the target is called in the schedules and in the list of backups." />
+                <partial name="_Radios" model='new RadioGroup("Type", "Type", types, Model.Type.ToString())' />
+            </div>
+        </div>
+    </div>
+
+    <div class="mat-card">
+        <div class="mat-card__head">@Ui.Icon("plug")<span class="mat-card__title">Connection</span></div>
+        <div class="mat-card__body mat-stack">
+            <div class="mat-form__grid">
+                <mn-field name="Path" label="Folder" required full value="@Model.Path" show-if="Type" show-value="Folder" mono msg-required="Please enter the folder." placeholder="/backups"
+                          hint="A folder inside the container. The image has /backups for this: mount a folder of the host, or a NAS share that is mounted on the host, there." />
+
+                <mn-field name="Host" label="Server" required value="@Model.Host" show-if="Type" show-value="Smb" msg-required="Please enter the name or the address of the server." placeholder="nas.local" autocomplete="off" />
+                <mn-field name="Port" kind="number" label="Port" required value="@Model.Port" show-if="Type" show-value="Smb" min="1" max="65535" msg-required="Please enter the port." hint="445 is the standard of SMB." />
+                <mn-field name="Share" label="Share" required value="@Model.Share" show-if="Type" show-value="Smb" msg-required="Please enter the name of the share." placeholder="backup" autocomplete="off" />
+                <mn-field name="SubFolder" label="Folder in the share" optional value="@Model.SubFolder" show-if="Type" show-value="Smb" placeholder="matnotes/backups" autocomplete="off" hint="Made when it is missing. Empty: the root of the share." />
+                <mn-field name="Username" label="User name" optional value="@Model.Username" show-if="Type" show-value="Smb" autocomplete="off" />
+                <mn-field name="Domain" label="Domain" optional value="@Model.Domain" show-if="Type" show-value="Smb" autocomplete="off" hint="Only for a Windows domain." />
+                <mn-field name="Password" kind="password" label="Password" optional full show-if="Type" show-value="Smb" autocomplete="new-password"
+                          hint="@(Model.HasStoredPassword ? "A password is stored (encrypted). Leave this empty to keep it, or type a new one." : "It is stored encrypted and never shown again.")" />
+            </div>
+
+            <div class="mat-btn-row mat-btn-row--plain">
+                <button type="submit" class="mat-btn mat-btn--secondary" formnovalidate formaction="?handler=Test">@Ui.Icon("plug")<span>Test connection</span></button>
+            </div>
+
+            @if (Model.TestOk is true)
+            {
+                <div class="mat-alert mat-alert--success" role="status">
+                    @Ui.Icon("check-circle")
+                    <div class="mat-alert__body">
+                        <strong>The connection works</strong>
+                        <p>@Model.TestMessage</p>
+                        @if (Model.Type == BackupTargetType.Smb && Model.Password.Length > 0)
+                        {
+                            <p>The password you typed is not kept in the form. Type it again before you save.</p>
+                        }
+                        <p>Nothing was saved yet.</p>
+                    </div>
+                </div>
+            }
+            else if (Model.TestOk is false)
+            {
+                <div class="mat-alert mat-alert--danger" role="alert">
+                    @Ui.Icon("x-circle")
+                    <div class="mat-alert__body">
+                        <strong>The connection does not work</strong>
+                        <p>@Model.TestMessage</p>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <mn-buttons save="Save target" back="/Admin/Backups/Targets" delete-handler="@(Model.IsNew ? null : "Delete")" delete-label="Delete target"
+                delete-confirm="@(Model.ScheduleCount > 0 ? "Delete this target? A schedule still uses it, so this will be refused." : "Delete this target? The backups that are in it stay where they are.")" />
+</form>

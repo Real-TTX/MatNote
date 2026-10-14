@@ -15,6 +15,7 @@ public static class FeatureRegistration
         services.AddScoped<ShareService>();
         services.AddScoped<PublicShareAccess>();
         services.AddExport();
+        services.AddBackup();
         return services;
     }
 }
