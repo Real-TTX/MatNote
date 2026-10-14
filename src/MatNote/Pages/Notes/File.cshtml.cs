@@ -6,7 +6,7 @@ using Microsoft.Net.Http.Headers;
 
 namespace MatNote.Pages.Notes;
 
-/// <summary>The file of a note. Only a PDF is shown in the page (<c>inline=1</c>); every other file is a download, so a file that somebody uploaded never runs in the page of the app.</summary>
+/// <summary>The file of a note. Only a PDF is shown in the page (<c>inline=true</c>); every other file is a download, so a file that somebody uploaded never runs in the page of the app.</summary>
 public sealed class FileModel(AccessService access, NoteService notes) : PageModel
 {
     public async Task<IActionResult> OnGetAsync(long id, bool inline = false)

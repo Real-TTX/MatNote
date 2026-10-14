@@ -130,6 +130,7 @@
         <a class="mat-menu__item" role="menuitem" href="/Account/Security">@Ui.Icon("shield")<span>Security</span></a>
         <div class="mat-menu__sep" role="separator"></div>
         <form method="post" action="/Account/Logout">
+            @Html.AntiForgeryToken()
             <button type="submit" class="mat-menu__item mat-menu__item--danger" role="menuitem">@Ui.Icon("logout")<span>Sign out</span></button>
         </form>
     </div>

@@ -148,7 +148,29 @@ public sealed class MaintenanceService(IServiceScopeFactory scopes, ILogger<Main
         var limit = now.AddDays(-Math.Max(1, config.Value.TrashDays));
         var notes = await db.Notes.IgnoreQueryFilters().Where(n => n.UpdateState == SoftEntity.Deleted && n.UpdateDate < limit).ExecuteDeleteAsync(ct);
         var shares = await db.Shares.IgnoreQueryFilters().Where(s => s.UpdateState == SoftEntity.Deleted && s.UpdateDate < limit).ExecuteDeleteAsync(ct);
-        logger.LogInformation("Housekeeping: {Sessions} old sessions, {Notes} notes from the trash, {Shares} old shares removed.", sessions, notes, shares);
+        await db.NoteLinks.Where(l => !db.Notes.IgnoreQueryFilters().Any(n => n.Id == l.SourceNoteId) || !db.Notes.IgnoreQueryFilters().Any(n => n.Id == l.TargetNoteId)).ExecuteDeleteAsync(ct);
+
+        // what was deleted with its owner or its folder goes too, once nothing refers to it any more (folders from the bottom up)
+        var folders = 0;
+        for (var pass = 0; pass < FolderService.MaxDepth + 2; pass++)
+        {
+            var removed = await db.Folders.IgnoreQueryFilters()
+                .Where(f => f.UpdateState == SoftEntity.Deleted && f.UpdateDate < limit
+                            && !db.Folders.IgnoreQueryFilters().Any(c => c.ParentId == f.Id) && !db.Notes.IgnoreQueryFilters().Any(n => n.FolderId == f.Id))
+                .ExecuteDeleteAsync(ct);
+            folders += removed;
+            if (removed == 0)
+            {
+                break;
+            }
+        }
+
+        var tags = await db.Tags.IgnoreQueryFilters().Where(t => t.UpdateState == SoftEntity.Deleted && t.UpdateDate < limit).ExecuteDeleteAsync(ct);
+        var users = await db.Users.IgnoreQueryFilters()
+            .Where(u => u.UpdateState == SoftEntity.Deleted && u.UpdateDate < limit
+                        && !db.Notes.IgnoreQueryFilters().Any(n => n.OwnerId == u.Id) && !db.Folders.IgnoreQueryFilters().Any(f => f.OwnerId == u.Id))
+            .ExecuteDeleteAsync(ct);
+        logger.LogInformation("Housekeeping: {Sessions} old sessions, {Notes} notes, {Folders} folders, {Tags} tags, {Shares} shares and {Users} accounts removed.", sessions, notes, folders, tags, shares, users);
     }
 }
 

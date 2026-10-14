@@ -40,7 +40,7 @@
             }
             else if (note.Type == NoteType.Pdf)
             {
-                <iframe class="mn-pdf" src="@Model.BaseUrl/file/@note.Id?inline=1" title="@note.Title"></iframe>
+                <iframe class="mn-pdf" src="@Model.BaseUrl/file/@note.Id?inline=true" title="@note.Title"></iframe>
             }
             else if (Model.FileHtml is not null)
             {
