@@ -8,6 +8,7 @@ public static class FeatureRegistration
         services.AddSingleton<Assets>();
         services.AddScoped<MenuService>();
         services.AddScoped<UserService>();
+        services.AddBackup();
         return services;
     }
 }
