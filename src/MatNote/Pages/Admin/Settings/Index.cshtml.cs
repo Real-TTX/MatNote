@@ -5,7 +5,7 @@ using MatNote.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace MatNote.Pages.Admin.System;
+namespace MatNote.Pages.Admin.Settings;
 
 /// <summary>The state of the app and its settings (kept in <c>config/app.json</c>): registration, sessions, the size of uploads, the trash, the public address, the time zone.</summary>
 public sealed class IndexModel(AppDbContext db, ConfigStore<AppConfig> config, AppPaths paths, MaintenanceService maintenance) : AppPageModel
