@@ -66,7 +66,7 @@
   }
 
   function select(id) {
-    Array.prototype.forEach.call(document.querySelectorAll('tr[data-note-id]'), function (row) {
+    Array.prototype.forEach.call(document.querySelectorAll('[data-split-rows] [data-note-id]'), function (row) {
       row.classList.toggle('is-selected', id !== null && String(id) === row.getAttribute('data-note-id'));
     });
     var url = new URL(location.href);
@@ -90,18 +90,23 @@
     }).catch(function () { /* the list stays as it is */ });
   }
 
-  split.addEventListener('click', function (e) {
+  document.addEventListener('click', function (e) {
     var link = e.target.closest && e.target.closest('[data-open-pane]');
     if (!link || !wide.matches || e.defaultPrevented || e.button || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) { return; }
     e.preventDefault();
-    var row = link.closest('tr[data-note-id]');
+    var row = link.closest('[data-note-id]');
     if (row) { select(row.getAttribute('data-note-id')); }
-    frame.contentWindow.location.replace(paneUrl(link.href));
+    // a note of the person opens in the mode they work in
+    var href = link.href;
+    if (row && row.hasAttribute('data-edit') && document.cookie.indexOf('mn.mode=edit') !== -1) { href = '/Notes/Edit?id=' + row.getAttribute('data-note-id'); }
+    frame.contentWindow.location.replace(paneUrl(href));
   });
 
   window.addEventListener('message', function (e) {
     var data = e.data;
     if (e.origin !== location.origin || e.source !== frame.contentWindow || !data || data.mn !== 'pane') { return; }
+    // the mode (reading or editing) of the note in the pane is the mode the next note opens in (also after a reload: the server reads the cookie)
+    if (data.mode) { document.cookie = 'mn.mode=' + data.mode + '; path=/; max-age=31536000; samesite=lax'; }
     select(data.id || null);
     refresh();
   });

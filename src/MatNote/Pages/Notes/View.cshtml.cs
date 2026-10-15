@@ -49,6 +49,21 @@ public sealed class ViewModel(AppDbContext db, CurrentUser me, AccessService acc
         return Page();
     }
 
+    /// <summary>
+    /// The text of a note as JSON, for the button of a link that shows the linked note inside this one (notelinks.js). Only what the person may read; a file has no text to show.
+    /// </summary>
+    public async Task<IActionResult> OnGetBodyAsync()
+    {
+        var (note, _) = await access.FindNoteAsync(Id);
+        if (note is null)
+        {
+            return NotFound();
+        }
+
+        var html = Ui.IsText(note.Type) ? preview.RenderText(note, id => $"/Notes/View?id={id}") : null;
+        return new JsonResult(new { id = note.Id, title = note.Title, icon = Ui.TypeIcon(note.Type), html });
+    }
+
     public async Task<IActionResult> OnPostFavoriteAsync()
     {
         var (note, level) = await access.FindNoteAsync(Id, Access.Owner, track: true);

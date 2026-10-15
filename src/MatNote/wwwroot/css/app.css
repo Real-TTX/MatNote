@@ -105,52 +105,116 @@ a.mn-stat:hover { border-color: var(--mat-border-strong); }
 .mat-auth .mat-footer { text-align: center; }
 
 /* ---- The notes list with the note beside it (Notes/Index "split" layout, and the pages inside the pane) ----------------- */
+/* This is the one place of the app that uses the whole window and drops the toolkit card look: the list and the note are the product, not their margins. */
 .mn-listhead { align-items: center; justify-content: space-between; }
-tr.is-selected > td { background: var(--mat-accent-soft); }
-tr.is-selected .mn-note-title a { color: var(--mat-accent-text); }
+.mn-listhead__tools { display: flex; align-items: center; gap: var(--mat-space-2); }
 .mn-split__pane, .mn-layout-switch { display: none; }
+
+.mn-notelist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 1px; }
+.mn-note-item__link { display: flex; align-items: flex-start; gap: var(--mat-space-3); padding: 7px var(--mat-space-3); color: inherit; text-decoration: none; border-radius: var(--mat-radius); border-left: 3px solid transparent; }
+.mn-note-item__link:hover { background: var(--mat-surface-3); text-decoration: none; }
+.mn-note-item.is-selected .mn-note-item__link { background: var(--mat-accent-soft); border-left-color: var(--mat-accent); }
+.mn-note-item__link > .mat-icon { flex: none; margin-top: 3px; color: var(--mat-text-muted); }
+.mn-note-item.is-selected .mn-note-item__link > .mat-icon { color: var(--mat-accent-text); }
+.mn-note-item__text { min-width: 0; display: grid; gap: 1px; }
+.mn-note-item__title { display: flex; align-items: center; gap: var(--mat-space-1); min-width: 0; font-weight: 560; }
+.mn-note-item__title > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mn-note-item__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 2px var(--mat-space-2); color: var(--mat-text-muted); font-size: var(--mat-fs-xs, .75rem); }
 
 @media (min-width: 1100px) {
   .mn-layout-switch { display: inline-flex; }
-  /* the one page of the app that uses the whole window: the list and the note are worth more than the margins */
-  .mat-page.mn-split-page { flex: 1 1 0; min-height: 0; max-width: none; margin: 0; gap: var(--mat-space-3); padding: var(--mat-space-4); }
+  .mat-page.mn-split-page { flex: 1 1 0; min-height: 0; max-width: none; margin: 0; gap: var(--mat-space-2); padding: var(--mat-space-2) var(--mat-space-3) var(--mat-space-3); }
   .mat-main:has(.mn-split-page) > .mat-footer { display: none; }
   .mn-split-page .mat-page__sub { display: none; }
-  .mn-split { flex: 1 1 0; min-height: 0; display: grid; grid-template-columns: minmax(20rem, 28vw) minmax(0, 1fr); gap: var(--mat-space-4); }
-  .mn-split__list { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding-right: var(--mat-space-1); }
-  .mn-split__pane { display: block; min-height: 0; border: 1px solid var(--mat-border); border-radius: var(--mat-radius); background: var(--mat-bg); overflow: hidden; }
-  .mn-split__frame { display: block; width: 100%; height: 100%; border: 0; background: transparent; }
-  .mn-split .mn-wide-col { display: none; }
+  .mn-split-page .mn-listhead h1 { font-size: 1.15rem; margin: 0; }
+  .mn-split { flex: 1 1 0; min-height: 0; display: grid; grid-template-columns: minmax(17rem, 21vw) minmax(0, 1fr); gap: var(--mat-space-3); }
+  .mn-split__list { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+  .mn-split .mat-list { gap: var(--mat-space-2); }
+  .mn-split .mat-toolbar { padding: 0; background: transparent; border: 0; box-shadow: none; }
+  .mn-split .mat-toolbar__search { flex: 1 1 8rem; min-width: 0; }
   .mn-split .mat-toolbar__btn > span, .mn-split .mat-toolbar__btn > small { display: none; }
+  .mn-split .mat-pager { padding: 0; }
+  .mn-split__pane { display: block; min-height: 0; border: 1px solid var(--mat-border); border-radius: var(--mat-radius); background: var(--mat-surface); overflow: hidden; }
+  .mn-split__frame { display: block; width: 100%; height: 100%; border: 0; background: transparent; }
 }
 
-/* a page inside the pane: no menu, its own scroll */
-.mn-embed { background: var(--mat-bg); }
-.mn-embed__page { display: flex; flex-direction: column; gap: var(--mat-space-4); padding: var(--mat-space-4) var(--mat-space-5) var(--mat-space-6); }
-.mn-embed .mn-doc { max-width: none; }
-/* the edit mode looks like the view: the title is the heading (a field drawn like it), folder and tags are one line where the view shows them, the editor sits where the text is */
-.mn-pane-bar .mn-pane-bar__input { flex: 1 1 auto; font: inherit; font-size: var(--mat-fs-xl, 1.35rem); font-weight: 700; line-height: 1.25; color: inherit; background: transparent; border: 1px solid transparent; border-radius: var(--mat-radius); padding: 2px var(--mat-space-2); margin: -3px calc(var(--mat-space-2) * -1 - 1px); width: 100%; min-width: 0; outline: none; }
+/* ---- A page inside the pane: no menu, its own scroll. Top to bottom: the bar (title, mode), the details, the ribbon (view: the actions, edit: the formatting), the text ---- */
+.mn-embed { --mn-bar-h: 3.25rem; background: var(--mat-surface); }
+.mn-embed__page { display: flex; flex-direction: column; min-height: 100vh; padding: 0 var(--mat-space-5) var(--mat-space-6); }
+.mn-embed__page > form.mat-form { flex: 1 1 auto; display: flex; flex-direction: column; gap: 0; }
+.mn-pane-empty { margin-top: var(--mat-space-12); }
+.mn-inline-form { display: contents; }
+
+.mn-pane-bar { position: sticky; top: 0; z-index: 6; display: flex; align-items: center; gap: var(--mat-space-2); box-sizing: border-box; height: var(--mn-bar-h); margin: 0 calc(var(--mat-space-5) * -1); padding: 0 var(--mat-space-5); background: var(--mat-surface); border-bottom: 1px solid var(--mat-border); }
+.mn-pane-bar__title { flex: 1 1 auto; min-width: 0; margin: 0; font-size: var(--mat-fs-xl, 1.35rem); line-height: 1.25; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mn-pane-bar .mn-pane-bar__input { font: inherit; font-size: var(--mat-fs-xl, 1.35rem); font-weight: 700; line-height: 1.25; color: inherit; background: transparent; border: 1px solid transparent; border-radius: var(--mat-radius); padding: 2px var(--mat-space-2); margin: 0 0 0 calc(var(--mat-space-2) * -1 - 1px); width: 100%; outline: none; }
 .mn-pane-bar .mn-pane-bar__input:hover { border-color: var(--mat-border); }
 .mn-pane-bar .mn-pane-bar__input:focus { border-color: var(--mat-accent); background: var(--mat-surface); }
-.mn-embed .mn-meta { min-height: 2.5rem; align-items: center; }
-.mn-embed .mn-edit-card { border: 0; box-shadow: none; background: transparent; }
-.mn-embed .mn-edit-card > .mat-card__head { display: none; }
-.mn-embed .mn-edit-card > .mat-card__body { padding: 0; }
-.mn-embed .mn-edit-grid { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--mat-space-3); }
-.mn-embed .mn-edit-grid > .mat-field { flex: 1 1 14rem; min-width: 0; }
-.mn-embed .mn-edit-grid > .mat-field--full { flex-basis: 100%; }
-.mn-embed .mn-edit-grid > .mat-field:has(.mat-switch) { flex: 0 0 auto; align-self: center; }
-.mn-embed .mn-edit-grid > .mat-field:not(.mat-field--full) > .mat-label,
-.mn-embed .mn-edit-grid > .mat-field:not(.mat-field--full) > .mat-hint,
-.mn-embed .mn-edit-grid > .mat-field:has(textarea) > .mat-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.mn-pane-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--mat-space-3); }
-.mn-pane-bar__title { font-size: var(--mat-fs-xl, 1.35rem); line-height: 1.25; margin: 0; min-width: 0; overflow-wrap: anywhere; }
-.mn-pane-bar .mat-seg { flex: none; }
+.mn-pane-bar .mat-seg, .mn-pane-bar .mat-btn { flex: none; }
 .mn-pane-bar__mode { display: inline-flex; align-items: center; gap: var(--mat-space-1); text-decoration: none; }
-.mn-pane-empty { margin-top: var(--mat-space-12); }
-.mn-autosave { display: flex; align-items: center; gap: var(--mat-space-2); margin: 0; color: var(--mat-text-muted); font-size: var(--mat-fs-sm); }
+.mn-pane-bar .mn-autosave { flex: none; max-width: 13rem; overflow: hidden; white-space: nowrap; }
+.mn-pane-bar .mn-autosave > span { overflow: hidden; text-overflow: ellipsis; }
+.mn-danger:hover { color: var(--mat-danger-text, var(--mat-danger)); }
+.mn-autosave { display: flex; align-items: center; gap: var(--mat-space-1); margin: 0; color: var(--mat-text-muted); font-size: var(--mat-fs-sm); }
 .mn-autosave.is-error { color: var(--mat-danger-text, var(--mat-danger)); }
-.mn-pane-bar { position: sticky; top: 0; z-index: 5; margin: calc(var(--mat-space-4) * -1) calc(var(--mat-space-5) * -1) 0; padding: var(--mat-space-3) var(--mat-space-5); background: var(--mat-glass); border-bottom: 1px solid var(--mat-border); }
-@media (min-width: 1100px) {
-  .mn-split .mat-toolbar__search { flex: 1 1 8rem; min-width: 0; }
-}
+
+.mn-embed .mn-meta { min-height: 2.75rem; align-items: center; }
+.mn-embed .mn-doc { max-width: none; }
+
+/* the ribbon: the quiet buttons of a note that is read, and the formatting bar of one that is written, in the same place */
+.mn-ribbon, .mn-embed .mn-editor__bar { position: sticky; top: var(--mn-bar-h); z-index: 5; display: flex; flex-wrap: nowrap; align-items: center; gap: 2px; overflow-x: auto; box-sizing: border-box; min-height: 2.5rem;
+  margin: 0 calc(var(--mat-space-5) * -1); padding: 3px var(--mat-space-5); background: var(--mat-surface); border: 0; border-bottom: 1px solid var(--mat-border); border-radius: 0; }
+.mn-ribbon .mat-btn, .mn-embed .mn-editor__bar .mat-btn { flex: none; }
+.mn-ribbon .mat-btn.is-on { background: var(--mat-accent-soft-strong); color: var(--mat-accent-text); }
+
+/* the text, on the page itself (no cards) */
+.mn-embed .mat-card { background: transparent; border: 0; box-shadow: none; overflow: visible; }
+.mn-embed .mat-card > .mat-card__body { padding: var(--mat-space-4) 0; }
+.mn-embed .mn-linked.mat-card { margin-top: var(--mat-space-4); border-top: 1px solid var(--mat-border); }
+.mn-embed .mn-linked > .mat-card__head { padding: var(--mat-space-3) 0 0; border: 0; background: transparent; }
+.mn-embed .mn-linked > .mat-card__body { padding-top: var(--mat-space-2); }
+.mn-embed .mn-pdf { height: calc(100vh - 10rem); }
+
+/* the edit mode: details in one line (the labels are only for screen readers), then the editor over the rest of the page */
+.mn-embed .mn-edit-card { flex: 1 1 auto; display: flex; flex-direction: column; }
+.mn-embed .mn-edit-card > .mat-card__head { display: none; }
+.mn-embed .mn-edit-card > .mat-card__body { flex: 1 1 auto; display: flex; flex-direction: column; gap: 0; padding: 0; }
+.mn-embed .mn-edit-meta { --mat-control-h: var(--mat-control-h-sm); display: flex; flex-wrap: wrap; align-items: center; gap: var(--mat-space-3); min-height: 2.75rem; padding: var(--mat-space-1) 0; }
+.mn-embed .mn-edit-meta > .mat-field { flex: 1 1 14rem; min-width: 0; margin: 0; }
+.mn-embed .mn-edit-meta > .mat-field:has(.mat-switch) { flex: 0 0 auto; }
+.mn-embed .mn-edit-meta > .mat-field > .mat-label, .mn-embed .mn-edit-meta > .mat-field > .mat-hint, .mn-embed .mn-edit-content > .mat-field:has(textarea) > .mat-label,
+.mn-embed .mn-hint-note { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.mn-embed .mn-edit-content { flex: 1 1 auto; display: flex; flex-direction: column; }
+.mn-embed .mn-edit-content > .mat-field:not([hidden]) { flex: 1 1 auto; display: flex; flex-direction: column; margin: 0; }
+.mn-embed .mn-editor { flex: 1 1 auto; display: flex; flex-direction: column; border: 0; border-radius: 0; background: transparent; overflow: visible; outline: none; }
+.mn-embed .mn-editor:focus-within { border: 0; outline: none; }
+.mn-embed .mn-editor__area { flex: 1 1 auto; min-height: 40vh; padding: var(--mat-space-4) 0 var(--mat-space-8, 3rem); }
+.mn-embed .mn-edit-content textarea.mat-textarea:not(.mn-editor__source) { flex: 1 1 auto; min-height: 50vh; resize: none; border: 0; box-shadow: none; background: transparent; padding: var(--mat-space-4) 0; outline: none; }
+.mn-embed .mn-edit-content .mat-hint { font-size: var(--mat-fs-xs, .75rem); }
+.mn-links { display: flex; flex-wrap: wrap; gap: var(--mat-space-2); padding: var(--mat-space-2) 0; }
+.mn-links[hidden] { display: none; }
+.mn-chip-link { display: inline-flex; align-items: center; gap: 4px; text-decoration: none; }
+
+/* links to notes: the list after [[, the bar over a link, and a note shown inside another one */
+.mn-linkpop { position: fixed; z-index: 50; min-width: 16rem; max-width: min(26rem, 90vw); max-height: 16rem; overflow: auto; padding: var(--mat-space-1); background: var(--mat-surface); border: 1px solid var(--mat-border-strong); border-radius: var(--mat-radius); box-shadow: var(--mat-shadow-3); }
+.mn-linkpop[hidden] { display: none; }
+.mn-linkpop .mat-menu__item { width: 100%; }
+.mn-linkpop .mat-menu__item.is-active { background: var(--mat-accent-soft); }
+.mn-linkpop--tip { display: flex; min-width: 0; padding: 2px; gap: 2px; }
+.mn-linkpop__none { margin: 0; padding: var(--mat-space-2) var(--mat-space-3); }
+.mn-doc a.mn-note-link, .mn-editor__area a.mn-note-link { text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 3px; }
+.mn-inject { display: inline-grid; place-items: center; width: 1.5em; height: 1.5em; margin-left: .2em; padding: 0; vertical-align: -.3em; border: 0; border-radius: var(--mat-radius-sm); background: transparent; color: var(--mat-text-muted); cursor: pointer; }
+.mn-inject:hover, .mn-inject.is-open { background: var(--mat-accent-soft); color: var(--mat-accent-text); }
+.mn-inject .mat-icon { width: .95em; height: .95em; }
+.mn-injected { margin: 0 0 .9em; padding: var(--mat-space-2) var(--mat-space-4) var(--mat-space-1); background: var(--mat-surface-2); border-left: 3px solid var(--mat-accent); border-radius: 0 var(--mat-radius) var(--mat-radius) 0; }
+.mn-injected .mn-injected { background: var(--mat-surface); }
+.mn-injected__head { display: flex; align-items: center; gap: var(--mat-space-2); margin-bottom: var(--mat-space-1); font-weight: 600; }
+.mn-injected__head > a { flex: 1 1 auto; min-width: 0; }
+.mn-injected__body.mn-doc { max-width: none; }
+.mn-injected__wait { margin: 0; }
+.mn-embed .mn-edit-content > .mat-field, .mn-embed .mn-edit-meta > .mat-field { gap: 0; }
+.mn-embed .mn-edit-meta .mat-error { min-height: 0; }
+.mn-embed .mn-edit-meta .mat-tagfield { min-height: var(--mat-control-h-sm); padding-block: 0; }
+.mn-embed .mn-editor__area:focus, .mn-embed .mn-editor__area:focus-visible { outline: none; box-shadow: none; }
+@media (min-width: 1100px) { .mn-split .mat-toolbar__info { display: none; } }
+.mn-embed .mn-linked ul { padding-left: 0; list-style: none; }

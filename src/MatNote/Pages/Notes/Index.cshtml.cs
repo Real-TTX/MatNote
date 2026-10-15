@@ -51,7 +51,12 @@ public sealed class IndexModel(AppDbContext db, CurrentUser me, AccessService ac
     /// <summary>The note shown in the pane (<c>?id=</c>), or <c>null</c>.</summary>
     public long? SelectedId { get; private set; }
 
-    public string PaneSrc => SelectedId is { } id ? $"/Notes/View?id={id}&embed=1" : $"/Notes/Pane?embed=1{(FolderId is { } f ? "&folder=" + f : string.Empty)}";
+    /// <summary>The person works in the edit mode (the cookie <c>mn.mode</c>, set by the page in the pane) and may edit the picked note: it opens in the editor.</summary>
+    public bool EditSelected { get; private set; }
+
+    public const string ModeCookie = "mn.mode";
+
+    public string PaneSrc => SelectedId is { } id ? $"/Notes/{(EditSelected ? "Edit" : "View")}?id={id}&embed=1" : $"/Notes/Pane?embed=1{(FolderId is { } f ? "&folder=" + f : string.Empty)}";
 
     public const string LayoutCookie = "mn.layout";
 
@@ -70,6 +75,12 @@ public sealed class IndexModel(AppDbContext db, CurrentUser me, AccessService ac
 
         IsSplit = layout != "list";
         SelectedId = long.TryParse(ListQuery.Text(Request, "id"), out var selected) && selected > 0 ? selected : null;
+        if (SelectedId is { } picked && Request.Cookies[ModeCookie] == "edit")
+        {
+            var (editable, _) = await access.FindNoteAsync(picked, Access.Edit);
+            EditSelected = editable is not null && Ui.IsText(editable.Type);
+        }
+
         var q = ListQuery.Text(Request, "q");
         var type = ListQuery.Text(Request, "type");
         var tagText = ListQuery.Text(Request, "tag");
@@ -198,7 +209,7 @@ public sealed class IndexModel(AppDbContext db, CurrentUser me, AccessService ac
             Label = "Notes",
             Search = q,
             SearchField = true,
-            SearchPlaceholder = "Search titles and texts",
+            SearchPlaceholder = "Search",
             Noun = "notes",
             Total = total,
             Matching = matching,

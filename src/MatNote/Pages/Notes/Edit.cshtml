@@ -14,7 +14,7 @@
 @if (Model.Embed)
 {
     @* the title is a field of the form below (form="note-form"): it stays where the heading of the view is *@
-    <partial name="_PaneBar" model="new MatNote.Pages.Shared.PaneBarModel(Model.Id ?? 0, Model.Title, !Model.IsNew, true, true)" />
+    <partial name="_PaneBar" model="new MatNote.Pages.Shared.PaneBarModel(Model.Id ?? 0, Model.Title, Model.IsOwner || !Model.IsNew, true, true, autosave, Model.IsOwner)" />
 }
 
 <form class="mat-form" id="note-form" method="post" enctype="multipart/form-data" novalidate data-autosave="@(autosave ? "true" : null)">
@@ -39,8 +39,8 @@
 
     <div class="mat-card mn-edit-card">
         <div class="mat-card__head">@Ui.Icon(Model.IsNew ? "file-plus" : Ui.TypeIcon(Model.Type))<span class="mat-card__title">@(Model.IsNew ? "New note" : Ui.TypeName(Model.Type))</span></div>
-        <div class="mat-card__body">
-            <div class="mat-form__grid mn-edit-grid">
+        <div class="mat-card__body mn-edit-body">
+            <div class="mat-form__grid mn-edit-meta">
                 @if (!Model.Embed)
                 {
                     <mn-field name="Title" label="Title" required full value="@Model.Title" maxlength="250" autofocus msg-required="Please give the note a title." />
@@ -57,7 +57,9 @@
                     <mn-field name="Tags" kind="tags" label="Tags" optional value="@Model.Tags" options="Model.TagChoices" placeholder="Add a tag" hint="Press Enter or a comma to add one; a new name makes a new tag." />
                     <mn-field name="Favorite" kind="switch" label="Favorite" full="@(!Model.Embed)" value="@Model.Favorite.ToString()" />
                 }
+            </div>
 
+            <div class="mn-edit-content">
                 @* ---- the text: the editor for rich text, a plain field for plain text and markdown; a new note shows the one of the chosen type ---- *@
                 @if (Model.IsNew || Model.Type == NoteType.RichText)
                 {
@@ -66,7 +68,7 @@
                         <div class="mn-editor" data-editor>
                             <textarea class="mat-textarea mn-editor__source mat-mono" id="RichContent" name="Content" rows="14" aria-label="Text of the note">@Model.Content</textarea>
                         </div>
-                        <span class="mat-hint">Use the link button in the bar to add another note: when you export this note, the linked note is copied into it.</span>
+                        <span class="mat-hint mn-hint-note">Type <kbd>[[</kbd> or use the link button in the bar to link another note: when you export this note, the linked note is copied into it. <kbd>Ctrl</kbd> + click opens a link.</span>
                         <span class="mat-error" aria-live="polite">@Model.ErrorFor("Content")</span>
                     </div>
                 }
@@ -75,9 +77,16 @@
                 {
                     <div class="mat-field mat-field--full@(Model.ErrorFor("Content") is null ? "" : " is-invalid")" @Html.Raw(Model.IsNew ? "data-show-if=\"#Kind\" data-show-value=\"PlainText,Markdown\"" : "")>
                         <label class="mat-label" for="TextContent">Text</label>
-                        <textarea class="mat-textarea mat-mono" id="TextContent" name="Content" rows="16" aria-label="Text of the note">@Model.Content</textarea>
-                        <span class="mat-hint">
-                            Add a link to another note with <code>[Title](note:ID)</code>, or
+                        @if (Model.Embed)
+                        {
+                            <div class="mn-ribbon">
+                                <button type="button" class="mat-btn mat-btn--ghost mat-btn--sm" data-note-link-open="#TextContent" data-tip="Link a note (or type [[)">@Ui.Icon("note-link")<span>Link a note</span></button>
+                            </div>
+                        }
+                        <textarea class="mat-textarea mat-mono" id="TextContent" name="Content" rows="16" aria-label="Text of the note" data-note-links="#TextContent-links">@Model.Content</textarea>
+                        <div class="mn-links" id="TextContent-links" aria-label="Linked notes" hidden></div>
+                        <span class="mat-hint mn-hint-note">
+                            Type <kbd>[[</kbd> to link a note (written as <code>[Title](note:ID)</code>), or
                             <button type="button" class="mat-btn mat-btn--ghost mat-btn--sm" data-note-link-open="#TextContent">@Ui.Icon("note-link")<span>choose a note</span></button>
                         </span>
                         <span class="mat-error" aria-live="polite">@Model.ErrorFor("Content")</span>
@@ -103,13 +112,16 @@
         </div>
     </div>
 
-    @if (autosave)
+    @if (!Model.Embed)
     {
-        <p class="mn-autosave" data-autosave-status role="status">@Ui.Icon("check-circle")<span>Changes are saved while you type.</span></p>
-    }
+        @if (autosave)
+        {
+            <p class="mn-autosave" data-autosave-status role="status">@Ui.Icon("check-circle")<span>Changes are saved while you type.</span></p>
+        }
 
-    <mn-buttons save="Save note" back="@back" delete-handler="@(Model.IsNew || !Model.IsOwner ? null : "Delete")" delete-label="Delete note" delete-ok="Move to trash"
-                delete-confirm="Move this note to the trash? You can restore it from there." />
+        <mn-buttons save="Save note" back="@back" delete-handler="@(Model.IsNew || !Model.IsOwner ? null : "Delete")" delete-label="Delete note" delete-ok="Move to trash"
+                    delete-confirm="Move this note to the trash? You can restore it from there." />
+    }
 </form>
 
 @if (canLink)

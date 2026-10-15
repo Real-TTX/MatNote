@@ -2,8 +2,13 @@
 @*
     The bar on top of a note inside the note pane: its title, and a switch between reading it and editing it (only for someone who may edit).
     A switch is a link to the other page of the same note; unsaved text is saved first (autosave.js).
-    In the edit mode the title is a field of the form "note-form" (attribute form=), drawn like the heading, so that nothing moves when the mode changes.
+    In the edit mode the title is a field of the form "note-form" (attribute form=), drawn like the heading, so that nothing moves when the mode changes; the bar then also
+    shows the state of the autosave and has the Save and Delete buttons of the form.
 *@
+@{
+    // a note that is not saved yet has no address: the switch and Delete appear with the first save (autosave.js)
+    var fresh = Model.Id == 0;
+}
 <div class="mn-pane-bar">
     @if (Model.TitleField)
     {
@@ -13,11 +18,23 @@
     {
         <h1 class="mn-pane-bar__title">@Model.Title</h1>
     }
+    @if (Model.TitleField && Model.Autosave)
+    {
+        <span class="mn-autosave" data-autosave-status role="status">@Ui.Icon("check-circle")<span>Saved while you type</span></span>
+    }
+    @if (Model.TitleField)
+    {
+        <button type="submit" form="note-form" class="mat-btn mat-btn--ghost mat-btn--icon" data-save-now aria-label="Save now" data-tip="Save now (Ctrl+S)">@Ui.Icon("save")</button>
+    }
     @if (Model.CanEdit)
     {
-        <div class="mat-seg" role="group" aria-label="Mode">
-            <a class="mat-seg__btn mn-pane-bar__mode" href="/Notes/View?id=@Model.Id&embed=1" aria-pressed="@(Model.Editing ? "false" : "true")">@Ui.Icon("eye")<span>View</span></a>
-            <a class="mat-seg__btn mn-pane-bar__mode" href="/Notes/Edit?id=@Model.Id&embed=1" aria-pressed="@(Model.Editing ? "true" : "false")">@Ui.Icon("edit")<span>Edit</span></a>
+        <div class="mat-seg" role="group" aria-label="Mode" hidden="@(fresh ? "hidden" : null)" data-after-create="@(fresh ? "true" : null)">
+            <a class="mat-seg__btn mn-pane-bar__mode" href="@(fresh ? "#" : $"/Notes/View?id={Model.Id}&embed=1")" data-href="/Notes/View?id={id}&embed=1" aria-pressed="@(Model.Editing ? "false" : "true")">@Ui.Icon("eye")<span>View</span></a>
+            <a class="mat-seg__btn mn-pane-bar__mode" href="@(fresh ? "#" : $"/Notes/Edit?id={Model.Id}&embed=1")" data-href="/Notes/Edit?id={id}&embed=1" aria-pressed="@(Model.Editing ? "true" : "false")">@Ui.Icon("edit")<span>Edit</span></a>
         </div>
+    }
+    @if (Model.TitleField && Model.CanDelete)
+    {
+        <button type="submit" form="note-form" class="mat-btn mat-btn--ghost mat-btn--icon mn-danger" hidden="@(fresh ? "hidden" : null)" data-after-create="@(fresh ? "true" : null)" formnovalidate formaction="?handler=Delete" data-confirm="Move this note to the trash? You can restore it from there." data-confirm-ok="Move to trash" aria-label="Delete note" data-tip="Delete note">@Ui.Icon("trash")</button>
     }
 </div>

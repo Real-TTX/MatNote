@@ -174,6 +174,8 @@
     });
     var form = source.form;
     if (form) { form.addEventListener('submit', function () { if (source.hidden) { sync(); } else { area.innerHTML = source.value; } }); }
+    attachPicker(area);
+    attachLinkTip(area);
     box.noteLinkTarget = area;
   }
 
@@ -260,5 +262,269 @@
     }
   });
 
+  // ---- OneNote style links: type [[ and a few letters, Ctrl + click or the little bar on a link opens it ----------------------------------
+
+  var embedded = doc.body.getAttribute('data-embed') === 'true';
+
+  function noteUrl(id) { return '/Notes/View?id=' + id + (embedded ? '&embed=1' : ''); }
+
+  // opens a note in this window after what is typed has been saved (autosave.js)
+  function openNote(id) {
+    var go = function () { window.location.href = noteUrl(id); };
+    (window.mnSaveNow ? window.mnSaveNow() : Promise.resolve()).then(go, go);
+  }
+
+  function textareaCaret(field) {
+    var cs = window.getComputedStyle(field);
+    var mirror = doc.createElement('div');
+    ['boxSizing', 'width', 'fontFamily', 'fontSize', 'fontWeight', 'fontStyle', 'letterSpacing', 'lineHeight', 'tabSize',
+      'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'borderTopWidth', 'borderRightWidth', 'borderBottomWidth', 'borderLeftWidth'].forEach(function (p) { mirror.style[p] = cs[p]; });
+    mirror.style.position = 'fixed'; mirror.style.visibility = 'hidden'; mirror.style.top = '0'; mirror.style.left = '-9999px';
+    mirror.style.whiteSpace = 'pre-wrap'; mirror.style.overflowWrap = 'break-word';
+    mirror.textContent = field.value.slice(0, field.selectionStart);
+    var mark = doc.createElement('span'); mark.textContent = '​'; mirror.appendChild(mark);
+    doc.body.appendChild(mirror);
+    var f = field.getBoundingClientRect(), m = mirror.getBoundingClientRect(), s = mark.getBoundingClientRect();
+    var h = parseFloat(cs.lineHeight) || 20;
+    var rect = { left: f.left + (s.left - m.left) - field.scrollLeft, top: f.top + (s.top - m.top) - field.scrollTop, height: h };
+    rect.bottom = rect.top + h;
+    mirror.remove();
+    return rect;
+  }
+
+  function caretRect(field) {
+    if (!field.isContentEditable) { return textareaCaret(field); }
+    var s = doc.getSelection();
+    if (s.rangeCount) {
+      var r = s.getRangeAt(0).cloneRange();
+      r.collapse(true);
+      var rects = r.getClientRects();
+      if (rects.length) { return rects[0]; }
+      var b = r.getBoundingClientRect();
+      if (b.width || b.height) { return b; }
+    }
+    return field.getBoundingClientRect();
+  }
+
+  function placeNear(pop, rect) {
+    pop.hidden = false;
+    var w = pop.offsetWidth, h = pop.offsetHeight;
+    var left = Math.max(8, Math.min(rect.left, window.innerWidth - w - 8));
+    var top = rect.bottom + 4;
+    if (top + h > window.innerHeight - 8 && rect.top - h - 4 > 8) { top = rect.top - h - 4; }
+    pop.style.left = left + 'px';
+    pop.style.top = top + 'px';
+  }
+
+  // the list that follows the cursor after [[
+  var picker = null;
+  var pick = null;   // { field, query, range | start + end, items, index, loaded }
+  var pickTimer = null;
+
+  function ensurePicker() {
+    if (picker) { return picker; }
+    picker = doc.createElement('div');
+    picker.className = 'mn-linkpop';
+    picker.setAttribute('role', 'listbox');
+    picker.setAttribute('aria-label', 'Notes to link');
+    picker.hidden = true;
+    // a click must not take the cursor out of the text
+    picker.addEventListener('mousedown', function (e) { e.preventDefault(); });
+    picker.addEventListener('click', function (e) {
+      var item = e.target.closest('[data-id]');
+      if (item && pick) { choose(Number(item.getAttribute('data-index'))); }
+    });
+    doc.body.appendChild(picker);
+    return picker;
+  }
+
+  function closePicker() {
+    clearTimeout(pickTimer);
+    pick = null;
+    if (picker) { picker.hidden = true; }
+  }
+
+  function renderPicker() {
+    var pop = ensurePicker();
+    if (!pick.items.length) {
+      pop.innerHTML = '<p class="mat-muted mn-linkpop__none">' + (pick.loaded ? 'No note found.' : 'Searching …') + '</p>';
+    } else {
+      pop.innerHTML = pick.items.map(function (n, i) {
+        return '<button type="button" role="option" class="mat-menu__item' + (i === pick.index ? ' is-active' : '') + '" data-id="' + n.id + '" data-index="' + i + '" aria-selected="' + (i === pick.index ? 'true' : 'false') + '">' +
+          icon(n.icon || 'file-text') + '<span>' + esc(n.title) + (n.folder ? ' <small class="mat-muted">' + esc(n.folder) + '</small>' : '') + '</span></button>';
+      }).join('');
+    }
+    placeNear(pop, caretRect(pick.field));
+  }
+
+  function lookup() {
+    var state = pick;
+    if (!state) { return; }
+    clearTimeout(pickTimer);
+    pickTimer = setTimeout(function () {
+      var dlg = $('[data-note-link-dialog]');
+      var exclude = dlg ? dlg.getAttribute('data-exclude') : '';
+      fetch('/Notes/Lookup?q=' + encodeURIComponent(state.query) + (exclude ? '&exclude=' + encodeURIComponent(exclude) : ''), { credentials: 'same-origin', headers: { Accept: 'application/json' } })
+        .then(function (r) { return r.ok ? r.json() : []; })
+        .then(function (items) {
+          if (pick !== state) { return; }
+          state.items = items.slice(0, 8);
+          state.loaded = true;
+          state.index = 0;
+          renderPicker();
+        })
+        .catch(function () { /* the list stays as it was */ });
+    }, 120);
+  }
+
+  // where the text before the cursor ends with [[query
+  function trigger(field) {
+    if (field.isContentEditable) {
+      var s = doc.getSelection();
+      if (!s.rangeCount || !s.isCollapsed || !field.contains(s.anchorNode) || s.anchorNode.nodeType !== 3) { return null; }
+      var before = s.anchorNode.nodeValue.slice(0, s.anchorOffset);
+      var m = /\[\[([^\[\]\n]{0,60})$/.exec(before);
+      if (!m) { return null; }
+      var range = doc.createRange();
+      range.setStart(s.anchorNode, s.anchorOffset - m[0].length);
+      range.setEnd(s.anchorNode, s.anchorOffset);
+      return { query: m[1], range: range };
+    }
+    if (field.selectionStart !== field.selectionEnd) { return null; }
+    var text = field.value.slice(0, field.selectionStart);
+    var t = /\[\[([^\[\]\n]{0,60})$/.exec(text);
+    return t ? { query: t[1], start: field.selectionStart - t[0].length, end: field.selectionStart } : null;
+  }
+
+  function update(field) {
+    var t = trigger(field);
+    if (!t) { closePicker(); return; }
+    var fresh = !pick || pick.field !== field;
+    var changed = fresh || pick.query !== t.query;
+    pick = { field: field, query: t.query, range: t.range, start: t.start, end: t.end, items: fresh ? [] : pick.items, index: fresh ? 0 : pick.index, loaded: fresh ? false : pick.loaded };
+    renderPicker();
+    if (changed) { lookup(); }
+  }
+
+  function choose(index) {
+    var state = pick;
+    var n = state && state.items[index];
+    if (!n) { return; }
+    var field = state.field;
+    closePicker();
+    if (field.isContentEditable) {
+      field.focus();
+      var s = doc.getSelection();
+      s.removeAllRanges();
+      s.addRange(state.range);
+      doc.execCommand('insertHTML', false, '<a class="mn-note-link" data-note-id="' + n.id + '" href="/Notes/View?id=' + n.id + '">' + esc(n.title) + '</a>&nbsp;');
+      field.dispatchEvent(new Event('input', { bubbles: true }));
+    } else {
+      var token = '[' + n.title.replace(/[\[\]]/g, '') + '](note:' + n.id + ') ';
+      field.value = field.value.slice(0, state.start) + token + field.value.slice(state.end);
+      field.focus();
+      field.selectionStart = field.selectionEnd = state.start + token.length;
+      field.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  }
+
+  function attachPicker(field) {
+    field.addEventListener('input', function () { update(field); });
+    field.addEventListener('click', function () { if (pick) { update(field); } });
+    field.addEventListener('blur', function () { setTimeout(function () { if (doc.activeElement !== field) { closePicker(); } }, 120); });
+    field.addEventListener('keydown', function (e) {
+      if (!pick || pick.field !== field) { return; }
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        if (!pick.items.length) { return; }
+        e.preventDefault();
+        pick.index = (pick.index + (e.key === 'ArrowDown' ? 1 : pick.items.length - 1)) % pick.items.length;
+        renderPicker();
+      } else if ((e.key === 'Enter' || e.key === 'Tab') && pick.items.length) {
+        e.preventDefault();
+        choose(pick.index);
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        closePicker();
+      }
+    });
+  }
+
+  // the little bar over a link to a note in the rich text: open it, or take the link away
+  var tip = null;
+  var tipLink = null;
+
+  function ensureTip() {
+    if (tip) { return tip; }
+    tip = doc.createElement('div');
+    tip.className = 'mn-linkpop mn-linkpop--tip';
+    tip.hidden = true;
+    tip.innerHTML = '<button type="button" class="mat-btn mat-btn--ghost mat-btn--sm" data-act="open">' + icon('external') + '<span>Open</span></button>' +
+      '<button type="button" class="mat-btn mat-btn--ghost mat-btn--sm" data-act="unlink">' + icon('x') + '<span>Remove link</span></button>';
+    tip.addEventListener('mousedown', function (e) { e.preventDefault(); });
+    tip.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-act]');
+      if (!b || !tipLink) { return; }
+      var link = tipLink;
+      if (b.getAttribute('data-act') === 'open') { openNote(link.getAttribute('data-note-id')); return; }
+      var area = link.closest('[contenteditable]');
+      link.replaceWith(doc.createTextNode(link.textContent));
+      tip.hidden = true;
+      tipLink = null;
+      if (area) { area.dispatchEvent(new Event('input', { bubbles: true })); }
+    });
+    doc.body.appendChild(tip);
+    return tip;
+  }
+
+  function attachLinkTip(area) {
+    function linkAt(node) {
+      var el = node && (node.nodeType === 1 ? node : node.parentNode);
+      return el && el.closest ? el.closest('a.mn-note-link[data-note-id]') : null;
+    }
+    function check() {
+      var s = doc.getSelection();
+      var link = s.rangeCount ? linkAt(s.anchorNode) : null;
+      if (!link || !area.contains(link)) { if (tip) { tip.hidden = true; } tipLink = null; return; }
+      tipLink = link;
+      placeNear(ensureTip(), link.getBoundingClientRect());
+    }
+    doc.addEventListener('selectionchange', function () { if (doc.activeElement === area) { check(); } });
+    area.addEventListener('blur', function () { setTimeout(function () { if (tip && doc.activeElement !== area) { tip.hidden = true; } }, 150); });
+    area.addEventListener('click', function (e) {
+      var link = linkAt(e.target);
+      if (link && (e.ctrlKey || e.metaKey)) { e.preventDefault(); openNote(link.getAttribute('data-note-id')); }
+    });
+  }
+
+  // the notes a plain text or markdown note links to, as chips under the field: a click opens one
+  function attachChips(field) {
+    var box = $(field.getAttribute('data-note-links'));
+    if (!box) { return; }
+    function render() {
+      var seen = {};
+      var html = '';
+      var re = /\[([^\]\r\n]*)\]\(note:(\d{1,18})\)/g, m;
+      while ((m = re.exec(field.value))) {
+        if (seen[m[2]]) { continue; }
+        seen[m[2]] = true;
+        html += '<a class="mat-tag mn-chip-link" href="' + noteUrl(m[2]) + '">' + icon('note-link') + '<span>' + esc(m[1] || ('Note ' + m[2])) + '</span></a>';
+      }
+      box.innerHTML = html;
+      box.hidden = !html;
+    }
+    field.addEventListener('input', render);
+    render();
+  }
+
+  // Enter in the title goes on to the text, like in a notebook
+  doc.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter' || e.shiftKey || !e.target.matches || !e.target.matches('input[name=Title]')) { return; }
+    var next = $('.mn-editor__area:not([hidden])') || $('textarea#TextContent');
+    if (!next) { return; }
+    e.preventDefault();
+    next.focus();
+  });
+
   $$('[data-editor]').forEach(setupEditor);
+  $$('textarea[data-note-links]').forEach(function (t) { attachPicker(t); attachChips(t); });
 })();

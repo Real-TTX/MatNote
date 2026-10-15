@@ -61,6 +61,11 @@
     url.searchParams.delete('handler');
     history.replaceState(null, '', url.toString());
     document.body.setAttribute('data-note-id', id);
+    // the switch of the pane bar and Delete have an address now
+    Array.prototype.forEach.call(document.querySelectorAll('[data-after-create]'), function (el) {
+      el.hidden = false;
+      Array.prototype.forEach.call(el.querySelectorAll('[data-href]'), function (link) { link.href = link.getAttribute('data-href').replace('{id}', id); });
+    });
     // the type is chosen once, with the first save
     if (form.elements.Kind) { form.elements.Kind.disabled = true; }
   }
@@ -116,6 +121,22 @@
     save(false).then(function () {
       if (link.target === '_top') { window.top.location.href = link.href; } else { location.href = link.href; }
     });
+  });
+
+  // the Save button of the pane bar and Ctrl+S save at once and stay on the page (a note that cannot be autosaved, a file, is posted like any form)
+  function saveNow() { unsaved = true; return save(false); }
+  window.mnSaveNow = function () { return unsaved ? save(false) : Promise.resolve(); };
+  document.addEventListener('click', function (e) {
+    var button = e.target.closest && e.target.closest('[data-save-now]');
+    if (!button || stopped || !ready()) { return; }
+    e.preventDefault();
+    saveNow();
+  });
+  document.addEventListener('keydown', function (e) {
+    if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === 's') {
+      e.preventDefault();
+      if (!stopped && ready()) { saveNow(); } else { form.requestSubmit(); }
+    }
   });
 
   window.addEventListener('pagehide', function () { if (unsaved && !stopped) { save(true); } });

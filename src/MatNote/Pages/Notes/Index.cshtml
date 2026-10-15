@@ -17,9 +17,15 @@
         <h1>@Model.Heading</h1>
         <p class="mat-page__sub">@Model.Subtitle</p>
     </div>
+    <div class="mn-listhead__tools">
+    @if (Model.IsSplit && Model.CanAddHere)
+    {
+        <a class="mat-btn mat-btn--primary mat-btn--sm mn-newnote" href="@newNote" data-open-pane>@Ui.Icon("file-plus")<span>New note</span></a>
+    }
     <div class="mat-seg mn-layout-switch" role="group" aria-label="Layout">
         <button type="button" class="mat-seg__btn" data-layout="split" aria-pressed="@(Model.IsSplit ? "true" : "false")" aria-label="List and note side by side" data-tip="List and note side by side">@Ui.Icon("sidebar")</button>
         <button type="button" class="mat-seg__btn" data-layout="list" aria-pressed="@(Model.IsSplit ? "false" : "true")" aria-label="Only the list" data-tip="Only the list">@Ui.Icon("list")</button>
+    </div>
     </div>
 </div>
 
@@ -63,6 +69,30 @@
     }
     else
     {
+        @if (Model.IsSplit)
+        {
+            <ul class="mn-notelist" aria-label="Notes">
+                @foreach (var n in Model.Items)
+                {
+                    <li class="mn-note-item@(n.Id == Model.SelectedId ? " is-selected" : "")" data-note-id="@n.Id" data-edit="@(n.Own && Ui.IsText(n.Type) ? "true" : null)">
+                        <a class="mn-note-item__link" href="/Notes/View?id=@n.Id" data-open-pane aria-current="@(n.Id == Model.SelectedId ? "true" : null)">
+                            @Ui.Icon(Ui.TypeIcon(n.Type))
+                            <span class="mn-note-item__text">
+                                <span class="mn-note-item__title"><span>@n.Title</span>@if (n.Favorite) { <span class="mn-star" title="Favorite">@Ui.Icon("star")<span class="mat-sr-only">Favorite</span></span> }</span>
+                                <span class="mn-note-item__meta">
+                                    <span>@Clock.Format(n.Updated)</span>
+                                    @if (!n.Own) { <span>Shared by @n.OwnerName</span> }
+                                    else if (n.FolderName is not null) { <span>@n.FolderName</span> }
+                                    @foreach (var t in n.Tags) { <span class="mat-tag" data-colour="@t.Color">@t.Name</span> }
+                                </span>
+                            </span>
+                        </a>
+                    </li>
+                }
+            </ul>
+        }
+        else
+        {
         <mn-table caption="Notes">
             <thead>
                 <tr><th scope="col">Note</th><th scope="col" class="mat-hide-md mn-wide-col">Folder</th><th scope="col" class="mat-hide-sm mn-wide-col">Type</th><th scope="col">Changed</th><th scope="col" class="mn-wide-col"><span class="mat-sr-only">Actions</span></th></tr>
@@ -100,13 +130,14 @@
                 }
             </tbody>
         </mn-table>
+        }
     }
 
     <partial name="_Pager" model="Model.Pager" />
     </div>
 
     <div class="mat-actions">
-        @if (Model.CanAddHere)
+        @if (Model.CanAddHere && !Model.IsSplit)
         {
             <a class="mat-btn mat-btn--primary" href="@newNote" data-open-pane>@Ui.Icon("file-plus")<span>New note</span></a>
         }
