@@ -17,11 +17,11 @@
 
 @if (Model.Running is not null)
 {
-    <div class="mat-alert mat-alert--info" role="status">
+    <div class="mat-alert mat-alert--info" role="status" data-auto-reload="3000">
         @Ui.Icon("progress-play")
         <div class="mat-alert__body">
             <strong>A backup is running</strong>
-            <p>“@Model.Running” is being made. It appears below when it is done; reload this page to see it.</p>
+            <p>“@Model.Running” is being made. It appears below when it is done; this page checks again every few seconds.</p>
         </div>
     </div>
 }

@@ -1,7 +1,8 @@
 /* MatNotes: the few behaviours that only this app has (the toolkit does the rest).
 
    data-copy-inner="#id"   copy the text of an element as the person reads it (line breaks of paragraphs and list items kept): the "Copy" button of a rich text note.
-                           (data-copy="#id" of the toolkit copies the value of a field, which is what plain text and markdown notes use.) */
+                           (data-copy="#id" of the toolkit copies the value of a field, which is what plain text and markdown notes use.)
+   data-auto-reload="ms"  reload the page after that time: the page of a running backup, until the backup is done (the notice is no longer on the page then). */
 (function () {
   'use strict';
 
@@ -21,6 +22,9 @@
       try { document.execCommand('copy') ? resolve() : reject(new Error('copy failed')); } catch (e) { reject(e); } finally { area.remove(); }
     });
   }
+
+  var auto = document.querySelector('[data-auto-reload]');
+  if (auto) { setTimeout(function () { location.reload(); }, parseInt(auto.getAttribute('data-auto-reload'), 10) || 3000); }
 
   document.addEventListener('click', function (e) {
     var button = e.target.closest && e.target.closest('[data-copy-inner]');
