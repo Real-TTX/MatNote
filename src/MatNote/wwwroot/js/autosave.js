@@ -21,9 +21,10 @@
 
   function show(text, icon, tone) {
     if (!status) { return; }
-    status.querySelector('span').textContent = text;
+    var label = status.querySelector('span');
+    if (label.textContent !== text) { label.textContent = text; status.title = text; }
     var use = status.querySelector('use');
-    if (use) { use.setAttribute('href', '#mat-i-' + icon); }
+    if (use && use.getAttribute('href') !== '#mat-i-' + icon) { use.setAttribute('href', '#mat-i-' + icon); }
     status.classList.toggle('is-error', tone === 'error');
   }
 
@@ -48,7 +49,7 @@
   function schedule() {
     if (stopped) { return; }
     unsaved = true;
-    show('Not saved yet ...', 'clock');
+    show('Not saved yet', 'clock');
     clearTimeout(timer);
     timer = setTimeout(function () { save(false); }, DELAY);
   }

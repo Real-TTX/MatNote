@@ -216,3 +216,6 @@ a.mn-stat:hover { border-color: var(--mat-border-strong); }
 .mn-doc section.mn-linked-note > :is(h2, h3, h4) > a:hover { text-decoration: underline; }
 @media (min-width: 1100px) { .mn-split .mat-toolbar { flex-wrap: nowrap; gap: var(--mat-space-1); } .mn-split .mat-toolbar__spacer { display: none; } .mn-split .mat-toolbar__end { margin-left: 0; flex: none; } }
 .mn-embed .mn-item-head { display: none; }
+/* nothing jumps while the page is drawn or while typing: the status has a fixed width, and the formatting bar has its place before editor.js draws it */
+.mn-pane-bar .mn-autosave { width: 8.75rem; justify-content: flex-end; }
+.mn-embed .mn-editor:not([data-ready])::before { content: ""; display: block; box-sizing: border-box; height: 2.5rem; margin: 0 calc(var(--mat-space-5) * -1); border-bottom: 1px solid var(--mat-border); }

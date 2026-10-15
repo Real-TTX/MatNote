@@ -67,11 +67,50 @@
 
   function select(id) {
     Array.prototype.forEach.call(document.querySelectorAll('[data-split-rows] [data-note-id]'), function (row) {
-      row.classList.toggle('is-selected', id !== null && String(id) === row.getAttribute('data-note-id'));
+      var on = id !== null && String(id) === row.getAttribute('data-note-id');
+      row.classList.toggle('is-selected', on);
+      var link = row.querySelector('[data-open-pane]');
+      if (link) { if (on) { link.setAttribute('aria-current', 'true'); } else { link.removeAttribute('aria-current'); } }
     });
     var url = new URL(location.href);
     if (id) { url.searchParams.set('id', id); } else { url.searchParams.delete('id'); }
     history.replaceState(null, '', url.toString());
+  }
+
+  // What is not the list of notes (the pager, the empty message): its markup without the list
+  function restOf(box) {
+    var copy = box.cloneNode(true);
+    var list = copy.querySelector('.mn-notelist');
+    if (list) { list.remove(); }
+    return copy.innerHTML;
+  }
+
+  // The list is brought up to date row by row and nothing that is the same is touched, so that it never flickers while a note is written. A changed row changes where it
+  // stands (the note that was just saved does not jump to the top under the pointer); a new note is put where the server has it, a removed one goes.
+  function patch(mine, fresh) {
+    var have = mine.querySelector('.mn-notelist');
+    var want = fresh.querySelector('.mn-notelist');
+    if (!have || !want || restOf(mine) !== restOf(fresh)) {
+      if (mine.innerHTML !== fresh.innerHTML) {
+        mine.innerHTML = fresh.innerHTML;
+        if (window.MatUi && window.MatUi.refresh) { window.MatUi.refresh(mine); }
+      }
+      return;
+    }
+
+    var rows = {};
+    Array.prototype.forEach.call(have.children, function (li) { rows[li.getAttribute('data-note-id')] = li; });
+    var ids = Array.prototype.map.call(want.children, function (li) { return li.getAttribute('data-note-id'); });
+    Object.keys(rows).forEach(function (id) { if (ids.indexOf(id) === -1) { rows[id].remove(); } });
+    Array.prototype.forEach.call(want.children, function (li, i) {
+      var cur = rows[ids[i]];
+      if (!cur) {
+        have.insertBefore(document.importNode(li, true), have.children[i] || null);
+        return;
+      }
+      if (cur.innerHTML !== li.innerHTML) { cur.innerHTML = li.innerHTML; }
+      if (cur.className !== li.className) { cur.className = li.className; }
+    });
   }
 
   function refresh() {
@@ -80,13 +119,10 @@
       var fresh = next.querySelector('[data-split-rows]');
       var mine = document.querySelector('[data-split-rows]');
       if (!fresh || !mine) { return; }
-      if (mine.innerHTML !== fresh.innerHTML) {
-        mine.innerHTML = fresh.innerHTML;
-        if (window.MatUi && window.MatUi.refresh) { window.MatUi.refresh(mine); }
-      }
+      patch(mine, fresh);
       var info = next.querySelector('.mat-toolbar__info');
       var shown = document.querySelector('.mat-toolbar__info');
-      if (info && shown) { shown.textContent = info.textContent; }
+      if (info && shown && shown.textContent !== info.textContent) { shown.textContent = info.textContent; }
     }).catch(function () { /* the list stays as it is */ });
   }
 
