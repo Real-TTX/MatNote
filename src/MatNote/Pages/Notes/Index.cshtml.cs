@@ -45,9 +45,31 @@ public sealed class IndexModel(AppDbContext db, CurrentUser me, AccessService ac
 
     public bool IsFavorites { get; private set; }
 
+    /// <summary>The layout: the list and the picked note side by side (<c>split</c>, on a wide window) or only the list, a note on a page of its own (<c>list</c>). Remembered in a cookie.</summary>
+    public bool IsSplit { get; private set; }
+
+    /// <summary>The note shown in the pane (<c>?id=</c>), or <c>null</c>.</summary>
+    public long? SelectedId { get; private set; }
+
+    public string PaneSrc => SelectedId is { } id ? $"/Notes/View?id={id}&embed=1" : $"/Notes/Pane?embed=1{(FolderId is { } f ? "&folder=" + f : string.Empty)}";
+
+    public const string LayoutCookie = "mn.layout";
+
     public async Task<IActionResult> OnGetAsync()
     {
         var id = me.RequiredId;
+        var layout = ListQuery.Text(Request, "layout");
+        if (layout is "split" or "list")
+        {
+            Response.Cookies.Append(LayoutCookie, layout, new CookieOptions { MaxAge = TimeSpan.FromDays(365), SameSite = SameSiteMode.Lax, Secure = Request.IsHttps, HttpOnly = true, IsEssential = true });
+        }
+        else
+        {
+            layout = Request.Cookies[LayoutCookie];
+        }
+
+        IsSplit = layout != "list";
+        SelectedId = long.TryParse(ListQuery.Text(Request, "id"), out var selected) && selected > 0 ? selected : null;
         var q = ListQuery.Text(Request, "q");
         var type = ListQuery.Text(Request, "type");
         var tagText = ListQuery.Text(Request, "tag");

@@ -1,0 +1,49 @@
+@inject Assets Toolkit
+@inject CurrentUser Me
+@*
+    The layout of a page inside the note pane of the list (side by side layout): no menu, no breadcrumb, no footer. The list page shows it in a frame.
+    A page sets ViewData["NoteId"] when it shows or edits one note, so that the list can mark it (embed.js tells the list page after every load).
+*@
+@{
+    var user = Me.Snapshot!;
+    var title = ViewData["Title"] as string ?? Ui.AppName;
+    var themeAttr = user.Theme is "light" or "dark" ? $" data-theme=\"{user.Theme}\"" : string.Empty;
+    var noteId = ViewData["NoteId"] as long?;
+}
+<!DOCTYPE html>
+<html lang="en" data-app="@Ui.AppId" data-scheme="@user.Scheme"@Html.Raw(themeAttr)>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <title>@title · @Ui.AppName</title>
+    <script src="~/matui/matui.boot.js" asp-append-version="true"></script>
+    <link rel="stylesheet" href="~/matui/matui.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/app.css" asp-append-version="true" />
+</head>
+<body class="mn-embed" data-embed="true" data-note-id="@noteId">
+    @Html.Raw(Toolkit.Sprite)
+
+    <main class="mn-embed__page" id="main">
+        @RenderBody()
+    </main>
+
+    @* the anti-forgery token of the page: the scripts send it with their requests *@
+    <form hidden>@Html.AntiForgeryToken()</form>
+
+    @if (TempData["Flash"] is string flash)
+    {
+        <div data-toast="@flash" data-tone="success" hidden></div>
+    }
+
+    @if (TempData["FlashError"] is string flashError)
+    {
+        <div data-toast="@flashError" data-tone="danger" hidden></div>
+    }
+
+    <script src="~/matui/matui.js" asp-append-version="true"></script>
+    <script src="~/js/app.js" asp-append-version="true"></script>
+    <script src="~/js/embed.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

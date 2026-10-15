@@ -94,7 +94,8 @@
     // paragraphs, and elements instead of style attributes (the page forbids inline style)
     try { doc.execCommand('defaultParagraphSeparator', false, 'p'); doc.execCommand('styleWithCSS', false, false); } catch (e) { /* older browsers */ }
 
-    function sync() { source.value = area.innerHTML; }
+    // the textarea is what is posted; an input event tells the form that it changed (autosave.js)
+    function sync() { source.value = area.innerHTML; source.dispatchEvent(new Event('input', { bubbles: true })); }
     function run(b) {
       if (b.action === 'source') { toggleSource(); return; }
       if (b.action === 'link') { askLink(); return; }

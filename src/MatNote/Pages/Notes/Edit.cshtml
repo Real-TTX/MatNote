@@ -3,12 +3,27 @@
 @{
     ViewData["Width"] = "wide";
     var isFile = Model.IsNew ? Model.Kind == "File" : !Ui.IsText(Model.Type);
-    var back = Model.IsNew ? (string.IsNullOrEmpty(Model.Folder) ? "/Notes" : $"/Notes?folder={Model.Folder}") : $"/Notes/View?id={Model.Id}";
+    var back = Model.Embed
+        ? (Model.IsNew ? "/Notes/Pane?embed=1" + (string.IsNullOrEmpty(Model.Folder) ? "" : $"&folder={Model.Folder}") : $"/Notes/View?id={Model.Id}&embed=1")
+        : Model.IsNew ? (string.IsNullOrEmpty(Model.Folder) ? "/Notes" : $"/Notes?folder={Model.Folder}") : $"/Notes/View?id={Model.Id}";
+    // text notes are saved while typing (a file needs its Save button)
+    var autosave = Model.IsNew || Ui.IsText(Model.Type);
     var canLink = Model.IsNew || Ui.IsText(Model.Type);
 }
 
-<form class="mat-form" method="post" enctype="multipart/form-data" novalidate>
+@if (Model.Embed && !Model.IsNew)
+{
+    <partial name="_PaneBar" model="new MatNote.Pages.Shared.PaneBarModel(Model.Id!.Value, Model.Title, true, true)" />
+}
+
+<form class="mat-form" method="post" enctype="multipart/form-data" novalidate data-autosave="@(autosave ? "true" : null)">
     <input type="hidden" name="Id" value="@Model.Id" />
+    <input type="hidden" name="Stamp" value="@Model.Stamp" />
+    @if (Model.Embed)
+    {
+        @* the buttons with an address of their own (Delete) lose the query: this field keeps the page in the pane *@
+        <input type="hidden" name="embed" value="1" />
+    }
     @if (Model.IsNew && !Model.IsOwner)
     {
         @* a new note in a folder that was shared with edit rights: the folder is fixed *@
@@ -88,6 +103,11 @@
         </div>
     </div>
 
+    @if (autosave)
+    {
+        <p class="mn-autosave" data-autosave-status role="status">@Ui.Icon("check-circle")<span>Changes are saved while you type.</span></p>
+    }
+
     <mn-buttons save="Save note" back="@back" delete-handler="@(Model.IsNew || !Model.IsOwner ? null : "Delete")" delete-label="Delete note" delete-ok="Move to trash"
                 delete-confirm="Move this note to the trash? You can restore it from there." />
 </form>
@@ -119,4 +139,5 @@
 
 @section Scripts {
     <script src="~/js/editor.js" asp-append-version="true"></script>
+    <script src="~/js/autosave.js" asp-append-version="true"></script>
 }

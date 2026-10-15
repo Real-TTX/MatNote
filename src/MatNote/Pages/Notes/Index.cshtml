@@ -3,10 +3,28 @@
 @inject Clock Clock
 @{
     ViewData["Title"] = Model.Heading;
-    ViewData["PageSub"] = Model.Subtitle;
+    ViewData["OwnHead"] = true;
+    if (Model.IsSplit)
+    {
+        ViewData["PageClass"] = "mn-split-page";
+    }
+
     var newNote = Model.FolderId is { } f && Model.CanAddHere ? $"/Notes/Edit?folder={f}" : "/Notes/Edit";
 }
 
+<div class="mat-page__head mn-listhead">
+    <div class="mat-page__title">
+        <h1>@Model.Heading</h1>
+        <p class="mat-page__sub">@Model.Subtitle</p>
+    </div>
+    <div class="mat-seg mn-layout-switch" role="group" aria-label="Layout">
+        <button type="button" class="mat-seg__btn" data-layout="split" aria-pressed="@(Model.IsSplit ? "true" : "false")" aria-label="List and note side by side" data-tip="List and note side by side">@Ui.Icon("sidebar")</button>
+        <button type="button" class="mat-seg__btn" data-layout="list" aria-pressed="@(Model.IsSplit ? "false" : "true")" aria-label="Only the list" data-tip="Only the list">@Ui.Icon("list")</button>
+    </div>
+</div>
+
+<div class="@(Model.IsSplit ? "mn-split" : "")" @(Model.IsSplit ? "data-split" : "")>
+<div class="@(Model.IsSplit ? "mn-split__list" : "")">
 <div class="mat-list">
     <partial name="_Toolbar" model="Model.Toolbar" />
 
@@ -20,6 +38,7 @@
         </div>
     }
 
+    <div data-split-rows>
     @if (Model.Items.Count == 0)
     {
         <div class="mat-empty">
@@ -46,17 +65,17 @@
     {
         <mn-table caption="Notes">
             <thead>
-                <tr><th scope="col">Note</th><th scope="col" class="mat-hide-md">Folder</th><th scope="col" class="mat-hide-sm">Type</th><th scope="col">Changed</th><th scope="col"><span class="mat-sr-only">Actions</span></th></tr>
+                <tr><th scope="col">Note</th><th scope="col" class="mat-hide-md mn-wide-col">Folder</th><th scope="col" class="mat-hide-sm mn-wide-col">Type</th><th scope="col">Changed</th><th scope="col" class="mn-wide-col"><span class="mat-sr-only">Actions</span></th></tr>
             </thead>
             <tbody>
                 @foreach (var n in Model.Items)
                 {
-                    <tr>
+                    <tr data-note-id="@n.Id" class="@(n.Id == Model.SelectedId ? "is-selected" : "")">
                         <td data-label="Note">
                             <div class="mat-table__name">
                                 @Ui.Icon(Ui.TypeIcon(n.Type))
                                 <span>
-                                    <span class="mn-note-title"><a href="/Notes/View?id=@n.Id">@n.Title</a>@if (n.Favorite) { <span class="mn-star" title="Favorite">@Ui.Icon("star")<span class="mat-sr-only">Favorite</span></span> }</span>
+                                    <span class="mn-note-title"><a href="/Notes/View?id=@n.Id" data-open-pane>@n.Title</a>@if (n.Favorite) { <span class="mn-star" title="Favorite">@Ui.Icon("star")<span class="mat-sr-only">Favorite</span></span> }</span>
                                     @if (!n.Own) { <small>Shared by @n.OwnerName</small> }
                                     else if (n.Tags.Count > 0)
                                     {
@@ -65,10 +84,10 @@
                                 </span>
                             </div>
                         </td>
-                        <td data-label="Folder" class="mat-hide-md">@n.FolderName</td>
-                        <td data-label="Type" class="mat-hide-sm"><span class="mat-pill mat-pill--plain">@Ui.TypeName(n.Type)</span>@if (n.FileSize > 0) { <small class="mat-muted"> @Ui.Size(n.FileSize)</small> }</td>
+                        <td data-label="Folder" class="mat-hide-md mn-wide-col">@n.FolderName</td>
+                        <td data-label="Type" class="mat-hide-sm mn-wide-col"><span class="mat-pill mat-pill--plain">@Ui.TypeName(n.Type)</span>@if (n.FileSize > 0) { <small class="mat-muted"> @Ui.Size(n.FileSize)</small> }</td>
                         <td data-label="Changed" class="mat-mono">@Clock.Format(n.Updated)</td>
-                        <td class="mat-table__cell-actions">
+                        <td class="mat-table__cell-actions mn-wide-col">
                             <div class="mat-table__actions">
                                 <a class="mat-btn mat-btn--ghost mat-btn--icon mat-btn--sm" href="/Notes/View?id=@n.Id" aria-label="Open @n.Title" data-tip="Open">@Ui.Icon("eye")</a>
                                 @if (n.Own)
@@ -84,11 +103,12 @@
     }
 
     <partial name="_Pager" model="Model.Pager" />
+    </div>
 
     <div class="mat-actions">
         @if (Model.CanAddHere)
         {
-            <a class="mat-btn mat-btn--primary" href="@newNote">@Ui.Icon("file-plus")<span>New note</span></a>
+            <a class="mat-btn mat-btn--primary" href="@newNote" data-open-pane>@Ui.Icon("file-plus")<span>New note</span></a>
         }
         @if (Model.OwnFolder)
         {
@@ -96,4 +116,12 @@
             <a class="mat-btn mat-btn--secondary" href="/Folders/Edit?id=@Model.FolderId">@Ui.Icon("edit")<span>Edit folder</span></a>
         }
     </div>
+</div>
+</div>
+@if (Model.IsSplit)
+{
+    <div class="mn-split__pane">
+        <iframe class="mn-split__frame" name="note-pane" title="Note" src="@Model.PaneSrc"></iframe>
+    </div>
+}
 </div>

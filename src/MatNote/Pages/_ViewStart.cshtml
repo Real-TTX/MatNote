@@ -1,3 +1,4 @@
 @{
-    Layout = "_Layout";
+    // inside the note pane of the list a page has no menu (the pane is a frame of the list page)
+    Layout = Context.Request.Query.ContainsKey("embed") ? "_LayoutEmbed" : "_Layout";
 }

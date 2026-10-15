@@ -9,6 +9,11 @@
     var copyable = Ui.IsText(note.Type);
 }
 
+@if (Model.Embed)
+{
+    <partial name="_PaneBar" model="new MatNote.Pages.Shared.PaneBarModel(note.Id, note.Title, canEdit, false)" />
+}
+
 <div class="mn-meta">
     <span>@Ui.Icon(Ui.TypeIcon(note.Type))<span> @Ui.TypeName(note.Type)@(note.FileSize > 0 ? " · " + Ui.Size(note.FileSize) : "")</span></span>
     @if (Model.FolderName is not null)
@@ -63,14 +68,14 @@
             {
                 <div class="mat-field">
                     <span class="mat-label">This note links to</span>
-                    <ul class="mat-stack mat-stack--sm">@foreach (var l in Model.LinksTo) { <li>@Ui.Icon(Ui.TypeIcon(l.Type)) <a href="/Notes/View?id=@l.Id">@l.Title</a></li> }</ul>
+                    <ul class="mat-stack mat-stack--sm">@foreach (var l in Model.LinksTo) { <li>@Ui.Icon(Ui.TypeIcon(l.Type)) <a href="/Notes/View?id=@l.Id@Model.EmbedQuery">@l.Title</a></li> }</ul>
                 </div>
             }
             @if (Model.LinkedFrom.Count > 0)
             {
                 <div class="mat-field">
                     <span class="mat-label">Linked from</span>
-                    <ul class="mat-stack mat-stack--sm">@foreach (var l in Model.LinkedFrom) { <li>@Ui.Icon(Ui.TypeIcon(l.Type)) <a href="/Notes/View?id=@l.Id">@l.Title</a></li> }</ul>
+                    <ul class="mat-stack mat-stack--sm">@foreach (var l in Model.LinkedFrom) { <li>@Ui.Icon(Ui.TypeIcon(l.Type)) <a href="/Notes/View?id=@l.Id@Model.EmbedQuery">@l.Title</a></li> }</ul>
                 </div>
             }
         </div>
@@ -78,7 +83,7 @@
 }
 
 <div class="mat-btn-row">
-    @if (canEdit)
+    @if (canEdit && !Model.Embed)
     {
         <a class="mat-btn mat-btn--primary" href="/Notes/Edit?id=@note.Id">@Ui.Icon("edit")<span>Edit</span></a>
     }
@@ -101,11 +106,14 @@
     @if (Model.IsOwner)
     {
         <a class="mat-btn mat-btn--secondary" href="/Shares/Edit?noteId=@note.Id">@Ui.Icon("share")<span>Share</span></a>
-        <form method="post" asp-page-handler="Favorite" asp-route-id="@note.Id">
+        <form method="post" asp-page-handler="Favorite" asp-route-id="@note.Id" asp-route-embed="@Model.EmbedValue">
             <button type="submit" class="mat-btn mat-btn--secondary">@Ui.Icon("star")<span>@(note.IsFavorite ? "Remove favorite" : "Favorite")</span></button>
         </form>
     }
-    <a class="mat-btn mat-btn--secondary" href="@(note.FolderId is { } f && Model.IsOwner ? $"/Notes?folder={f}" : "/Notes")">@Ui.Icon("back")<span>Back</span></a>
+    @if (!Model.Embed)
+    {
+        <a class="mat-btn mat-btn--secondary" href="@(note.FolderId is { } f && Model.IsOwner ? $"/Notes?folder={f}" : "/Notes")">@Ui.Icon("back")<span>Back</span></a>
+    }
 </div>
 
 <dialog class="mat-dialog mat-dialog--sm" id="export-dialog" aria-labelledby="export-title">

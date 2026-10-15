@@ -100,7 +100,7 @@
                 }
             </header>
 
-            <main class="mat-page @(width == "narrow" ? "mat-page--narrow" : width == "wide" ? "mat-page--wide" : "")" id="main">
+            <main class="mat-page @(width == "narrow" ? "mat-page--narrow" : width == "wide" ? "mat-page--wide" : "") @(ViewData["PageClass"])" id="main">
                 @if (!ownHead)
                 {
                     <div class="mat-page__head">

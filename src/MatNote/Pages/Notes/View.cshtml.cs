@@ -60,12 +60,13 @@ public sealed class ViewModel(AppDbContext db, CurrentUser me, AccessService acc
         note.IsFavorite = !note.IsFavorite;
         await db.SaveChangesAsync();
         Flash(note.IsFavorite ? "Added to your favorites." : "Removed from your favorites.");
-        return RedirectToPage(new { id = Id });
+        return RedirectToPage(new { id = Id, embed = EmbedValue });
     }
 
     private async Task FillAsync(Note note, Access level)
     {
         Note = note;
+        ViewData["NoteId"] = note.Id;
         Access = level;
         OwnerName = await db.Users.AsNoTracking().Where(u => u.Id == note.OwnerId).Select(u => u.DisplayName).FirstOrDefaultAsync() ?? string.Empty;
 

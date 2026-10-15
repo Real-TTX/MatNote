@@ -17,5 +17,14 @@ public abstract class AppPageModel : PageModel
     protected IActionResult RedirectLocal(string? url, string fallback = "/")
         => !string.IsNullOrEmpty(url) && Url.IsLocalUrl(url) ? LocalRedirect(url) : LocalRedirect(fallback);
 
+    /// <summary>The page is shown inside the note pane of the list (side by side layout): the layout has no menu, and addresses keep <c>embed=1</c>.</summary>
+    public bool Embed => Request.Query.ContainsKey("embed") || (Request.HasFormContentType && Request.Form.ContainsKey("embed"));
+
+    /// <summary>For a route value: <c>1</c> inside the pane, otherwise nothing (a null value is left out of the address).</summary>
+    public int? EmbedValue => Embed ? 1 : null;
+
+    /// <summary>The end of an address built by hand (<c>/Notes/View?id=5</c> + this).</summary>
+    public string EmbedQuery => Embed ? "&embed=1" : string.Empty;
+
     public string? ErrorFor(string key) => ModelState.TryGetValue(key, out var entry) ? entry.Errors.FirstOrDefault()?.ErrorMessage : null;
 }

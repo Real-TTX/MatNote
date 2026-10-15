@@ -1,0 +1,20 @@
+@page "/Notes/Pane"
+@model MatNote.Pages.Notes.PaneModel
+@{
+    ViewData["Title"] = "Note";
+}
+
+<div class="mat-empty mn-pane-empty">
+    <span class="mat-empty__icon">@Ui.Icon(Model.Gone ? "trash" : "file-text")</span>
+    @if (Model.Gone)
+    {
+        <div class="mat-empty__title">The note is in the trash</div>
+        <p>You can restore it from the trash for 30 days.</p>
+    }
+    else
+    {
+        <div class="mat-empty__title">Pick a note</div>
+        <p>Choose a note on the left to read it here, or write a new one.</p>
+    }
+    <a class="mat-btn mat-btn--primary" href="/Notes/Edit?@(Model.Folder is { } f ? $"folder={f}&" : string.Empty)embed=1">@Ui.Icon("file-plus")<span>New note</span></a>
+</div>

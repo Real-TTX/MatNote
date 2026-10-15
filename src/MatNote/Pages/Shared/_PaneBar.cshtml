@@ -1,0 +1,15 @@
+@model MatNote.Pages.Shared.PaneBarModel
+@*
+    The bar on top of a note inside the note pane: its title, and a switch between reading it and editing it (only for someone who may edit).
+    A switch is a link to the other page of the same note; unsaved text is saved first (autosave.js).
+*@
+<div class="mn-pane-bar">
+    <h1 class="mn-pane-bar__title">@Model.Title</h1>
+    @if (Model.CanEdit)
+    {
+        <div class="mat-seg" role="group" aria-label="Mode">
+            <a class="mat-seg__btn mn-pane-bar__mode" href="/Notes/View?id=@Model.Id&embed=1" aria-pressed="@(Model.Editing ? "false" : "true")">@Ui.Icon("eye")<span>View</span></a>
+            <a class="mat-seg__btn mn-pane-bar__mode" href="/Notes/Edit?id=@Model.Id&embed=1" aria-pressed="@(Model.Editing ? "true" : "false")">@Ui.Icon("edit")<span>Edit</span></a>
+        </div>
+    }
+</div>

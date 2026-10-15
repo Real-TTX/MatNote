@@ -103,3 +103,37 @@ a.mn-stat:hover { border-color: var(--mat-border-strong); }
 .mn-editor__source[hidden], .mn-editor__area[hidden] { display: none; }
 .mn-pad { padding: var(--mat-space-4); }
 .mat-auth .mat-footer { text-align: center; }
+
+/* ---- The notes list with the note beside it (Notes/Index "split" layout, and the pages inside the pane) ----------------- */
+.mn-listhead { align-items: center; justify-content: space-between; }
+tr.is-selected > td { background: var(--mat-accent-soft); }
+tr.is-selected .mn-note-title a { color: var(--mat-accent-text); }
+.mn-split__pane, .mn-layout-switch { display: none; }
+
+@media (min-width: 1100px) {
+  .mn-layout-switch { display: inline-flex; }
+  .mat-page.mn-split-page { flex: 1 1 0; min-height: 0; gap: var(--mat-space-3); padding-bottom: var(--mat-space-4); }
+  .mat-main:has(.mn-split-page) > .mat-footer { display: none; }
+  .mn-split-page .mat-page__sub { display: none; }
+  .mn-split { flex: 1 1 0; min-height: 0; display: grid; grid-template-columns: minmax(20rem, 26rem) minmax(0, 1fr); gap: var(--mat-space-4); }
+  .mn-split__list { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding-right: var(--mat-space-1); }
+  .mn-split__pane { display: block; min-height: 0; border: 1px solid var(--mat-border); border-radius: var(--mat-radius); background: var(--mat-bg); overflow: hidden; }
+  .mn-split__frame { display: block; width: 100%; height: 100%; border: 0; background: transparent; }
+  .mn-split .mn-wide-col { display: none; }
+  .mn-split .mat-toolbar__btn > span, .mn-split .mat-toolbar__btn > small { display: none; }
+}
+
+/* a page inside the pane: no menu, its own scroll */
+.mn-embed { background: var(--mat-bg); }
+.mn-embed__page { display: flex; flex-direction: column; gap: var(--mat-space-4); padding: var(--mat-space-4) var(--mat-space-5) var(--mat-space-6); max-width: 60rem; margin: 0 auto; }
+.mn-pane-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--mat-space-3); }
+.mn-pane-bar__title { font-size: var(--mat-fs-xl, 1.35rem); line-height: 1.25; margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.mn-pane-bar .mat-seg { flex: none; }
+.mn-pane-bar__mode { display: inline-flex; align-items: center; gap: var(--mat-space-1); text-decoration: none; }
+.mn-pane-empty { margin-top: var(--mat-space-12); }
+.mn-autosave { display: flex; align-items: center; gap: var(--mat-space-2); margin: 0; color: var(--mat-text-muted); font-size: var(--mat-fs-sm); }
+.mn-autosave.is-error { color: var(--mat-danger-text, var(--mat-danger)); }
+.mn-pane-bar { position: sticky; top: 0; z-index: 5; margin: calc(var(--mat-space-4) * -1) calc(var(--mat-space-5) * -1) 0; padding: var(--mat-space-3) var(--mat-space-5); background: var(--mat-glass); border-bottom: 1px solid var(--mat-border); }
+@media (min-width: 1100px) {
+  .mn-split .mat-toolbar__search { flex: 1 1 8rem; min-width: 0; }
+}
