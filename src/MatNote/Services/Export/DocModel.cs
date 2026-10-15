@@ -26,7 +26,7 @@ internal sealed record Cell(bool Header, List<Inline> Inlines);
 internal sealed record TableBlock(List<List<Cell>> Rows) : Block;
 
 /// <summary>A linked note that is copied into the document: a titled section.</summary>
-internal sealed record Section(string Title, List<Block> Blocks, int Depth) : Block
+internal sealed record Section(string Title, List<Block> Blocks, int Depth, long NoteId = 0) : Block
 {
     /// <summary>The heading level the title gets (2 for the first level of links, at most 4).</summary>
     public int Level => Math.Clamp(Depth + 1, 2, 4);

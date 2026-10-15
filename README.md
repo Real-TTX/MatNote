@@ -28,8 +28,8 @@ ever showing anyone a list of the other people who use the app.
 - Every note has a **type**: *rich text* (a small built-in editor), *plain text* (exactly what you typed – ideal for
   prompts), *Markdown*, *Word (.docx)*, *Excel (.xlsx)*, *PDF* or any other file
 - Upload a `.txt`, `.md` or `.html` file and it becomes a text note; Word and Excel files get a preview, PDFs are shown in the page
-- **Links between notes**: type `[[` and a few letters to link a note, Ctrl + click (or the little bar over the link) opens it, and when you read a note a button
-  after each link **shows the linked note right there**. When you export a note, the linked notes are **copied into the export** at the place of the link –
+- **Links between notes**: type `[[` and a few letters to link a note, Ctrl + click (or the little bar over the link) opens it, and when you read a note, the button *Linked notes in the text*
+  **shows them right where the export would put them**. When you export a note, the linked notes are **copied into the export** at the place of the link –
   but only notes the reader may see
 - **List and note side by side, like OneNote**: on a wide window the note opens right next to the list, switchable between *view* and *edit*, and text notes are **saved while you type**. One click switches to the plain list, a phone always gets the list with a page per note
 - **Favorites**, search, filters and sorting on every list, a **trash** with 30 days of grace
@@ -61,7 +61,7 @@ ever showing anyone a list of the other people who use the app.
 | ![A note beside the list](docs/images/split.png) | ![The editor beside the list](docs/images/split-edit.png) |
 
 Pick a note and it opens at the right, in the mode you worked in last; *View* and *Edit* switch the mode in place and nothing moves. Type `[[` to link another note; while
-reading, the arrow after a link shows that note inside this one (shown in the left picture). The editor saves after a short pause and says so; if somebody else changed the same
+reading, *Linked notes in the text* puts each linked note under the paragraph that links it (left picture). A note has the tabs *View*, *Edit* and *Sharing*; a folder *Folder* and *Sharing*. The editor saves after a short pause and says so; if somebody else changed the same
 note in the meantime, it stops instead of overwriting their text. The two buttons at the top right choose between this layout and the plain list (remembered per browser).
 
 ### Notes and the folder tree

@@ -33,7 +33,7 @@ internal static class DocHtml
             sb.Append("<h1>").Append(Enc(doc.Title.Trim())).Append("</h1>\n");
         }
 
-        Blocks(doc.Blocks, sb);
+        Blocks(doc.Blocks, sb, null);
         sb.Append("</body>\n</html>\n");
         return sb.ToString();
     }
@@ -41,22 +41,30 @@ internal static class DocHtml
     public static string Fragment(List<Block> blocks)
     {
         var sb = new StringBuilder();
-        Blocks(blocks, sb);
+        Blocks(blocks, sb, null);
+        return sb.ToString();
+    }
+
+    /// <summary>The fragment for a page of the app: the title of a copied-in note is a link to that note (<paramref name="noteUrl"/> gives its address).</summary>
+    public static string Fragment(List<Block> blocks, Func<long, string> noteUrl)
+    {
+        var sb = new StringBuilder();
+        Blocks(blocks, sb, noteUrl);
         return sb.ToString();
     }
 
     /// <summary>Encodes the five characters that matter in HTML text and attributes; everything else stays as it is (the page is UTF-8).</summary>
     internal static string Enc(string text) => text.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;").Replace("\"", "&quot;").Replace("'", "&#39;");
 
-    private static void Blocks(List<Block> blocks, StringBuilder sb)
+    private static void Blocks(List<Block> blocks, StringBuilder sb, Func<long, string>? noteUrl)
     {
         foreach (var b in blocks)
         {
-            One(b, sb);
+            One(b, sb, noteUrl);
         }
     }
 
-    private static void One(Block block, StringBuilder sb)
+    private static void One(Block block, StringBuilder sb, Func<long, string>? noteUrl)
     {
         switch (block)
         {
@@ -79,7 +87,7 @@ internal static class DocHtml
                 break;
             case Quote q:
                 sb.Append("<blockquote>\n");
-                Blocks(q.Blocks, sb);
+                Blocks(q.Blocks, sb, noteUrl);
                 sb.Append("</blockquote>\n");
                 break;
             case ListBlock l:
@@ -101,7 +109,7 @@ internal static class DocHtml
                     else
                     {
                         sb.Append('\n');
-                        Blocks(item, sb);
+                        Blocks(item, sb, noteUrl);
                     }
 
                     sb.Append("</li>\n");
@@ -129,8 +137,18 @@ internal static class DocHtml
                 break;
             case Section s:
                 var level = s.Level;
-                sb.Append("<section class=\"mn-linked-note\">\n<h").Append(level).Append('>').Append(Enc(s.Title.Trim())).Append("</h").Append(level).Append(">\n");
-                Blocks(s.Blocks, sb);
+                sb.Append("<section class=\"mn-linked-note\">\n<h").Append(level).Append('>');
+                if (noteUrl is not null && s.NoteId > 0 && noteUrl(s.NoteId) is { } url && url.StartsWith('/') && !url.StartsWith("//", StringComparison.Ordinal))
+                {
+                    sb.Append("<a class=\"mn-note-link\" data-note-id=\"").Append(s.NoteId).Append("\" href=\"").Append(Enc(url)).Append("\">").Append(Enc(s.Title.Trim())).Append("</a>");
+                }
+                else
+                {
+                    sb.Append(Enc(s.Title.Trim()));
+                }
+
+                sb.Append("</h").Append(level).Append(">\n");
+                Blocks(s.Blocks, sb, noteUrl);
                 sb.Append("</section>\n");
                 break;
             case MdSource m:

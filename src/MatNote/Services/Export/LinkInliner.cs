@@ -197,7 +197,7 @@ internal sealed class LinkInliner(NoteResolver resolver, ExportOptions options, 
             }
 
             var content = await Process(NoteDocs.Blocks(note, markdownSource), depth + 1, ct);
-            into.Add(new Section(string.IsNullOrWhiteSpace(note.Title) ? $"Note {note.Id}" : note.Title.Trim(), content, depth + 1));
+            into.Add(new Section(string.IsNullOrWhiteSpace(note.Title) ? $"Note {note.Id}" : note.Title.Trim(), content, depth + 1, note.Id));
         }
     }
 }

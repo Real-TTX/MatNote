@@ -7,8 +7,8 @@
 (function () {
   'use strict';
 
-  var STAY = /^\/Notes\/(View|Edit|Pane|File|Export)$/;
-  var WITH_EMBED = /^\/Notes\/(View|Edit|Pane)$/;
+  var STAY = /^\/(Notes\/(View|Edit|Pane|File|Export)|Shares\/Edit)$/;
+  var WITH_EMBED = /^\/(Notes\/(View|Edit|Pane)|Shares\/Edit)$/;
 
   function links(root) {
     Array.prototype.forEach.call(root.querySelectorAll('a[href]'), function (a) {

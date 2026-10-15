@@ -8,14 +8,32 @@
     var userIsChosen = Model.Kind == "User";
 }
 
+@* the same tabs as the note (or folder) the share belongs to: sharing is a part of the item, not an action on it *@
+@if (Model.Embed && Model.NoteId is { } paneNote)
+{
+    <partial name="_PaneBar" model="new MatNote.Pages.Shared.PaneBarModel(paneNote, Model.ItemName, true, false, CanShare: true, Sharing: true)" />
+}
+else if (Model.NoteId is { } tabNote)
+{
+    <partial name="_ItemTabs" model='new MatNote.Pages.Shared.ItemTabsModel(false, tabNote, "share")' />
+}
+else if (Model.FolderId is { } tabFolder)
+{
+    <partial name="_ItemTabs" model='new MatNote.Pages.Shared.ItemTabsModel(true, tabFolder, "share")' />
+}
+
 <form class="mat-form" method="post" novalidate>
+    @if (Model.Embed)
+    {
+        <input type="hidden" name="embed" value="1" />
+    }
     <input type="hidden" name="Id" value="@Model.Id" />
     <input type="hidden" name="NoteId" value="@Model.NoteId" />
     <input type="hidden" name="FolderId" value="@Model.FolderId" />
     <partial name="_FormSummary" model="ViewData.ModelState" />
 
     <div class="mat-card">
-        <div class="mat-card__head">@Ui.Icon(Model.ItemIcon)<span class="mat-card__title">@Model.ItemName</span><span class="mat-pill mat-pill--plain">@Model.ItemKind</span></div>
+        <div class="mat-card__head mn-item-head">@Ui.Icon(Model.ItemIcon)<span class="mat-card__title">@Model.ItemName</span><span class="mat-pill mat-pill--plain">@Model.ItemKind</span></div>
         <div class="mat-card__body">
             @if (Model.LinkUrl is { } url)
             {
@@ -87,7 +105,7 @@
                             <td data-label="With">@if (o.Kind == ShareKind.Link) { <span class="mat-pill mat-pill--info">Link</span> } else { <span>@o.WithName</span> <small class="mat-muted mat-mono">@o.WithUser</small> }</td>
                             <td data-label="Access">@(o.Kind == ShareKind.Link || o.Permission == SharePermission.Read ? "Read" : "Read and edit")</td>
                             <td data-label="Until" class="mat-hide-sm mat-mono">@(o.Expires is null ? "No end" : Clock.FormatDate(o.Expires))</td>
-                            <td class="mat-table__cell-actions"><div class="mat-table__actions"><a class="mat-btn mat-btn--ghost mat-btn--icon mat-btn--sm" href="/Shares/Edit?id=@o.Id" aria-label="Edit this share" data-tip="Edit">@Ui.Icon("edit")</a></div></td>
+                            <td class="mat-table__cell-actions"><div class="mat-table__actions"><a class="mat-btn mat-btn--ghost mat-btn--icon mat-btn--sm" href="/Shares/Edit?id=@o.Id@Model.EmbedQuery" aria-label="Edit this share" data-tip="Edit">@Ui.Icon("edit")</a></div></td>
                         </tr>
                     }
                 </tbody>

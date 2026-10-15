@@ -29,8 +29,12 @@
     @if (Model.CanEdit)
     {
         <div class="mat-seg" role="group" aria-label="Mode" hidden="@(fresh ? "hidden" : null)" data-after-create="@(fresh ? "true" : null)">
-            <a class="mat-seg__btn mn-pane-bar__mode" href="@(fresh ? "#" : $"/Notes/View?id={Model.Id}&embed=1")" data-href="/Notes/View?id={id}&embed=1" aria-pressed="@(Model.Editing ? "false" : "true")">@Ui.Icon("eye")<span>View</span></a>
+            <a class="mat-seg__btn mn-pane-bar__mode" href="@(fresh ? "#" : $"/Notes/View?id={Model.Id}&embed=1")" data-href="/Notes/View?id={id}&embed=1" aria-pressed="@(Model.Editing || Model.Sharing ? "false" : "true")">@Ui.Icon("eye")<span>View</span></a>
             <a class="mat-seg__btn mn-pane-bar__mode" href="@(fresh ? "#" : $"/Notes/Edit?id={Model.Id}&embed=1")" data-href="/Notes/Edit?id={id}&embed=1" aria-pressed="@(Model.Editing ? "true" : "false")">@Ui.Icon("edit")<span>Edit</span></a>
+            @if (Model.CanShare)
+            {
+                <a class="mat-seg__btn mn-pane-bar__mode" href="@(fresh ? "#" : $"/Shares/Edit?noteId={Model.Id}&embed=1")" data-href="/Shares/Edit?noteId={id}&embed=1" aria-pressed="@(Model.Sharing ? "true" : "false")">@Ui.Icon("share")<span>Share</span></a>
+            }
         </div>
     }
     @if (Model.TitleField && Model.CanDelete)

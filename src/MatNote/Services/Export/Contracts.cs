@@ -64,6 +64,13 @@ public interface INotePreview
     /// </summary>
     string RenderText(Note note, Func<long, string> noteUrl);
 
+    /// <summary>
+    /// The text of a note for the page with the linked notes in it, exactly as the export puts them: the note stays, and each linked note follows as a titled section right after
+    /// the paragraph (the list item, the table, the line of a plain text) that links it. Only notes the <paramref name="resolver"/> gives, once each, three levels deep.
+    /// The title of a section is a link to its note.
+    /// </summary>
+    Task<string> RenderWithLinkedAsync(Note note, NoteResolver resolver, Func<long, string> noteUrl, CancellationToken ct = default);
+
     /// <summary>A preview of a Word or Excel file as safe HTML (a limited number of rows and columns), or <c>null</c> for any other type.</summary>
     Task<string?> RenderFileAsync(Note note, CancellationToken ct = default);
 

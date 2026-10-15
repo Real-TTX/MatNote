@@ -40,6 +40,16 @@ public sealed partial class NotePreview(INoteFileStore store) : INotePreview
         };
     }
 
+    public async Task<string> RenderWithLinkedAsync(Note note, NoteResolver resolver, Func<long, string> noteUrl, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(note);
+        ArgumentNullException.ThrowIfNull(resolver);
+        ArgumentNullException.ThrowIfNull(noteUrl);
+        var inliner = new LinkInliner(resolver, new ExportOptions(IncludeLinkedNotes: true), markdownSource: false, note.Id);
+        var blocks = await inliner.ProcessAsync(NoteDocs.Blocks(note), ct);
+        return DocHtml.Fragment(blocks, noteUrl);
+    }
+
     /// <summary>The address of a note for the page; anything that is not an address of this site or a web address is refused (no script URLs).</summary>
     private static string? SafeUrl(Func<long, string> noteUrl, long id)
     {

@@ -1,0 +1,29 @@
+@model MatNote.Pages.Shared.ItemTabsModel
+@*
+    The tabs of one note or folder. What is only an action (copy, export, favorite, delete) stays a button; what has a page of its own (reading, editing, sharing) is a tab.
+    In the note pane the same three are the switch of the pane bar (_PaneBar).
+*@
+@if (Model.IsFolder)
+{
+    <mn-tabs label="Folder">
+        <mn-tab href="/Folders/Edit?id=@Model.Id" active="@(Model.Active == "folder")">@Ui.Icon("folder")<span>Folder</span></mn-tab>
+        @if (Model.CanShare)
+        {
+            <mn-tab href="/Shares/Edit?folderId=@Model.Id" active="@(Model.Active == "share")">@Ui.Icon("share")<span>Sharing</span></mn-tab>
+        }
+    </mn-tabs>
+}
+else
+{
+    <mn-tabs label="Note">
+        <mn-tab href="/Notes/View?id=@Model.Id" active="@(Model.Active == "view")">@Ui.Icon("eye")<span>View</span></mn-tab>
+        @if (Model.CanEdit)
+        {
+            <mn-tab href="/Notes/Edit?id=@Model.Id" active="@(Model.Active == "edit")">@Ui.Icon("edit")<span>Edit</span></mn-tab>
+        }
+        @if (Model.CanShare)
+        {
+            <mn-tab href="/Shares/Edit?noteId=@Model.Id" active="@(Model.Active == "share")">@Ui.Icon("share")<span>Sharing</span></mn-tab>
+        }
+    </mn-tabs>
+}

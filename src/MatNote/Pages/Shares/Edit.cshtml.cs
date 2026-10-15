@@ -193,11 +193,11 @@ public sealed class EditModel(AppDbContext db, CurrentUser me, AccessService acc
         if (kind == ShareKind.Link)
         {
             Flash(IsNew ? "The link is ready. Copy it and send it." : "The share is saved.");
-            return RedirectToPage(new { id = share.Id });
+            return RedirectToPage(new { id = share.Id, embed = EmbedValue });
         }
 
         Flash(IsNew ? $"Shared with {target!.DisplayName}." : "The share is saved.");
-        return RedirectToPage("Mine");
+        return AfterChange(share);
     }
 
     public async Task<IActionResult> OnPostDeleteAsync()
@@ -211,8 +211,11 @@ public sealed class EditModel(AppDbContext db, CurrentUser me, AccessService acc
         db.Shares.Remove(share);
         await db.SaveChangesAsync();
         Flash("Sharing stopped. The link or the access no longer works.");
-        return RedirectToPage("Mine");
+        return AfterChange(share);
     }
+
+    /// <summary>After a user share or a stop: in the note pane back to the sharing tab of the note, otherwise the list of the shares.</summary>
+    private IActionResult AfterChange(Share share) => Embed && share.NoteId is { } note ? RedirectToPage("Edit", new { noteId = note, embed = 1 }) : RedirectToPage("Mine");
 
     /// <summary>Finds what is shared (a new share: the note or folder from the address; an existing one: from the share). Only the owner may share.</summary>
     private async Task<(bool Found, Share? Share)> LoadTargetAsync(bool track)
@@ -241,7 +244,8 @@ public sealed class EditModel(AppDbContext db, CurrentUser me, AccessService acc
             ItemName = note.Title;
             ItemKind = Ui.TypeName(note.Type);
             ItemIcon = Ui.TypeIcon(note.Type);
-            BackUrl = $"/Notes/View?id={note.Id}";
+            BackUrl = Embed ? (IsNew ? $"/Notes/View?id={note.Id}&embed=1" : $"/Shares/Edit?noteId={note.Id}&embed=1") : $"/Notes/View?id={note.Id}";
+            ViewData["NoteId"] = note.Id;
             FolderId = null;
             return (true, share);
         }

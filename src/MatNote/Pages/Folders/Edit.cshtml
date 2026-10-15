@@ -7,6 +7,11 @@
         : "Delete this folder?";
 }
 
+@if (!Model.IsNew)
+{
+    <partial name="_ItemTabs" model='new MatNote.Pages.Shared.ItemTabsModel(true, Model.Id!.Value, "folder")' />
+}
+
 <form class="mat-form" method="post" novalidate>
     <input type="hidden" name="Id" value="@Model.Id" />
     <partial name="_FormSummary" model="ViewData.ModelState" />
@@ -23,7 +28,6 @@
     <mn-buttons save="Save folder" back="/Folders" delete-handler="@(Model.IsNew ? null : "Delete")" delete-label="Delete folder" delete-confirm="@deleteText">
         @if (!Model.IsNew)
         {
-            <a class="mat-btn mat-btn--secondary" href="/Shares/Edit?folderId=@Model.Id">@Ui.Icon("share")<span>Share</span></a>
             <a class="mat-btn mat-btn--secondary" href="/Folders/Export?id=@Model.Id">@Ui.Icon("download")<span>Export as zip</span></a>
         }
     </mn-buttons>

@@ -14,7 +14,11 @@
 @if (Model.Embed)
 {
     @* the title is a field of the form below (form="note-form"): it stays where the heading of the view is *@
-    <partial name="_PaneBar" model="new MatNote.Pages.Shared.PaneBarModel(Model.Id ?? 0, Model.Title, Model.IsOwner || !Model.IsNew, true, true, autosave, Model.IsOwner)" />
+    <partial name="_PaneBar" model="new MatNote.Pages.Shared.PaneBarModel(Model.Id ?? 0, Model.Title, Model.IsOwner || !Model.IsNew, true, true, autosave, Model.IsOwner, Model.IsOwner)" />
+}
+else if (!Model.IsNew)
+{
+    <partial name="_ItemTabs" model='new MatNote.Pages.Shared.ItemTabsModel(false, Model.Id!.Value, "edit", true, Model.IsOwner)' />
 }
 
 <form class="mat-form" id="note-form" method="post" enctype="multipart/form-data" novalidate data-autosave="@(autosave ? "true" : null)">

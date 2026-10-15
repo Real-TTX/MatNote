@@ -35,6 +35,14 @@ public sealed class ViewModel(AppDbContext db, CurrentUser me, AccessService acc
 
     public IReadOnlyList<ExportFormat> Formats { get; private set; } = [];
 
+    public const string InlineCookie = "mn.inline";
+
+    /// <summary>The note links to other notes (a text note).</summary>
+    public bool HasLinks { get; private set; }
+
+    /// <summary>The linked notes are shown inside the text, where the export would put them (the button of the ribbon; remembered in the cookie <c>mn.inline</c>).</summary>
+    public bool Inline { get; private set; }
+
     public bool IsOwner => Access == Access.Owner;
 
     public async Task<IActionResult> OnGetAsync()
@@ -45,23 +53,18 @@ public sealed class ViewModel(AppDbContext db, CurrentUser me, AccessService acc
             return NotFound();
         }
 
-        await FillAsync(note, level);
-        return Page();
-    }
-
-    /// <summary>
-    /// The text of a note as JSON, for the button of a link that shows the linked note inside this one (notelinks.js). Only what the person may read; a file has no text to show.
-    /// </summary>
-    public async Task<IActionResult> OnGetBodyAsync()
-    {
-        var (note, _) = await access.FindNoteAsync(Id);
-        if (note is null)
+        var want = Request.Query["inline"].ToString();
+        if (want is "1" or "0")
         {
-            return NotFound();
+            Response.Cookies.Append(InlineCookie, want, new CookieOptions { MaxAge = TimeSpan.FromDays(365), SameSite = SameSiteMode.Lax, Secure = Request.IsHttps, HttpOnly = true, IsEssential = true });
+        }
+        else
+        {
+            want = Request.Cookies[InlineCookie] ?? "0";
         }
 
-        var html = Ui.IsText(note.Type) ? preview.RenderText(note, id => $"/Notes/View?id={id}") : null;
-        return new JsonResult(new { id = note.Id, title = note.Title, icon = Ui.TypeIcon(note.Type), html });
+        await FillAsync(note, level, want == "1");
+        return Page();
     }
 
     public async Task<IActionResult> OnPostFavoriteAsync()
@@ -78,7 +81,7 @@ public sealed class ViewModel(AppDbContext db, CurrentUser me, AccessService acc
         return RedirectToPage(new { id = Id, embed = EmbedValue });
     }
 
-    private async Task FillAsync(Note note, Access level)
+    private async Task FillAsync(Note note, Access level, bool inline = false)
     {
         Note = note;
         ViewData["NoteId"] = note.Id;
@@ -87,7 +90,11 @@ public sealed class ViewModel(AppDbContext db, CurrentUser me, AccessService acc
 
         if (Ui.IsText(note.Type))
         {
-            BodyHtml = preview.RenderText(note, id => $"/Notes/View?id={id}");
+            HasLinks = preview.ExtractLinks(note).Count > 0;
+            Inline = inline && HasLinks;
+            BodyHtml = Inline
+                ? await preview.RenderWithLinkedAsync(note, async linked => (await access.FindNoteAsync(linked)).Note, id => $"/Notes/View?id={id}{EmbedQuery}", HttpContext.RequestAborted)
+                : preview.RenderText(note, id => $"/Notes/View?id={id}");
         }
         else if (note.Type is NoteType.Docx or NoteType.Xlsx)
         {

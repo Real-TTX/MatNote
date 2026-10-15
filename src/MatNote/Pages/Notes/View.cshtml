@@ -13,10 +13,6 @@
     async Task Actions()
     {
         <div class="mat-btn-row@(Model.Embed ? " mn-ribbon" : "")">
-            @if (canEdit && !Model.Embed)
-            {
-                <a class="mat-btn mat-btn--primary" href="/Notes/Edit?id=@note.Id">@Ui.Icon("edit")<span>Edit</span></a>
-            }
             @if (copyable)
             {
                 @if (note.Type == NoteType.RichText)
@@ -35,14 +31,14 @@
             <button type="button" class="@btn" data-dialog-open="export-dialog" aria-haspopup="dialog">@Ui.Icon("upload")<span>Export</span></button>
             @if (Model.IsOwner)
             {
-                <a class="@btn" href="/Shares/Edit?noteId=@note.Id">@Ui.Icon("share")<span>Share</span></a>
                 <form method="post" asp-page-handler="Favorite" asp-route-id="@note.Id" asp-route-embed="@Model.EmbedValue" class="mn-inline-form">
                     <button type="submit" class="@btn">@Ui.Icon("star")<span>@(note.IsFavorite ? "Remove favorite" : "Favorite")</span></button>
                 </form>
             }
-            @if (copyable && Model.LinksTo.Count > 0)
+            @if (Model.HasLinks)
             {
-                <button type="button" class="@btn" data-inject-all aria-pressed="false" data-tip="Show every linked note inside this one">@Ui.Icon("layers")<span>Linked notes inline</span></button>
+                @* the linked notes inside the text, exactly where the export puts them; remembered for the next note *@
+                <a class="@btn@(Model.Inline ? " is-on" : "")" href="/Notes/View?id=@note.Id&inline=@(Model.Inline ? "0" : "1")@Model.EmbedQuery" aria-pressed="@(Model.Inline ? "true" : "false")" data-tip="@(Model.Inline ? "Show the text alone" : "Show the linked notes inside the text, like the export")">@Ui.Icon("layers")<span>Linked notes in the text</span></a>
             }
             @if (!Model.Embed)
             {
@@ -54,7 +50,11 @@
 
 @if (Model.Embed)
 {
-    <partial name="_PaneBar" model="new MatNote.Pages.Shared.PaneBarModel(note.Id, note.Title, canEdit, false)" />
+    <partial name="_PaneBar" model="new MatNote.Pages.Shared.PaneBarModel(note.Id, note.Title, canEdit, false, CanShare: Model.IsOwner)" />
+}
+else
+{
+    <partial name="_ItemTabs" model='new MatNote.Pages.Shared.ItemTabsModel(false, note.Id, "view", canEdit, Model.IsOwner)' />
 }
 
 <div class="mn-meta">
@@ -82,7 +82,7 @@
     <div class="mat-card__body">
         @if (Model.BodyHtml is not null)
         {
-            <div class="mn-doc" id="note-body" data-note-id="@note.Id">@Html.Raw(Model.BodyHtml)</div>
+            <div class="mn-doc" id="note-body">@Html.Raw(Model.BodyHtml)</div>
             if (note.Type != NoteType.RichText)
             {
                 <textarea id="note-raw" hidden readonly>@note.Content</textarea>
@@ -169,7 +169,3 @@
         </div>
     </form>
 </dialog>
-
-@section Scripts {
-    <script src="~/js/notelinks.js" asp-append-version="true"></script>
-}

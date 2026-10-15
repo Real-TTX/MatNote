@@ -80,6 +80,8 @@ tests/MatNote.Tests          unit tests
 - Pages are built only from `mat-*` classes: no inline styles, no inline scripts, no event-handler attributes, no literal colours outside `app.css`'s accent. App-only classes start with `mn-`.
 - CRUD = a list page and a **separate** edit page (no modal editing). A list has its **toolbar above** (search, filter, sort: `_Toolbar` + `ToolbarModel`), the table, the **pager directly under**
   it (`_Pager`), then the list actions left-aligned (`mat-actions`). **Delete lives on the edit page**, separated by `mat-btn-row__spacer`. Buttons: positive to negative (`Save`, `Back`, space, `Delete`) via `<mn-buttons>`.
+- **Tabs or buttons?** What is a part of one item and has a page of its own is a **tab** (`_ItemTabs`: a note has View | Edit | Sharing, a folder Folder | Sharing; in the note pane the same three are the switch of
+  the pane bar). What only does something (copy, export, favorite, download, delete, back) is a **button**. Never a button that really opens another aspect of the item.
 - Every `td` has `data-label` (rows become cards on a phone). Use icons (`Ui.Icon("name")`, names in `wwwroot/matui/matui-icons.svg` and `wwwroot/img/app-icons.svg`; a missing name is a bug).
 - Dependent fields only appear when needed (`show-if` / `data-show-if`). Account, sign out and the theme button are at the bottom left of the menu.
 - Controls have one code base and can appear several times on a page (ids come from the model: `ToolbarModel.Id`, `mn-field id=`).
