@@ -18,9 +18,14 @@
         <p class="mat-page__sub">@Model.Subtitle</p>
     </div>
     <div class="mn-listhead__tools">
-    @if (Model.IsSplit && Model.CanAddHere)
+    @if (Model.CanAddHere)
     {
         <a class="mat-btn mat-btn--primary mat-btn--sm mn-newnote" href="@newNote" data-open-pane>@Ui.Icon("file-plus")<span>New note</span></a>
+    }
+    @if (Model.OwnFolder)
+    {
+        <a class="mat-btn mat-btn--secondary mat-btn--sm" href="/Folders/Edit?parent=@Model.FolderId">@Ui.Icon("folder-plus")<span>New subfolder</span></a>
+        <a class="mat-btn mat-btn--secondary mat-btn--sm" href="/Folders/Edit?id=@Model.FolderId">@Ui.Icon("edit")<span>Edit folder</span></a>
     }
     <div class="mat-seg mn-layout-switch" role="group" aria-label="Layout">
         <button type="button" class="mat-seg__btn" data-layout="split" aria-pressed="@(Model.IsSplit ? "true" : "false")" aria-label="List and note side by side" data-tip="List and note side by side">@Ui.Icon("sidebar")</button>
@@ -33,16 +38,6 @@
 <div class="@(Model.IsSplit ? "mn-split__list" : "")">
 <div class="mat-list">
     <partial name="_Toolbar" model="Model.Toolbar" />
-
-    @if (Model.Subfolders.Count > 0)
-    {
-        <div class="mn-subfolders" role="group" aria-label="Subfolders">
-            @foreach (var sub in Model.Subfolders)
-            {
-                <a class="mat-btn mat-btn--secondary mat-btn--sm" href="/Notes?folder=@sub.Id">@Ui.Icon("folder", colour: sub.Color)<span>@sub.Name</span></a>
-            }
-        </div>
-    }
 
     <div data-split-rows>
     @if (Model.Items.Count == 0)
@@ -134,18 +129,6 @@
     }
 
     <partial name="_Pager" model="Model.Pager" />
-    </div>
-
-    <div class="mat-actions">
-        @if (Model.CanAddHere && !Model.IsSplit)
-        {
-            <a class="mat-btn mat-btn--primary" href="@newNote" data-open-pane>@Ui.Icon("file-plus")<span>New note</span></a>
-        }
-        @if (Model.OwnFolder)
-        {
-            <a class="mat-btn mat-btn--secondary" href="/Folders/Edit?parent=@Model.FolderId">@Ui.Icon("folder-plus")<span>New subfolder</span></a>
-            <a class="mat-btn mat-btn--secondary" href="/Folders/Edit?id=@Model.FolderId">@Ui.Icon("edit")<span>Edit folder</span></a>
-        }
     </div>
 </div>
 </div>

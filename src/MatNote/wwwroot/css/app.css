@@ -35,7 +35,6 @@
 .mn-star .mat-icon { fill: currentColor; }
 .mn-tags { display: flex; flex-wrap: wrap; gap: var(--mat-space-1); }
 .mn-subfolders { display: flex; flex-wrap: wrap; gap: var(--mat-space-2); }
-.mat-list > .mn-subfolders { order: 1; }
 /* a destructive action in a row of actions stands apart from the others (LIST-08) */
 .mn-sep { margin-left: var(--mat-space-3); }
 .mn-meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--mat-space-2) var(--mat-space-4); color: var(--mat-text-muted); font-size: var(--mat-fs-sm); }
@@ -107,7 +106,11 @@ a.mn-stat:hover { border-color: var(--mat-border-strong); }
 /* ---- The notes list with the note beside it (Notes/Index "split" layout, and the pages inside the pane) ----------------- */
 /* This is the one place of the app that uses the whole window and drops the toolkit card look: the list and the note are the product, not their margins. */
 .mn-listhead { align-items: center; justify-content: space-between; }
-.mn-listhead__tools { display: flex; align-items: center; gap: var(--mat-space-2); }
+.mn-listhead__tools { display: flex; flex-wrap: wrap; align-items: center; gap: var(--mat-space-2); }
+@media (max-width: 640px) {
+  .mn-listhead { flex-wrap: wrap; }
+  .mn-listhead__tools { flex: 1 1 100%; }
+}
 .mn-split__pane, .mn-layout-switch { display: none; }
 
 .mn-notelist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 1px; }

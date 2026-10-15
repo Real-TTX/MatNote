@@ -14,8 +14,6 @@ public sealed record NoteRow(long Id, string Title, NoteType Type, string? Folde
     public Access Access { get; set; }
 }
 
-public sealed record SubfolderView(long Id, string Name, string? Color);
-
 /// <summary>
 /// The notes the signed-in person may see (their own and what was shared with them): all of them, the favorites, one folder or one tag.
 /// A toolbar above (search, filter by type and tag, sort), the table, the pagination under it and the actions below.
@@ -29,8 +27,6 @@ public sealed class IndexModel(AppDbContext db, CurrentUser me, AccessService ac
     public PagerModel Pager { get; private set; } = null!;
 
     public List<NoteRow> Items { get; private set; } = [];
-
-    public List<SubfolderView> Subfolders { get; private set; } = [];
 
     public string Heading { get; private set; } = "All notes";
 
@@ -127,11 +123,6 @@ public sealed class IndexModel(AppDbContext db, CurrentUser me, AccessService ac
                 crumbs.Add((folder.Name, null));
                 Subtitle = "A folder that was shared with you";
             }
-
-            var scopeFolders = (await access.ScopeAsync()).Folders;
-            Subfolders = await db.Folders.AsNoTracking()
-                .Where(f => f.ParentId == folder.Id && (f.OwnerId == id || scopeFolders.Keys.Contains(f.Id)))
-                .OrderBy(f => f.Name).Select(f => new SubfolderView(f.Id, f.Name, f.Color)).ToListAsync();
         }
         else if (IsFavorites)
         {
