@@ -148,6 +148,36 @@ public class LinkInliningTests
     }
 
     [Fact]
+    public async Task The_page_view_cuts_cycles_too_and_the_depth_is_capped()
+    {
+        // A -> B -> C -> A, and a long chain 10 -> 11 -> ... -> 30: nothing is rendered twice, nothing runs away
+        var a = Kit.Rich(1, "AAA", $"<p>{L(2, "to B")} {L(1, "me")}</p>");
+        var b = Kit.Rich(2, "BBB", $"<p>{L(3, "to C")}</p>");
+        var c = Kit.Rich(3, "CCC", $"<p>{L(1, "back to A")} {L(2, "back to B")}</p>");
+        var notes = new List<Note> { a, b, c };
+        for (var i = 10; i < 30; i++)
+        {
+            notes.Add(Kit.Rich(i, "N" + i, $"<p>{L(i + 1, "next")}</p>"));
+        }
+
+        var resolver = Kit.Resolver([.. notes]);
+        var html = await Kit.Preview().RenderWithLinkedAsync(a, resolver, id => $"/Notes/View?id={id}");
+        Assert.Equal(1, Count(html, ">BBB</a>"));
+        Assert.Equal(1, Count(html, ">CCC</a>"));
+        Assert.DoesNotContain(">AAA</a>", html);
+        Assert.Contains("back to A", html);
+
+        var chain = await Kit.Preview().RenderWithLinkedAsync(notes.First(n => n.Id == 10), resolver, id => $"/Notes/View?id={id}", default);
+        Assert.Equal(3, Count(chain, "<section"));
+        Assert.Equal(3, Count(chain, "</section>"));
+        Assert.DoesNotContain(">N14<", chain);
+
+        // a larger depth than the code allows is cut at the limit
+        var deep = Kit.Utf8(await Kit.Export(notes.First(n => n.Id == 10), ExportFormat.Html, new ExportOptions(true, 1000), resolver));
+        Assert.Equal(8, Count(deep, "<section"));
+    }
+
+    [Fact]
     public async Task A_note_that_links_to_itself_is_not_included()
     {
         var a = Kit.Rich(1, "AAA", $"<p>{L(1, "me")}</p>");

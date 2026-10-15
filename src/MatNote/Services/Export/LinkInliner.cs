@@ -10,6 +10,9 @@ namespace MatNote.Services.Export;
 /// </summary>
 internal sealed class LinkInliner(NoteResolver resolver, ExportOptions options, bool markdownSource, long rootId)
 {
+    /// <summary>However many levels are asked for, never more than this: the recursion stays shallow even for a wrong option.</summary>
+    private const int DepthLimit = 8;
+
     private readonly HashSet<long> visited = [rootId];
     private readonly Dictionary<long, Note?> resolved = [];
 
@@ -173,7 +176,7 @@ internal sealed class LinkInliner(NoteResolver resolver, ExportOptions options, 
 
     private async Task AddSections(List<long> ids, int depth, List<Block> into, CancellationToken ct)
     {
-        if (!options.IncludeLinkedNotes || depth >= options.MaxDepth)
+        if (!options.IncludeLinkedNotes || depth >= Math.Min(options.MaxDepth, DepthLimit))
         {
             return;
         }
