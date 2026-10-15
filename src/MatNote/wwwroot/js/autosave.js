@@ -101,8 +101,10 @@
       });
   }
 
-  form.addEventListener('input', schedule);
-  form.addEventListener('change', schedule);
+  // a field can sit outside the form element and still belong to it (the title in the bar of the pane has form="note-form")
+  function mine(e) { return e.target && (e.target.form === form || form.contains(e.target)); }
+  document.addEventListener('input', function (e) { if (mine(e)) { schedule(); } });
+  document.addEventListener('change', function (e) { if (mine(e)) { schedule(); } });
   // the Save button saves everything itself
   form.addEventListener('submit', function () { stopped = true; clearTimeout(timer); });
 

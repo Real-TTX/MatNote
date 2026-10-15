@@ -11,12 +11,13 @@
     var canLink = Model.IsNew || Ui.IsText(Model.Type);
 }
 
-@if (Model.Embed && !Model.IsNew)
+@if (Model.Embed)
 {
-    <partial name="_PaneBar" model="new MatNote.Pages.Shared.PaneBarModel(Model.Id!.Value, Model.Title, true, true)" />
+    @* the title is a field of the form below (form="note-form"): it stays where the heading of the view is *@
+    <partial name="_PaneBar" model="new MatNote.Pages.Shared.PaneBarModel(Model.Id ?? 0, Model.Title, !Model.IsNew, true, true)" />
 }
 
-<form class="mat-form" method="post" enctype="multipart/form-data" novalidate data-autosave="@(autosave ? "true" : null)">
+<form class="mat-form" id="note-form" method="post" enctype="multipart/form-data" novalidate data-autosave="@(autosave ? "true" : null)">
     <input type="hidden" name="Id" value="@Model.Id" />
     <input type="hidden" name="Stamp" value="@Model.Stamp" />
     @if (Model.Embed)
@@ -36,11 +37,14 @@
         <div class="mat-alert mat-alert--info">@Ui.Icon("share")<div class="mat-alert__body">This note was shared with you. You can change its title and its text.</div></div>
     }
 
-    <div class="mat-card">
+    <div class="mat-card mn-edit-card">
         <div class="mat-card__head">@Ui.Icon(Model.IsNew ? "file-plus" : Ui.TypeIcon(Model.Type))<span class="mat-card__title">@(Model.IsNew ? "New note" : Ui.TypeName(Model.Type))</span></div>
         <div class="mat-card__body">
-            <div class="mat-form__grid">
-                <mn-field name="Title" label="Title" required full value="@Model.Title" maxlength="250" autofocus msg-required="Please give the note a title." />
+            <div class="mat-form__grid mn-edit-grid">
+                @if (!Model.Embed)
+                {
+                    <mn-field name="Title" label="Title" required full value="@Model.Title" maxlength="250" autofocus msg-required="Please give the note a title." />
+                }
 
                 @if (Model.IsNew)
                 {
@@ -51,6 +55,7 @@
                 {
                     <mn-field name="Folder" kind="picker" label="Folder" optional value="@Model.Folder" options="Model.FolderChoices" placeholder="No folder" picker="search clearable" />
                     <mn-field name="Tags" kind="tags" label="Tags" optional value="@Model.Tags" options="Model.TagChoices" placeholder="Add a tag" hint="Press Enter or a comma to add one; a new name makes a new tag." />
+                    <mn-field name="Favorite" kind="switch" label="Favorite" full="@(!Model.Embed)" value="@Model.Favorite.ToString()" />
                 }
 
                 @* ---- the text: the editor for rich text, a plain field for plain text and markdown; a new note shows the one of the chosen type ---- *@
@@ -93,11 +98,6 @@
                         </span>
                         <span class="mat-error" id="Upload-error" aria-live="polite">@Model.ErrorFor("Upload")</span>
                     </div>
-                }
-
-                @if (Model.IsOwner)
-                {
-                    <mn-field name="Favorite" kind="switch" label="Favorite" full value="@Model.Favorite.ToString()" />
                 }
             </div>
         </div>

@@ -38,7 +38,7 @@ public sealed class EditModel(AppDbContext db, CurrentUser me, AccessService acc
 
     [BindProperty] public IFormFile? Upload { get; set; }
 
-    /// <summary>When the note was last saved, as the page last saw it (microseconds of the update date): autosave refuses to overwrite a newer text.</summary>
+    /// <summary>When the note was last saved, as the page last saw it (microseconds of the update date): autosave refuses to overwrite a newer text. The JSON answer carries it as text: it is larger than a script number can hold exactly.</summary>
     [BindProperty] public long Stamp { get; set; }
 
     public bool IsNew => Id is null;
@@ -149,7 +149,7 @@ public sealed class EditModel(AppDbContext db, CurrentUser me, AccessService acc
         }
 
         var updated = await db.Notes.AsNoTracking().Where(n => n.Id == note.Id).Select(n => n.UpdateDate).FirstAsync();
-        return new JsonResult(new { ok = true, id = note.Id, stamp = StampOf(updated), time = clock.ToLocal(DateTime.UtcNow).ToString("HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture) });
+        return new JsonResult(new { ok = true, id = note.Id, stamp = StampOf(updated).ToString(System.Globalization.CultureInfo.InvariantCulture), time = clock.ToLocal(DateTime.UtcNow).ToString("HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture) });
     }
 
     /// <summary>Checks and saves what was posted. A failure is the answer to give (not found, or the form again with its errors); otherwise the saved note.</summary>

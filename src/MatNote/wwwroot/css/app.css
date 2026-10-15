@@ -112,10 +112,11 @@ tr.is-selected .mn-note-title a { color: var(--mat-accent-text); }
 
 @media (min-width: 1100px) {
   .mn-layout-switch { display: inline-flex; }
-  .mat-page.mn-split-page { flex: 1 1 0; min-height: 0; gap: var(--mat-space-3); padding-bottom: var(--mat-space-4); }
+  /* the one page of the app that uses the whole window: the list and the note are worth more than the margins */
+  .mat-page.mn-split-page { flex: 1 1 0; min-height: 0; max-width: none; margin: 0; gap: var(--mat-space-3); padding: var(--mat-space-4); }
   .mat-main:has(.mn-split-page) > .mat-footer { display: none; }
   .mn-split-page .mat-page__sub { display: none; }
-  .mn-split { flex: 1 1 0; min-height: 0; display: grid; grid-template-columns: minmax(20rem, 26rem) minmax(0, 1fr); gap: var(--mat-space-4); }
+  .mn-split { flex: 1 1 0; min-height: 0; display: grid; grid-template-columns: minmax(20rem, 28vw) minmax(0, 1fr); gap: var(--mat-space-4); }
   .mn-split__list { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding-right: var(--mat-space-1); }
   .mn-split__pane { display: block; min-height: 0; border: 1px solid var(--mat-border); border-radius: var(--mat-radius); background: var(--mat-bg); overflow: hidden; }
   .mn-split__frame { display: block; width: 100%; height: 100%; border: 0; background: transparent; }
@@ -125,7 +126,23 @@ tr.is-selected .mn-note-title a { color: var(--mat-accent-text); }
 
 /* a page inside the pane: no menu, its own scroll */
 .mn-embed { background: var(--mat-bg); }
-.mn-embed__page { display: flex; flex-direction: column; gap: var(--mat-space-4); padding: var(--mat-space-4) var(--mat-space-5) var(--mat-space-6); max-width: 60rem; margin: 0 auto; }
+.mn-embed__page { display: flex; flex-direction: column; gap: var(--mat-space-4); padding: var(--mat-space-4) var(--mat-space-5) var(--mat-space-6); }
+.mn-embed .mn-doc { max-width: none; }
+/* the edit mode looks like the view: the title is the heading (a field drawn like it), folder and tags are one line where the view shows them, the editor sits where the text is */
+.mn-pane-bar .mn-pane-bar__input { flex: 1 1 auto; font: inherit; font-size: var(--mat-fs-xl, 1.35rem); font-weight: 700; line-height: 1.25; color: inherit; background: transparent; border: 1px solid transparent; border-radius: var(--mat-radius); padding: 2px var(--mat-space-2); margin: -3px calc(var(--mat-space-2) * -1 - 1px); width: 100%; min-width: 0; outline: none; }
+.mn-pane-bar .mn-pane-bar__input:hover { border-color: var(--mat-border); }
+.mn-pane-bar .mn-pane-bar__input:focus { border-color: var(--mat-accent); background: var(--mat-surface); }
+.mn-embed .mn-meta { min-height: 2.5rem; align-items: center; }
+.mn-embed .mn-edit-card { border: 0; box-shadow: none; background: transparent; }
+.mn-embed .mn-edit-card > .mat-card__head { display: none; }
+.mn-embed .mn-edit-card > .mat-card__body { padding: 0; }
+.mn-embed .mn-edit-grid { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--mat-space-3); }
+.mn-embed .mn-edit-grid > .mat-field { flex: 1 1 14rem; min-width: 0; }
+.mn-embed .mn-edit-grid > .mat-field--full { flex-basis: 100%; }
+.mn-embed .mn-edit-grid > .mat-field:has(.mat-switch) { flex: 0 0 auto; align-self: center; }
+.mn-embed .mn-edit-grid > .mat-field:not(.mat-field--full) > .mat-label,
+.mn-embed .mn-edit-grid > .mat-field:not(.mat-field--full) > .mat-hint,
+.mn-embed .mn-edit-grid > .mat-field:has(textarea) > .mat-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .mn-pane-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--mat-space-3); }
 .mn-pane-bar__title { font-size: var(--mat-fs-xl, 1.35rem); line-height: 1.25; margin: 0; min-width: 0; overflow-wrap: anywhere; }
 .mn-pane-bar .mat-seg { flex: none; }

@@ -2,9 +2,17 @@
 @*
     The bar on top of a note inside the note pane: its title, and a switch between reading it and editing it (only for someone who may edit).
     A switch is a link to the other page of the same note; unsaved text is saved first (autosave.js).
+    In the edit mode the title is a field of the form "note-form" (attribute form=), drawn like the heading, so that nothing moves when the mode changes.
 *@
 <div class="mn-pane-bar">
-    <h1 class="mn-pane-bar__title">@Model.Title</h1>
+    @if (Model.TitleField)
+    {
+        <input class="mn-pane-bar__title mn-pane-bar__input" type="text" name="Title" form="note-form" value="@Model.Title" maxlength="250" placeholder="Title" aria-label="Title" autocomplete="off" autofocus="@string.IsNullOrEmpty(Model.Title)" />
+    }
+    else
+    {
+        <h1 class="mn-pane-bar__title">@Model.Title</h1>
+    }
     @if (Model.CanEdit)
     {
         <div class="mat-seg" role="group" aria-label="Mode">

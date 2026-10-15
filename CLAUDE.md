@@ -51,7 +51,8 @@ src/MatNote
                              embed=1 in addresses and redirects (Edit.cshtml also posts a hidden embed field, because a button with its own formaction loses the query). embed.js sends the list a
                              postMessage after each load (which note is shown): app.js marks the row, keeps ?id= and fetches the rows again. Links that leave the note get target=_top.
                              autosave.js (Edit, text notes): posts the form to the handler Autosave after 1.2 s, JSON back; a new note is created by the first save with a title; Stamp (microseconds of
-                             UpdateDate) refuses to overwrite a newer save (409). The Save button stays.
+                             UpdateDate, sent as text: too big for a script number) refuses to overwrite a newer save (409). The Save button stays. The split page is full width (no max width);
+                             in the pane the edit mode mirrors the view: the title is an input in the pane bar (form="note-form"), folder/tags/favorite are one line, no card chrome.
   Controls/                  ONE code base per control: <mn-field>, <mn-buttons>, <mn-table>, <mn-tabs>/<mn-tab>; partials _Toolbar, _Pager, _FormSummary in Pages/Shared
   Pages/                     Razor Pages: Account/ (sign-in, TOTP step, setup, account, security), Notes/, Folders/, Tags/, Shares/, Trash/, Public/ (link shares, anonymous), Admin/ (Users/, Backups/, Settings/ = the System page; the folder is not called System because the namespace would hide System.*)
   wwwroot/matui/             the toolkit (copied from MatDesign: never edit by hand, update by copying again)
