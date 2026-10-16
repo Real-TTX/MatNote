@@ -10,12 +10,24 @@ public interface INoteFileStore
     Task<byte[]?> GetFileAsync(long noteId, CancellationToken ct = default);
 
     Task<IReadOnlyList<string>> GetTagNamesAsync(long noteId, CancellationToken ct = default);
+
+    /// <summary>The files attached to the note (name and bytes), oldest first.</summary>
+    Task<IReadOnlyList<(string Name, byte[] Data)>> GetAttachmentsAsync(long noteId, CancellationToken ct = default);
 }
 
 public sealed class DbNoteFileStore(AppDbContext db) : INoteFileStore
 {
     public async Task<byte[]?> GetFileAsync(long noteId, CancellationToken ct = default) =>
         await db.NoteFiles.AsNoTracking().Where(f => f.NoteId == noteId).Select(f => f.Data).FirstOrDefaultAsync(ct);
+
+    public async Task<IReadOnlyList<(string Name, byte[] Data)>> GetAttachmentsAsync(long noteId, CancellationToken ct = default)
+    {
+        var rows = await (from f in db.NoteAttachmentFiles.AsNoTracking()
+                          where f.Attachment!.NoteId == noteId
+                          orderby f.Attachment!.CreateDate, f.AttachmentId
+                          select new { f.Attachment!.FileName, f.Data }).ToListAsync(ct);
+        return rows.Select(r => (r.FileName, r.Data)).ToList();
+    }
 
     public async Task<IReadOnlyList<string>> GetTagNamesAsync(long noteId, CancellationToken ct = default) =>
         await (from nt in db.NoteTags.AsNoTracking()

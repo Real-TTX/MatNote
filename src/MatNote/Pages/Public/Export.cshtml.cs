@@ -12,7 +12,7 @@ public sealed class ExportModel(PublicShareAccess pub, INoteExporter exporter) :
 
     [FromRoute] public long NoteId { get; set; }
 
-    public async Task<IActionResult> OnGetAsync(Services.Export.ExportFormat format, bool linked = false)
+    public async Task<IActionResult> OnGetAsync(Services.Export.ExportFormat format, bool linked = false, bool attachments = false)
     {
         var (status, share) = await pub.ResolveAsync(HttpContext, Token);
         if (status != PublicShareAccess.Status.Ok || share is null || !share.AllowExport)
@@ -26,7 +26,7 @@ public sealed class ExportModel(PublicShareAccess pub, INoteExporter exporter) :
             return NotFound();
         }
 
-        var result = await exporter.ExportAsync(note, format, new ExportOptions(linked), id => pub.NoteAsync(share, id), HttpContext.RequestAborted);
+        var result = await exporter.ExportAsync(note, format, new ExportOptions(linked, IncludeAttachments: attachments), id => pub.NoteAsync(share, id), HttpContext.RequestAborted);
         return File(result.Data, result.ContentType, result.FileName);
     }
 }

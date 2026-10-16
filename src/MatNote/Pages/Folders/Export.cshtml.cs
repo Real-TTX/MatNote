@@ -18,6 +18,9 @@ public sealed class ExportModel(AppDbContext db, AccessService access, FolderSer
 
     [BindProperty(SupportsGet = true)] public bool Linked { get; set; } = true;
 
+    /// <summary>The files attached to the notes go along: a directory next to each note that has some.</summary>
+    [BindProperty(SupportsGet = true)] public bool Attachments { get; set; } = true;
+
     public string FolderName { get; private set; } = string.Empty;
 
     public int NoteCount { get; private set; }
@@ -50,7 +53,7 @@ public sealed class ExportModel(AppDbContext db, AccessService access, FolderSer
         }
 
         var items = await ItemsAsync(folder);
-        var result = await exporter.ExportManyAsync(folder.Name, items, Format, new ExportOptions(Linked), async noteId => (await access.FindNoteAsync(noteId)).Note, HttpContext.RequestAborted);
+        var result = await exporter.ExportManyAsync(folder.Name, items, Format, new ExportOptions(Linked, IncludeAttachments: Attachments), async noteId => (await access.FindNoteAsync(noteId)).Note, HttpContext.RequestAborted);
         return File(result.Data, result.ContentType, result.FileName);
     }
 

@@ -32,6 +32,43 @@ public sealed class NoteExporter(INoteFileStore store) : INoteExporter
 
     public async Task<ExportResult> ExportAsync(Note note, ExportFormat format, ExportOptions options, NoteResolver resolver, CancellationToken ct = default)
     {
+        var result = await ExportCoreAsync(note, format, options, resolver, ct);
+        if (!options.IncludeAttachments)
+        {
+            return result;
+        }
+
+        var attachments = await store.GetAttachmentsAsync(note.Id, ct);
+        if (attachments.Count == 0)
+        {
+            return result;
+        }
+
+        // the exported file and its attachments in one zip: the file at the top, the attachments in a directory next to it
+        using var stream = new MemoryStream();
+        using (var zip = new ZipArchive(stream, ZipArchiveMode.Create, leaveOpen: true))
+        {
+            var used = new HashSet<string>();
+            await AddAsync(zip, FileNames.UniquePath(string.Empty, result.FileName, used), result.Data, note, ct);
+            foreach (var (name, data) in attachments)
+            {
+                await AddAsync(zip, FileNames.UniquePath("attachments", name, used), data, note, ct);
+            }
+        }
+
+        return new ExportResult(stream.ToArray(), FileNames.WithExtension(Path.GetFileNameWithoutExtension(result.FileName), ".zip"), "application/zip");
+    }
+
+    private static async Task AddAsync(ZipArchive zip, string path, byte[] data, Note note, CancellationToken ct)
+    {
+        var entry = zip.CreateEntry(path, CompressionLevel.Optimal);
+        entry.LastWriteTime = new DateTimeOffset(DateTime.SpecifyKind(note.UpdateDate == default ? DateTime.UtcNow : note.UpdateDate, DateTimeKind.Utc));
+        await using var target = entry.Open();
+        await target.WriteAsync(data, ct);
+    }
+
+    private async Task<ExportResult> ExportCoreAsync(Note note, ExportFormat format, ExportOptions options, NoteResolver resolver, CancellationToken ct)
+    {
         ArgumentNullException.ThrowIfNull(note);
         ArgumentNullException.ThrowIfNull(resolver);
         if (!FormatsFor(note.Type).Contains(format))
@@ -58,7 +95,7 @@ public sealed class NoteExporter(INoteFileStore store) : INoteExporter
                 ExportResult result;
                 try
                 {
-                    result = await ExportAsync(note, chosen, options, resolver, ct);
+                    result = await ExportCoreAsync(note, chosen, options, resolver, ct);
                 }
                 catch (MissingFileException)
                 {
@@ -67,8 +104,20 @@ public sealed class NoteExporter(INoteFileStore store) : INoteExporter
 
                 var entry = zip.CreateEntry(FileNames.UniquePath(folder ?? string.Empty, result.FileName, used), CompressionLevel.Optimal);
                 entry.LastWriteTime = new DateTimeOffset(DateTime.SpecifyKind(note.UpdateDate == default ? DateTime.UtcNow : note.UpdateDate, DateTimeKind.Utc));
-                await using var target = entry.Open();
-                await target.WriteAsync(result.Data, ct);
+                await using (var target = entry.Open())
+                {
+                    await target.WriteAsync(result.Data, ct);
+                }
+
+                if (options.IncludeAttachments)
+                {
+                    // next to the note a directory with its files: "Title - attachments"
+                    var dir = (string.IsNullOrEmpty(folder) ? string.Empty : folder + "/") + FileNames.Safe(Path.GetFileNameWithoutExtension(result.FileName)) + " - attachments";
+                    foreach (var (fileName, data) in await store.GetAttachmentsAsync(note.Id, ct))
+                    {
+                        await AddAsync(zip, FileNames.UniquePath(dir, fileName, used), data, note, ct);
+                    }
+                }
             }
         }
 

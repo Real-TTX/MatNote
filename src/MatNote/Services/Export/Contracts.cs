@@ -33,7 +33,11 @@ public enum ExportFormat
 /// in the format of the export; a note that is already part of the export is not included a second time (no endless loops).
 /// </param>
 /// <param name="MaxDepth">How many levels of links are followed (a linked note that links on).</param>
-public sealed record ExportOptions(bool IncludeLinkedNotes = true, int MaxDepth = 3);
+/// <param name="IncludeAttachments">
+/// The files attached to the note go along: a single note becomes a zip (the exported file and a directory <c>attachments</c>), in a zip of a folder every note gets a directory next to it.
+/// The attachments of a linked note that is copied in are not part of it.
+/// </param>
+public sealed record ExportOptions(bool IncludeLinkedNotes = true, int MaxDepth = 3, bool IncludeAttachments = false);
 
 public sealed record ExportResult(byte[] Data, string FileName, string ContentType);
 

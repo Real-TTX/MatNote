@@ -25,6 +25,11 @@ internal static class Kit
 
         public Dictionary<long, string[]> Tags { get; } = [];
 
+        public Dictionary<long, List<(string Name, byte[] Data)>> Attachments { get; } = [];
+
+        public Task<IReadOnlyList<(string Name, byte[] Data)>> GetAttachmentsAsync(long noteId, CancellationToken ct = default) =>
+            Task.FromResult<IReadOnlyList<(string Name, byte[] Data)>>(Attachments.GetValueOrDefault(noteId) ?? []);
+
         public Task<byte[]?> GetFileAsync(long noteId, CancellationToken ct = default) => Task.FromResult(Files.GetValueOrDefault(noteId));
 
         public Task<IReadOnlyList<string>> GetTagNamesAsync(long noteId, CancellationToken ct = default) =>

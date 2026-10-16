@@ -156,6 +156,12 @@ else
                     }
                 </div>
             </fieldset>
+            @if (Model.Attachments.Count > 0)
+            {
+                <div class="mat-field">
+                    <label class="mat-check"><input type="checkbox" name="attachments" value="true" checked /><span class="mat-check__text"><strong>Include the attachments</strong><small class="mat-muted">@Model.Attachments.Count attached file@(Model.Attachments.Count == 1 ? "" : "s"): the export becomes a zip with the file and a directory <em>attachments</em>.</small></span></label>
+                </div>
+            }
             @if (Ui.IsText(note.Type))
             {
                 <div class="mat-field">
