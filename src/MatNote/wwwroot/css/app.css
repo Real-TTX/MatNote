@@ -243,3 +243,5 @@ a.mn-stat:hover { border-color: var(--mat-border-strong); }
 .mn-dropping body::after { content: 'Drop files to attach them to this note'; position: fixed; inset: var(--mat-space-3); z-index: 90; display: flex; align-items: center; justify-content: center; border: 2px dashed var(--mat-accent); border-radius: var(--mat-radius-lg); background: color-mix(in srgb, var(--mat-accent-soft) 85%, transparent); color: var(--mat-accent-text); font-weight: 650; pointer-events: none; }
 .mn-split__list.is-drop, [data-file-drop].is-drop { outline: 2px dashed var(--mat-accent); outline-offset: -4px; background: var(--mat-accent-soft); }
 [data-file-drop].is-busy { opacity: .7; cursor: progress; }
+.mn-compose__quick:empty { display: none; }
+.mn-compose__quick .mat-btn { width: 100%; justify-content: center; }

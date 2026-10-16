@@ -87,6 +87,7 @@
       var on = flag(row, 'data-fav');
       items.push({ icon: 'star', text: on ? 'Remove favorite' : 'Favorite', run: function () { favorite(id, on); } });
     }
+    items.push({ icon: 'layers', text: 'Add to a note', run: function () { document.dispatchEvent(new CustomEvent('mn:compose', { detail: { id: id, title: row.getAttribute('data-title') || 'Note' } })); } });
     items.push({ icon: 'note-link', text: 'Copy link to this note', run: function () { copy('[' + (row.getAttribute('data-title') || 'Note') + '](note:' + id + ')'); } });
     if (flag(row, 'data-file')) { items.push({ icon: 'download', text: 'Download the file', href: '/Notes/File?id=' + id }); }
     return items;

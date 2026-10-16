@@ -29,6 +29,7 @@
                 <a class="@btn" href="/Notes/File?id=@note.Id">@Ui.Icon("download")<span>Download</span></a>
             }
             <button type="button" class="@btn" data-dialog-open="export-dialog" aria-haspopup="dialog">@Ui.Icon("upload")<span>Export</span></button>
+            <button type="button" class="@btn" data-compose="@note.Id" data-title="@note.Title" data-tip="Put a link to this note into one of your notes: nothing is copied">@Ui.Icon("note-link")<span>Add to a note</span></button>
             @if (Model.IsOwner)
             {
                 <form method="post" asp-page-handler="Favorite" asp-route-id="@note.Id" asp-route-embed="@Model.EmbedValue" class="mn-inline-form">

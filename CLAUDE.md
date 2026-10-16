@@ -63,6 +63,9 @@ src/MatNote
                              Upload/Delete, JSON; Public/Attachment for link shares that allow exports); partial _Attachments under the text in View and Edit (same place), attachments.js uploads (button or drop on
                              the page) and removes; a note has at most 50, each up to the upload limit; always delivered as a download. A note can have any number of link shares (each its own address, password, end,
                              label): Shares/Edit lists them with copy buttons.
+                             Own notes from read-only ones (a shared collection of snippets stays read-only and is never copied): compose.js ("Add to a note" in the note ribbon and the right-click menu) puts a LINK to the
+                             note at the end of one of the person's own text notes or of a new one (POST Notes/Reference, JSON; the target must be the person's own text note, Lookup?mine=true lists them); the page and
+                             the export show the current text of the snippet where the link is. The target picked last is offered first (localStorage mn.compose.target).
   Controls/                  ONE code base per control: <mn-field>, <mn-buttons>, <mn-table>, <mn-tabs>/<mn-tab>; partials _Toolbar, _Pager, _FormSummary in Pages/Shared
   Pages/                     Razor Pages: Account/ (sign-in, TOTP step, setup, account, security), Notes/, Folders/, Tags/, Shares/, Trash/, Public/ (link shares, anonymous), Admin/ (Users/, Backups/, Settings/ = the System page; the folder is not called System because the namespace would hide System.*)
   wwwroot/matui/             the toolkit (copied from MatDesign: never edit by hand, update by copying again)
