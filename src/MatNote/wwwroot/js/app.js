@@ -110,6 +110,8 @@
       }
       if (cur.innerHTML !== li.innerHTML) { cur.innerHTML = li.innerHTML; }
       if (cur.className !== li.className) { cur.className = li.className; }
+      Array.prototype.forEach.call(li.attributes, function (a) { if (cur.getAttribute(a.name) !== a.value) { cur.setAttribute(a.name, a.value); } });
+      Array.prototype.slice.call(cur.attributes).forEach(function (a) { if (!li.hasAttribute(a.name)) { cur.removeAttribute(a.name); } });
     });
   }
 
@@ -126,6 +128,8 @@
     }).catch(function () { /* the list stays as it is */ });
   }
 
+  document.addEventListener('mn:refresh-list', refresh);
+
   document.addEventListener('click', function (e) {
     var link = e.target.closest && e.target.closest('[data-open-pane]');
     if (!link || !wide.matches || e.defaultPrevented || e.button || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) { return; }
@@ -134,7 +138,7 @@
     if (row) { select(row.getAttribute('data-note-id')); }
     // a note of the person opens in the mode they work in
     var href = link.href;
-    if (row && row.hasAttribute('data-edit') && document.cookie.indexOf('mn.mode=edit') !== -1) { href = '/Notes/Edit?id=' + row.getAttribute('data-note-id'); }
+    if (row && row.getAttribute('data-edit') === 'true' && document.cookie.indexOf('mn.mode=edit') !== -1) { href = '/Notes/Edit?id=' + row.getAttribute('data-note-id'); }
     frame.contentWindow.location.replace(paneUrl(href));
   });
 

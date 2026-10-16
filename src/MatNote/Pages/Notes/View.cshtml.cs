@@ -9,7 +9,7 @@ namespace MatNote.Pages.Notes;
 public sealed record LinkedNote(long Id, string Title, NoteType Type);
 
 /// <summary>A note on a page: its text or file, what it links to, what links to it, and the actions (edit, copy, export, share, favorite).</summary>
-public sealed class ViewModel(AppDbContext db, CurrentUser me, AccessService access, INotePreview preview, INoteExporter exporter, FolderService folders) : AppPageModel
+public sealed class ViewModel(AppDbContext db, CurrentUser me, AccessService access, INotePreview preview, INoteExporter exporter, FolderService folders, AttachmentService attachments) : AppPageModel
 {
     [BindProperty(SupportsGet = true)] public long Id { get; set; }
 
@@ -34,6 +34,8 @@ public sealed class ViewModel(AppDbContext db, CurrentUser me, AccessService acc
     public List<LinkedNote> LinkedFrom { get; private set; } = [];
 
     public IReadOnlyList<ExportFormat> Formats { get; private set; } = [];
+
+    public IReadOnlyList<AttachmentView> Attachments { get; private set; } = [];
 
     public const string InlineCookie = "mn.inline";
 
@@ -102,6 +104,7 @@ public sealed class ViewModel(AppDbContext db, CurrentUser me, AccessService acc
         }
 
         Formats = exporter.FormatsFor(note.Type);
+        Attachments = await attachments.ListAsync(note.Id);
 
         if (IsOwner)
         {

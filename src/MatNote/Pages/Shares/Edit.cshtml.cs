@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MatNote.Pages.Shares;
 
-public sealed record ShareListItem(long Id, ShareKind Kind, string? WithUser, string? WithName, SharePermission Permission, DateTime? Expires, bool HasPassword);
+public sealed record ShareListItem(long Id, ShareKind Kind, string? WithUser, string? WithName, SharePermission Permission, DateTime? Expires, bool HasPassword, string? Label = null, string? Url = null, int Views = 0);
 
 /// <summary>
 /// Share a note or a folder (everything inside it) with one user or with anyone who has the link, or change or stop an existing share. Only the owner can.
@@ -14,7 +14,7 @@ public sealed record ShareListItem(long Id, ShareKind Kind, string? WithUser, st
 /// </summary>
 public sealed class EditModel(AppDbContext db, CurrentUser me, AccessService access, ShareService shares, Clock clock) : AppPageModel
 {
-    public static readonly Choice[] Kinds = [new("Link", "Anyone with the link", "A web address; no account needed; read only"), new("User", "One user of MatNotes", "By user name; read, or read and edit")];
+    public static readonly Choice[] Kinds = [new("Link", "Anyone with the link", "A web address; no account needed; read only. Make as many as you like."), new("User", "One user of MatNotes", "By user name; read, or read and edit")];
 
     public static readonly Choice[] Permissions = [new("Read", "Read", "See, copy and export"), new("Edit", "Read and edit", "Also change the title and the text")];
 
@@ -58,6 +58,12 @@ public sealed class EditModel(AppDbContext db, CurrentUser me, AccessService acc
     public bool KindIsFixed => !IsNew;
 
     public List<ShareListItem> Others { get; private set; } = [];
+
+    /// <summary>How many links without an account this note or folder has (a note can have as many as the owner wants, each with its own password and end date).</summary>
+    public int LinkCount { get; private set; }
+
+    /// <summary>The address of the form for one more share of the same note or folder.</summary>
+    public string NewShareUrl => (NoteId is { } n ? $"/Shares/Edit?noteId={n}" : $"/Shares/Edit?folderId={FolderId}") + EmbedQuery;
 
     public async Task<IActionResult> OnGetAsync()
     {
@@ -270,11 +276,13 @@ public sealed class EditModel(AppDbContext db, CurrentUser me, AccessService acc
 
     private async Task PrepareAsync()
     {
-        Others = await db.Shares.AsNoTracking()
+        var others = await db.Shares.AsNoTracking().Include(s => s.SharedWithUser)
             .Where(s => s.OwnerId == me.RequiredId && s.NoteId == NoteId && s.FolderId == FolderId && s.Id != Id)
             .OrderByDescending(s => s.CreateDate)
-            .Select(s => new ShareListItem(s.Id, s.Kind, s.SharedWithUser != null ? s.SharedWithUser.Username : null, s.SharedWithUser != null ? s.SharedWithUser.DisplayName : null, s.Permission, s.ExpiresDate, s.PasswordHash != null))
             .ToListAsync();
+        Others = others.Select(s => new ShareListItem(s.Id, s.Kind, s.SharedWithUser?.Username, s.SharedWithUser?.DisplayName, s.Permission, s.ExpiresDate, s.PasswordHash != null,
+            s.Label, s.Kind == ShareKind.Link ? shares.LinkUrl(Request, s) : null, s.ViewCount)).ToList();
+        LinkCount = others.Count(s => s.Kind == ShareKind.Link) + (Kind == "Link" && !IsNew ? 1 : 0);
         ViewData["Title"] = IsNew ? "Share" : "Edit share";
         ViewData["ActiveNav"] = "shares";
         Crumbs(("Shares", "/Shares/Mine"), (IsNew ? "Share " + ItemName : ItemName, null));

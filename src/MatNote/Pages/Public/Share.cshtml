@@ -54,6 +54,7 @@
                     <p>@(Model.Share.AllowExport ? "There is no preview for this kind of file. Download it to open it." : "There is no preview for this kind of file.")</p>
                 </div>
             }
+            <partial name="_Attachments" model="new MatNote.Pages.Shared.AttachmentsModel(note.Id, Model.Attachments, false, Model.Token, Model.Share.AllowExport)" />
         </div>
     </div>
 

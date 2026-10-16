@@ -15,7 +15,7 @@ public sealed record PublicFolder(long Id, string Name);
 /// A shared link, opened by anyone who has it. It shows one note, or a folder with its notes (and the notes in it), read only. It gives away nothing else:
 /// not who else has access, not the folders around it, not the other notes of the owner.
 /// </summary>
-public sealed class ShareModel(PublicShareAccess pub, AppDbContext db, INotePreview preview, INoteExporter exporter) : PageModel
+public sealed class ShareModel(PublicShareAccess pub, AppDbContext db, INotePreview preview, INoteExporter exporter, AttachmentService attachments) : PageModel
 {
     [FromRoute] public string Token { get; set; } = string.Empty;
 
@@ -42,6 +42,8 @@ public sealed class ShareModel(PublicShareAccess pub, AppDbContext db, INotePrev
     public List<PublicFolder> Path { get; private set; } = [];
 
     public IReadOnlyList<ExportFormat> Formats { get; private set; } = [];
+
+    public IReadOnlyList<AttachmentView> Attachments { get; private set; } = [];
 
     public string BaseUrl => "/s/" + Token;
 
@@ -107,6 +109,7 @@ public sealed class ShareModel(PublicShareAccess pub, AppDbContext db, INotePrev
         }
 
         Formats = Share.AllowExport ? exporter.FormatsFor(note.Type) : [];
+        Attachments = await attachments.ListAsync(note.Id);
         if (Share.FolderId is not null && note.FolderId is { } folder)
         {
             Folder = folder;

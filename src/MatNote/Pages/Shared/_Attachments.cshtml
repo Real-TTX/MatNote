@@ -1,0 +1,54 @@
+@model MatNote.Pages.Shared.AttachmentsModel
+@*
+    The files attached to a note, under its text (reading and editing show the same). Who may edit the note also adds (the button, or by dropping files on the page) and removes;
+    attachments.js does that and keeps the list. A note that is not saved yet shows the section after its first save (data-after-create).
+*@
+@if (Model.CanEdit || Model.Items.Count > 0)
+{
+    var pending = Model.NoteId is null;
+    <section class="mn-attach@(Model.Items.Count == 0 ? " is-empty" : "")" data-attach data-note-id="@Model.NoteId" data-can-edit="@(Model.CanEdit ? "true" : "false")" aria-label="Attachments" @Html.Raw(pending ? "hidden data-after-create" : "")>
+        <div class="mn-attach__head">
+            @Ui.Icon("paperclip")
+            <h2 class="mn-attach__title">Attachments</h2>
+            <span class="mat-pill mat-pill--plain mn-attach__count" data-attach-count>@Model.Items.Count</span>
+            @if (Model.CanEdit)
+            {
+                <label class="mat-btn mat-btn--ghost mat-btn--sm mn-attach__add" data-tip="Or drop files anywhere on the page">@Ui.Icon("upload")<span>Add files</span><input class="mat-sr-only" type="file" multiple data-attach-input aria-label="Add files" /></label>
+            }
+        </div>
+        <ul class="mn-attach__list" data-attach-list>
+            @foreach (var a in Model.Items)
+            {
+                <li class="mn-attach__item" data-file-id="@a.Id">
+                    @Ui.Icon(a.Icon)
+                    @if (Model.CanDownload)
+                    {
+                        <a class="mn-attach__name" href="@Model.Url(a.Id)" download>@a.FileName</a>
+                    }
+                    else
+                    {
+                        <span class="mn-attach__name">@a.FileName</span>
+                    }
+                    <span class="mn-attach__size">@Ui.Size(a.Size)</span>
+                    @if (Model.CanEdit)
+                    {
+                        <button type="button" class="mat-btn mat-btn--ghost mat-btn--icon mat-btn--sm" data-attach-remove aria-label="Remove @a.FileName" data-tip="Remove">@Ui.Icon("x")</button>
+                    }
+                </li>
+            }
+        </ul>
+        @if (Model.CanEdit)
+        {
+            <p class="mn-attach__hint">Drop files here or anywhere on the page. They stay with this note.</p>
+            <template data-attach-template>
+                <li class="mn-attach__item">
+                    @Ui.Icon("paperclip")
+                    <a class="mn-attach__name" href="#" download></a>
+                    <span class="mn-attach__size"></span>
+                    <button type="button" class="mat-btn mat-btn--ghost mat-btn--icon mat-btn--sm" data-attach-remove data-tip="Remove">@Ui.Icon("x")</button>
+                </li>
+            </template>
+            <form class="mn-attach__token" hidden>@Html.AntiForgeryToken()</form>
+        }
+    </section>
+}

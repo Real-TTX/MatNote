@@ -104,6 +104,7 @@ else
                 <p>There is no preview for this kind of file. Download it to open it.</p>
             </div>
         }
+        <partial name="_Attachments" model="new MatNote.Pages.Shared.AttachmentsModel(note.Id, Model.Attachments, canEdit)" />
     </div>
 </div>
 
@@ -169,3 +170,7 @@ else
         </div>
     </form>
 </dialog>
+
+@section Scripts {
+    <script src="~/js/attachments.js" asp-append-version="true"></script>
+}

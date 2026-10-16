@@ -19,6 +19,10 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, Current
 
     public DbSet<NoteFile> NoteFiles => Set<NoteFile>();
 
+    public DbSet<NoteAttachment> NoteAttachments => Set<NoteAttachment>();
+
+    public DbSet<NoteAttachmentFile> NoteAttachmentFiles => Set<NoteAttachmentFile>();
+
     public DbSet<Tag> Tags => Set<Tag>();
 
     public DbSet<NoteTag> NoteTags => Set<NoteTag>();
@@ -82,6 +86,23 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, Current
             e.ToTable("NoteFile");
             e.HasIndex(x => x.NoteId).IsUnique();
             e.HasOne(x => x.Note).WithMany().HasForeignKey(x => x.NoteId).OnDelete(DeleteBehavior.Cascade);
+            e.Property(x => x.Sha256).HasMaxLength(64);
+        });
+
+        b.Entity<NoteAttachment>(e =>
+        {
+            e.ToTable("NoteAttachment");
+            e.HasIndex(x => x.NoteId);
+            e.HasOne(x => x.Note).WithMany().HasForeignKey(x => x.NoteId).OnDelete(DeleteBehavior.Cascade);
+            e.Property(x => x.FileName).HasMaxLength(260);
+            e.Property(x => x.ContentType).HasMaxLength(150);
+        });
+
+        b.Entity<NoteAttachmentFile>(e =>
+        {
+            e.ToTable("NoteAttachmentFile");
+            e.HasIndex(x => x.AttachmentId).IsUnique();
+            e.HasOne(x => x.Attachment).WithMany().HasForeignKey(x => x.AttachmentId).OnDelete(DeleteBehavior.Cascade);
             e.Property(x => x.Sha256).HasMaxLength(64);
         });
 

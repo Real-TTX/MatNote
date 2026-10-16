@@ -12,6 +12,7 @@ public static class FeatureRegistration
         services.AddScoped<UserService>();
         services.AddScoped<FolderService>();
         services.AddScoped<NoteService>();
+        services.AddScoped<AttachmentService>();
         services.AddScoped<ShareService>();
         services.AddScoped<PublicShareAccess>();
         services.AddExport();

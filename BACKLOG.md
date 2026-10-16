@@ -17,6 +17,9 @@ Priority: **P1** soon, **P2** next, **P3** some day.
 | P2 | Mail: password reset and a note of a new share | Needs an SMTP setting on the System page; today an administrator sets a new password |
 | P2 | Create a note from `[[new title` in the editor (like OneNote), a back button for the pane after following a link | Today `[[` only finds existing notes; the browser history of the frame is the way back |
 | P3 | Version history of a note | Restore an older text |
+| P2 | Attachments in the exports (single note: a zip with the attachments next to the file; folder zip), and in a copy of a note | Today an export has the text only |
+| P3 | Paste an image into the rich text editor as an attachment shown in the text | Today images are attachments only |
+| P3 | Context menu on a phone (long press) and for the notes of the list layout table on touch | Right click and the menu key work |
 | P3 | Import: a folder or a zip of files/markdown at once | The reverse of the folder export |
 | P3 | Autosave for the title and tags of file notes (Word, Excel, PDF) | Today they have the Save button only |
 | P3 | Keep the toolbar count and the unread state of the list in step while typing in the pane | The rows refresh after each save; the count in the toolbar is updated, filters are not re-applied to a title that no longer matches |

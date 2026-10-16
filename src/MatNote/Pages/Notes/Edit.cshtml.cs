@@ -11,7 +11,7 @@ namespace MatNote.Pages.Notes;
 /// Create or change a note: a page of its own (no editing in a dialog). A note has a type that is chosen once: rich text, plain text, markdown, or a file
 /// (Word, Excel, PDF or any other). Someone who may only edit a shared note changes its title and text, nothing else.
 /// </summary>
-public sealed class EditModel(AppDbContext db, CurrentUser me, AccessService access, NoteService notes, FolderService folders, Clock clock) : AppPageModel
+public sealed class EditModel(AppDbContext db, CurrentUser me, AccessService access, NoteService notes, FolderService folders, Clock clock, AttachmentService attachments) : AppPageModel
 {
     public static readonly Choice[] Kinds =
     [
@@ -54,6 +54,8 @@ public sealed class EditModel(AppDbContext db, CurrentUser me, AccessService acc
     public NoteType Type { get; private set; } = NoteType.RichText;
 
     public List<Choice> FolderChoices { get; private set; } = [];
+
+    public IReadOnlyList<AttachmentView> Attachments { get; private set; } = [];
 
     public List<Choice> TagChoices { get; private set; } = [];
 
@@ -306,6 +308,11 @@ public sealed class EditModel(AppDbContext db, CurrentUser me, AccessService acc
     private async Task PrepareAsync()
     {
         var owner = Existing?.OwnerId ?? me.RequiredId;
+        if (Id is { } existingId)
+        {
+            Attachments = await attachments.ListAsync(existingId);
+        }
+
         if (IsOwner)
         {
             FolderChoices = await folders.ChoicesAsync(owner);

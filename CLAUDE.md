@@ -55,7 +55,14 @@ src/MatNote
                              a compact <ul class="mn-notelist"> (the list layout keeps the table). In the pane (no cards) the edit mode mirrors the view, top to bottom: pane bar (title: an input in edit mode, form="note-form";
                              autosave state, Save now, mode switch, Delete), details (view: type/folder/tags; edit: folder/tags/favorite in one line), ribbon (view: the action buttons; edit: the formatting bar), text.
                              mn.mode (cookie, set from the pane by app.js) = the mode the next note opens in. Links: editor.js has [[ (list after the cursor), Ctrl+click / the little bar over a link (open,
-                             remove), chips for plain text; notelinks.js (View) puts a button after each link that shows the linked note inline (handler View?handler=Body, JSON, three levels).
+                             remove), chips for plain text. "Linked notes in the text" (View) is rendered by the server where the export puts them (INotePreview.RenderWithLinkedAsync, cookie mn.inline).
+                             contextmenu.js (every page with the menu): right click / menu key on a note row or a folder entry of the menu opens a .mat-menu with what the pages already offer (open, edit, share,
+                             favorite, new subfolder ...): it decides nothing, the server checks every address. A row says what is allowed with data-own / data-can-edit / data-fav / data-file = "true" (Razor writes
+                             data-x="" for a null, so test the value, never hasAttribute). filedrop.js (Notes/Index): "Upload files" and files dropped on the list make one note per file in the open folder (the same POST as
+                             the new-note form, Kind=File). Attachments: any number of files per note (tables NoteAttachment + NoteAttachmentFile, AttachmentService; page Notes/Attachment = download GET, handlers
+                             Upload/Delete, JSON; Public/Attachment for link shares that allow exports); partial _Attachments under the text in View and Edit (same place), attachments.js uploads (button or drop on
+                             the page) and removes; a note has at most 50, each up to the upload limit; always delivered as a download. A note can have any number of link shares (each its own address, password, end,
+                             label): Shares/Edit lists them with copy buttons.
   Controls/                  ONE code base per control: <mn-field>, <mn-buttons>, <mn-table>, <mn-tabs>/<mn-tab>; partials _Toolbar, _Pager, _FormSummary in Pages/Shared
   Pages/                     Razor Pages: Account/ (sign-in, TOTP step, setup, account, security), Notes/, Folders/, Tags/, Shares/, Trash/, Public/ (link shares, anonymous), Admin/ (Users/, Backups/, Settings/ = the System page; the folder is not called System because the namespace would hide System.*)
   wwwroot/matui/             the toolkit (copied from MatDesign: never edit by hand, update by copying again)

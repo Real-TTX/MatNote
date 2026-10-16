@@ -112,6 +112,8 @@ else if (!Model.IsNew)
                         <span class="mat-error" id="Upload-error" aria-live="polite">@Model.ErrorFor("Upload")</span>
                     </div>
                 }
+
+                <partial name="_Attachments" model="new MatNote.Pages.Shared.AttachmentsModel(Model.Id, Model.Attachments, true)" />
             </div>
         </div>
     </div>
@@ -156,4 +158,5 @@ else if (!Model.IsNew)
 @section Scripts {
     <script src="~/js/editor.js" asp-append-version="true"></script>
     <script src="~/js/autosave.js" asp-append-version="true"></script>
+    <script src="~/js/attachments.js" asp-append-version="true"></script>
 }

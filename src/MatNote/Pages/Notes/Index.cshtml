@@ -21,6 +21,7 @@
     @if (Model.CanAddHere)
     {
         <a class="mat-btn mat-btn--primary mat-btn--sm mn-newnote" href="@newNote" data-open-pane>@Ui.Icon("file-plus")<span>New note</span></a>
+        <label class="mat-btn mat-btn--secondary mat-btn--sm" data-tip="Or drop files on the list">@Ui.Icon("upload")<span>Upload files</span><input class="mat-sr-only" type="file" multiple data-upload-input aria-label="Upload files as notes" /></label>
     }
     @if (Model.OwnFolder)
     {
@@ -35,7 +36,7 @@
 </div>
 
 <div class="@(Model.IsSplit ? "mn-split" : "")" @(Model.IsSplit ? "data-split" : "")>
-<div class="@(Model.IsSplit ? "mn-split__list" : "")">
+<div class="@(Model.IsSplit ? "mn-split__list" : "")" data-file-drop="@(Model.CanAddHere ? "true" : "false")" data-folder="@Model.FolderId">
 <div class="mat-list">
     <partial name="_Toolbar" model="Model.Toolbar" />
 
@@ -69,7 +70,7 @@
             <ul class="mn-notelist" aria-label="Notes">
                 @foreach (var n in Model.Items)
                 {
-                    <li class="mn-note-item@(n.Id == Model.SelectedId ? " is-selected" : "")" data-note-id="@n.Id" data-edit="@(n.Own && Ui.IsText(n.Type) ? "true" : null)">
+                    <li class="mn-note-item@(n.Id == Model.SelectedId ? " is-selected" : "")" data-note-id="@n.Id" data-own="@(n.Own ? "true" : null)" data-can-edit="@(n.Own && Ui.IsText(n.Type) ? "true" : null)" data-fav="@(n.Favorite ? "true" : null)" data-file="@(Ui.IsText(n.Type) ? null : "true")" data-title="@n.Title" data-edit="@(n.Own && Ui.IsText(n.Type) ? "true" : null)">
                         <a class="mn-note-item__link" href="/Notes/View?id=@n.Id" data-open-pane aria-current="@(n.Id == Model.SelectedId ? "true" : null)">
                             @Ui.Icon(Ui.TypeIcon(n.Type))
                             <span class="mn-note-item__text">
@@ -95,7 +96,7 @@
             <tbody>
                 @foreach (var n in Model.Items)
                 {
-                    <tr data-note-id="@n.Id" class="@(n.Id == Model.SelectedId ? "is-selected" : "")">
+                    <tr data-note-id="@n.Id" data-own="@(n.Own ? "true" : null)" data-can-edit="@(n.Own && Ui.IsText(n.Type) ? "true" : null)" data-fav="@(n.Favorite ? "true" : null)" data-file="@(Ui.IsText(n.Type) ? null : "true")" data-title="@n.Title" class="@(n.Id == Model.SelectedId ? "is-selected" : "")">
                         <td data-label="Note">
                             <div class="mat-table__name">
                                 @Ui.Icon(Ui.TypeIcon(n.Type))
@@ -139,3 +140,7 @@
     </div>
 }
 </div>
+
+@section Scripts {
+    <script src="~/js/filedrop.js" asp-append-version="true"></script>
+}

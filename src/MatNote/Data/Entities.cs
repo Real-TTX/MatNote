@@ -187,6 +187,32 @@ public sealed class NoteFile : Entity
     public string Sha256 { get; set; } = string.Empty;
 }
 
+/// <summary>A file attached to a note (of any type: a note can carry any number of them). The bytes are in <see cref="NoteAttachmentFile"/>. Deleted for good, together with its note.</summary>
+public sealed class NoteAttachment : Entity
+{
+    public long NoteId { get; set; }
+
+    public Note? Note { get; set; }
+
+    public string FileName { get; set; } = string.Empty;
+
+    public string ContentType { get; set; } = string.Empty;
+
+    public long Size { get; set; }
+}
+
+/// <summary>The bytes of an attachment; a table of its own so that a list of attachments never loads them.</summary>
+public sealed class NoteAttachmentFile : Entity
+{
+    public long AttachmentId { get; set; }
+
+    public NoteAttachment? Attachment { get; set; }
+
+    public byte[] Data { get; set; } = [];
+
+    public string Sha256 { get; set; } = string.Empty;
+}
+
 public sealed class Tag : SoftEntity
 {
     public long OwnerId { get; set; }

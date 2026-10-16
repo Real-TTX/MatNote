@@ -149,7 +149,7 @@ public sealed class IndexModel(AppDbContext db, ConfigStore<AppConfig> config, A
 
         Users = await db.Users.CountAsync();
         NoteCount = await db.Notes.CountAsync();
-        FileBytes = await db.Notes.SumAsync(n => n.FileSize);
+        FileBytes = await db.Notes.SumAsync(n => n.FileSize) + await db.NoteAttachments.SumAsync(a => a.Size);
         LastBackup = await db.BackupRuns.AsNoTracking().OrderByDescending(r => r.StartDate).FirstOrDefaultAsync();
         Crumbs(("Administration", null), ("System", null));
     }

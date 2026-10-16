@@ -83,6 +83,7 @@
 /* ---- Sharing ------------------------------------------------------------------------------------------------------ */
 .mn-linkbox { display: flex; gap: var(--mat-space-2); align-items: center; }
 .mn-linkbox .mat-input { flex: 1 1 auto; min-width: 0; }
+.mn-head-action { margin-left: auto; }
 .mn-public { max-width: 60rem; margin: 0 auto; padding: var(--mat-space-6) var(--mat-space-4); display: grid; gap: var(--mat-space-4); }
 .mn-grow { flex: 1 1 auto; }
 .mn-public .mat-footer { padding-inline: 0; }
@@ -222,3 +223,23 @@ a.mn-stat:hover { border-color: var(--mat-border-strong); }
 /* nothing jumps while the page is drawn or while typing: the status has a fixed width, and the formatting bar has its place before editor.js draws it */
 .mn-pane-bar .mn-autosave { width: 8.75rem; justify-content: flex-end; }
 .mn-embed .mn-editor:not([data-ready])::before { content: ""; display: block; box-sizing: border-box; height: 2.5rem; margin: 0 calc(var(--mat-space-5) * -1); border-bottom: 1px solid var(--mat-border); }
+
+/* ---- Attachments of a note: a quiet list under the text; a drop sign over the page while files are dragged in ---- */
+.mn-attach { margin-top: var(--mat-space-5); padding-top: var(--mat-space-3); border-top: 1px solid var(--mat-border); }
+.mn-attach__head { display: flex; align-items: center; gap: var(--mat-space-2); }
+.mn-attach__title { margin: 0; font-size: var(--mat-fs-base); font-weight: 650; }
+.mn-attach__add { margin-left: auto; cursor: pointer; }
+.mn-attach__add:focus-within { outline: 2px solid var(--mat-accent); outline-offset: 2px; }
+.mn-attach__list { list-style: none; margin: var(--mat-space-2) 0 0; padding: 0; display: flex; flex-direction: column; }
+.mn-attach__item { display: flex; align-items: center; gap: var(--mat-space-3); padding: 2px var(--mat-space-2); border-radius: var(--mat-radius-sm); }
+.mn-attach__item:hover { background: var(--mat-surface-3); }
+.mn-attach__item > .mat-icon { flex: none; color: var(--mat-text-muted); }
+.mn-attach__name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mn-attach__size { flex: none; color: var(--mat-text-muted); font-size: var(--mat-fs-sm); }
+.mn-attach__hint { display: none; margin: var(--mat-space-1) 0 0; color: var(--mat-text-muted); font-size: var(--mat-fs-sm); }
+.mn-attach.is-empty .mn-attach__hint { display: block; }
+.mn-attach.is-empty .mn-attach__list, .mn-attach.is-empty .mn-attach__count { display: none; }
+.mn-attach.is-busy { opacity: .7; }
+.mn-dropping body::after { content: 'Drop files to attach them to this note'; position: fixed; inset: var(--mat-space-3); z-index: 90; display: flex; align-items: center; justify-content: center; border: 2px dashed var(--mat-accent); border-radius: var(--mat-radius-lg); background: color-mix(in srgb, var(--mat-accent-soft) 85%, transparent); color: var(--mat-accent-text); font-weight: 650; pointer-events: none; }
+.mn-split__list.is-drop, [data-file-drop].is-drop { outline: 2px dashed var(--mat-accent); outline-offset: -4px; background: var(--mat-accent-soft); }
+[data-file-drop].is-busy { opacity: .7; cursor: progress; }

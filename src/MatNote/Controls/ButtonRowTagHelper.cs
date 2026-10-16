@@ -48,7 +48,7 @@ public sealed class ButtonRowTagHelper : TagHelper
         }
 
         sb.Append(extra);
-        if (DeleteHandler is not null)
+        if (!string.IsNullOrEmpty(DeleteHandler))
         {
             sb.Append("<span class=\"mat-btn-row__spacer\"></span>");
             sb.Append($"<button type=\"submit\" class=\"mat-btn mat-btn--danger\" formnovalidate formaction=\"?handler={E(DeleteHandler)}\" data-confirm=\"{E(DeleteConfirm ?? "Delete this? This cannot be undone.")}\" data-confirm-ok=\"{E(DeleteOk ?? "Delete")}\">{Ui.Icon("trash")}<span>{E(DeleteLabel)}</span></button>");
