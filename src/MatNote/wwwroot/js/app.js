@@ -28,6 +28,51 @@
   var auto = document.querySelector('[data-auto-reload]');
   if (auto) { setTimeout(function () { location.reload(); }, parseInt(auto.getAttribute('data-auto-reload'), 10) || 3000); }
 
+  // "Copy to clipboard" in the export dialog: the same request as the download (the chosen format, linked notes or not), but the text goes to the clipboard. Only text formats can: a Word
+  // file or a PDF is a download. A web page is copied formatted (it pastes into a mail or a document as it looks) with its source as the plain text.
+  var TEXT_FORMATS = ['Txt', 'Markdown', 'Html', 'Rtf', 'Csv', 'Json'];
+
+  function chosenFormat(form) {
+    var radio = form.querySelector('input[name="format"]:checked');
+    return radio ? radio.value : '';
+  }
+
+  function syncExportCopy(form) {
+    var button = form.querySelector('[data-export-copy]');
+    if (button) { button.hidden = TEXT_FORMATS.indexOf(chosenFormat(form)) === -1; }
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll('form [data-export-copy]'), function (button) {
+    var form = button.closest('form');
+    syncExportCopy(form);
+    form.addEventListener('change', function () { syncExportCopy(form); });
+  });
+
+  document.addEventListener('click', function (e) {
+    var button = e.target.closest && e.target.closest('[data-export-copy]');
+    if (!button) { return; }
+    var form = button.closest('form');
+    var format = chosenFormat(form);
+    var query = new URLSearchParams();
+    query.set('format', format);
+    Array.prototype.forEach.call(form.querySelectorAll('input[type=hidden], input[type=checkbox]:checked'), function (field) { if (field.name !== 'attachments') { query.set(field.name, field.value); } });
+    fetch(form.getAttribute('action') + '?' + query.toString(), { credentials: 'same-origin' }).then(function (r) {
+      if (!r.ok) { throw new Error('http ' + r.status); }
+      return r.text();
+    }).then(function (text) {
+      if (format === 'Html' && window.ClipboardItem && navigator.clipboard && navigator.clipboard.write && window.isSecureContext) {
+        // the content of the page only (its style block would be run by the browser when it prepares the clipboard); the whole page as the plain text
+        var body = new DOMParser().parseFromString(text, 'text/html').body.innerHTML;
+        return navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([body], { type: 'text/html' }), 'text/plain': new Blob([text], { type: 'text/plain' }) })]);
+      }
+      return copyText(text);
+    }).then(function () {
+      toast('Copied to the clipboard.');
+      var dialog = button.closest('dialog');
+      if (dialog && dialog.close) { dialog.close(); }
+    }, function () { toast('The text could not be copied.', 'danger'); });
+  });
+
   document.addEventListener('click', function (e) {
     var button = e.target.closest && e.target.closest('[data-copy-inner]');
     if (!button) { return; }
