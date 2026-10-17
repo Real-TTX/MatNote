@@ -245,3 +245,44 @@ a.mn-stat:hover { border-color: var(--mat-border-strong); }
 [data-file-drop].is-busy { opacity: .7; cursor: progress; }
 .mn-compose__quick:empty { display: none; }
 .mn-compose__quick .mat-btn { width: 100%; justify-content: center; }
+
+/* ---- A shared folder, seen through a link: like a file explorer (folder tree at the left, address bar, folders first) ---- */
+.mn-public--wide { max-width: 80rem; }
+.mn-explorer { display: grid; grid-template-columns: minmax(13rem, 17rem) minmax(0, 1fr); gap: var(--mat-space-4); align-items: start; }
+.mn-explorer__main { min-width: 0; display: grid; gap: var(--mat-space-3); }
+.mn-explorer__tree { position: sticky; top: var(--mat-space-4); max-height: calc(100dvh - 2 * var(--mat-space-4)); overflow: auto; padding: var(--mat-space-2); background: var(--mat-surface); border: 1px solid var(--mat-border); border-radius: var(--mat-radius); }
+.mn-tree__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 1px; }
+.mn-tree__list .mn-tree__list { margin: 1px 0 1px var(--mat-space-3); padding-left: var(--mat-space-2); border-left: 1px solid var(--mat-border); }
+.mn-tree__item { display: flex; align-items: center; gap: var(--mat-space-2); padding: 5px var(--mat-space-2); border-radius: var(--mat-radius-sm); color: inherit; text-decoration: none; min-width: 0; }
+.mn-tree__item > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mn-tree__item > .mat-icon { flex: none; color: var(--mat-text-muted); }
+.mn-tree__item:hover { background: var(--mat-surface-3); text-decoration: none; }
+.mn-tree__item.is-active { background: var(--mat-accent-soft); color: var(--mat-accent-text); font-weight: 650; }
+.mn-tree__item.is-active > .mat-icon { color: var(--mat-accent-text); }
+.mn-address { display: flex; align-items: center; gap: var(--mat-space-2); padding: 6px var(--mat-space-3); background: var(--mat-surface); border: 1px solid var(--mat-border); border-radius: var(--mat-radius); }
+.mn-address > .mat-icon { flex: none; color: var(--mat-text-muted); }
+.mn-address ol { flex-wrap: wrap; }
+/* the list of a folder: folders first, then the notes; on a phone the type and the date move under the name */
+.mn-files { background: var(--mat-surface); border: 1px solid var(--mat-border); border-radius: var(--mat-radius); overflow: hidden; }
+.mn-files__head, .mn-files__row { display: grid; grid-template-columns: 1.5rem minmax(0, 1fr) 8rem 7rem; align-items: center; gap: var(--mat-space-3); padding: 0 var(--mat-space-4); }
+.mn-files__head { min-height: 2.5rem; background: var(--mat-surface-2, var(--mat-surface-3)); border-bottom: 1px solid var(--mat-border); color: var(--mat-text-muted); font-size: var(--mat-fs-sm); }
+.mn-files__row { min-height: 3rem; padding-block: 6px; color: inherit; text-decoration: none; border-bottom: 1px solid var(--mat-border); }
+.mn-files__row:last-child { border-bottom: 0; }
+.mn-files__row:hover { background: var(--mat-surface-3); text-decoration: none; }
+.mn-files__row > .mat-icon { color: var(--mat-text-muted); }
+.mn-files__row--folder > .mat-icon { color: var(--mat-accent-text); }
+.mn-files__name { min-width: 0; display: grid; }
+.mn-files__name strong { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--mat-accent-text); }
+.mn-files__name small { color: var(--mat-text-muted); }
+.mn-files__small { display: none; }
+.mn-files__type, .mn-files__date { color: var(--mat-text-muted); font-size: var(--mat-fs-sm); }
+@media (max-width: 640px) {
+  .mn-files__head { display: none; }
+  .mn-files__row { grid-template-columns: 1.5rem minmax(0, 1fr); }
+  .mn-files__type, .mn-files__date { display: none; }
+  .mn-files__small { display: block; }
+}
+@media (max-width: 899px) {
+  .mn-explorer { grid-template-columns: minmax(0, 1fr); }
+  .mn-explorer__tree { display: none; }
+}

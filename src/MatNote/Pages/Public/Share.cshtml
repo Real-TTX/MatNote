@@ -6,9 +6,21 @@
     var note = Model.Note;
 }
 
+@{ var explorer = Model.Share.FolderId is not null && Model.Tree is not null; ViewData["Wide"] = explorer; }
+
+@if (explorer)
+{
+    @:<div class="mn-explorer">
+        <nav class="mn-explorer__tree" aria-label="Folders of this link">
+            <ul class="mn-tree__list mn-tree__list--root"><partial name="_PublicTree" model="(Model.Tree!, Model.Folder, Model.BaseUrl)" /></ul>
+        </nav>
+    @:<div class="mn-explorer__main">
+}
+
 @if (Model.Share.FolderId is not null && Model.Path.Count > 0)
 {
-    <nav class="mat-crumbs" aria-label="Folders">
+    <nav class="mat-crumbs mn-address" aria-label="Folders">
+        @Ui.Icon("folder")
         <ol>
             @for (var i = 0; i < Model.Path.Count; i++)
             {
@@ -133,37 +145,41 @@
 }
 else
 {
-    @if (Model.Subfolders.Count > 0)
-    {
-        <div class="mn-subfolders" role="group" aria-label="Subfolders">
-            @foreach (var sub in Model.Subfolders)
-            {
-                <a class="mat-btn mat-btn--secondary mat-btn--sm" href="@Model.BaseUrl?folder=@sub.Id">@Ui.Icon("folder")<span>@sub.Name</span></a>
-            }
-        </div>
-    }
-
-    @if (Model.Notes.Count == 0)
+    @if (Model.Subfolders.Count == 0 && Model.Notes.Count == 0)
     {
         <div class="mat-empty">
-            <span class="mat-empty__icon">@Ui.Icon("file-text")</span>
-            <div class="mat-empty__title">No notes in this folder</div>
+            <span class="mat-empty__icon">@Ui.Icon("folder")</span>
+            <div class="mat-empty__title">This folder is empty</div>
         </div>
     }
     else
     {
-        <mn-table caption="Notes in this folder">
-            <thead><tr><th scope="col">Note</th><th scope="col" class="mat-hide-sm">Type</th><th scope="col">Changed</th></tr></thead>
-            <tbody>
-                @foreach (var n in Model.Notes)
-                {
-                    <tr>
-                        <td data-label="Note"><div class="mat-table__name">@Ui.Icon(Ui.TypeIcon(n.Type))<span><a href="@Model.BaseUrl/@n.Id">@n.Title</a></span></div></td>
-                        <td data-label="Type" class="mat-hide-sm"><span class="mat-pill mat-pill--plain">@Ui.TypeName(n.Type)</span></td>
-                        <td data-label="Changed" class="mat-mono">@n.Updated.ToString("yyyy-MM-dd")</td>
-                    </tr>
-                }
-            </tbody>
-        </mn-table>
+        @* like a file explorer: the folders first, then the notes *@
+        <div class="mn-files" role="list" aria-label="Content of this folder">
+            <div class="mn-files__head" aria-hidden="true"><span></span><span>Name</span><span>Type</span><span>Changed</span></div>
+            @foreach (var sub in Model.Subfolders)
+            {
+                <a class="mn-files__row mn-files__row--folder" role="listitem" href="@Model.BaseUrl?folder=@sub.Id">
+                    @Ui.Icon("folder")
+                    <span class="mn-files__name"><strong>@sub.Name</strong><small>@sub.Notes @(sub.Notes == 1 ? "note" : "notes")@(sub.Folders > 0 ? $" · {sub.Folders} {(sub.Folders == 1 ? "folder" : "folders")}" : "")</small></span>
+                    <span class="mn-files__type">Folder</span>
+                    <span class="mn-files__date"></span>
+                </a>
+            }
+            @foreach (var n in Model.Notes)
+            {
+                <a class="mn-files__row" role="listitem" href="@Model.BaseUrl/@n.Id">
+                    @Ui.Icon(Ui.TypeIcon(n.Type))
+                    <span class="mn-files__name"><strong>@n.Title</strong><small class="mn-files__small">@Ui.TypeName(n.Type) · @n.Updated.ToString("yyyy-MM-dd")</small></span>
+                    <span class="mn-files__type">@Ui.TypeName(n.Type)</span>
+                    <span class="mn-files__date">@n.Updated.ToString("yyyy-MM-dd")</span>
+                </a>
+            }
+        </div>
     }
+}
+
+@if (explorer)
+{
+    @:</div></div>
 }

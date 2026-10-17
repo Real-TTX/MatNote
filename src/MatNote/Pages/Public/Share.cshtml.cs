@@ -11,6 +11,19 @@ public sealed record PublicNote(long Id, string Title, NoteType Type, DateTime U
 
 public sealed record PublicFolder(long Id, string Name);
 
+/// <summary>A folder as a row of the list (like in a file explorer): how many folders and notes are directly inside.</summary>
+public sealed record PublicFolderRow(long Id, string Name, int Folders, int Notes);
+
+/// <summary>A folder of the tree at the left: the shared folder is the top, only folders inside it are in it.</summary>
+public sealed class PublicTreeNode(long id, string name)
+{
+    public long Id { get; } = id;
+
+    public string Name { get; } = name;
+
+    public List<PublicTreeNode> Children { get; } = [];
+}
+
 /// <summary>
 /// A shared link, opened by anyone who has it. It shows one note, or a folder with its notes (and the notes in it), read only. It gives away nothing else:
 /// not who else has access, not the folders around it, not the other notes of the owner.
@@ -37,7 +50,10 @@ public sealed class ShareModel(PublicShareAccess pub, AppDbContext db, INotePrev
 
     public List<PublicNote> Notes { get; private set; } = [];
 
-    public List<PublicFolder> Subfolders { get; private set; } = [];
+    public List<PublicFolderRow> Subfolders { get; private set; } = [];
+
+    /// <summary>The folders of the share as a tree (the shared folder at the top); <c>null</c> for a link to one note.</summary>
+    public PublicTreeNode? Tree { get; private set; }
 
     public List<PublicFolder> Path { get; private set; } = [];
 
@@ -61,6 +77,7 @@ public sealed class ShareModel(PublicShareAccess pub, AppDbContext db, INotePrev
         }
 
         Share = share!;
+        var firstVisit = NoteId is null && Folder is null;
         OwnerName = await db.Users.AsNoTracking().Where(u => u.Id == Share.OwnerId).Select(u => u.DisplayName).FirstOrDefaultAsync() ?? string.Empty;
         ViewData["SharedBy"] = OwnerName;
 
@@ -86,7 +103,12 @@ public sealed class ShareModel(PublicShareAccess pub, AppDbContext db, INotePrev
             await ShowFolderAsync();
         }
 
-        if (NoteId is null && Folder is null)
+        if (Share.FolderId is not null)
+        {
+            await BuildTreeAsync();
+        }
+
+        if (firstVisit)
         {
             await pub.CountViewAsync(Share);
         }
@@ -130,9 +152,50 @@ public sealed class ShareModel(PublicShareAccess pub, AppDbContext db, INotePrev
         Heading = folder.Name;
         ViewData["PageSub"] = "A shared folder";
         Path = await PathAsync(folder.Id);
-        Subfolders = await db.Folders.AsNoTracking().Where(f => f.ParentId == folder.Id && f.OwnerId == Share.OwnerId).OrderBy(f => f.Name).Select(f => new PublicFolder(f.Id, f.Name)).ToListAsync();
         Notes = await db.Notes.AsNoTracking().Where(n => n.FolderId == folder.Id && n.OwnerId == Share.OwnerId).OrderBy(n => n.Title)
             .Select(n => new PublicNote(n.Id, n.Title, n.Type, n.UpdateDate)).ToListAsync();
+    }
+
+    /// <summary>The tree of the folders inside the share, and the rows (the folders directly in the open folder, with how much is inside them).</summary>
+    private async Task BuildTreeAsync()
+    {
+        var root = Share.FolderId!.Value;
+        var all = await db.Folders.AsNoTracking().Where(f => f.OwnerId == Share.OwnerId).Select(f => new { f.Id, f.ParentId, f.Name }).ToListAsync();
+        var children = all.Where(f => f.ParentId is not null).ToLookup(f => f.ParentId!.Value);
+        var rootFolder = all.FirstOrDefault(f => f.Id == root);
+        if (rootFolder is null)
+        {
+            return;
+        }
+
+        var nodes = new Dictionary<long, PublicTreeNode>();
+        PublicTreeNode Build(long id, string name, int depth)
+        {
+            var node = new PublicTreeNode(id, name);
+            nodes[id] = node;
+            if (depth < FolderService.MaxDepth + 2)
+            {
+                foreach (var child in children[id].OrderBy(c => c.Name, StringComparer.CurrentCultureIgnoreCase))
+                {
+                    if (!nodes.ContainsKey(child.Id))
+                    {
+                        node.Children.Add(Build(child.Id, child.Name, depth + 1));
+                    }
+                }
+            }
+
+            return node;
+        }
+
+        Tree = Build(root, rootFolder.Name, 0);
+        if (Note is not null || Folder is not { } open || !nodes.TryGetValue(open, out var current))
+        {
+            return;
+        }
+
+        var counts = await db.Notes.AsNoTracking().Where(n => n.OwnerId == Share.OwnerId && n.FolderId != null && nodes.Keys.Contains(n.FolderId.Value))
+            .GroupBy(n => n.FolderId!.Value).Select(g => new { Folder = g.Key, Count = g.Count() }).ToDictionaryAsync(g => g.Folder, g => g.Count);
+        Subfolders = current.Children.Select(c => new PublicFolderRow(c.Id, c.Name, c.Children.Count, counts.GetValueOrDefault(c.Id))).ToList();
     }
 
     /// <summary>The folders from the shared one down to <paramref name="folderId"/> (never the folders above the shared one).</summary>

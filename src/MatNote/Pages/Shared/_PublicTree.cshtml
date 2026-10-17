@@ -1,0 +1,21 @@
+@model (MatNote.Pages.Public.PublicTreeNode Node, long? Active, string BaseUrl)
+@*
+    One folder of the tree at the left of a shared folder (like the folder pane of a file explorer). The whole tree is open: it is the map of what the link shares.
+    The open folder is marked, the folders on the way to it are set bold.
+*@
+@{
+    var node = Model.Node;
+    var active = Model.Active == node.Id;
+}
+<li>
+    <a class="mn-tree__item@(active ? " is-active" : "")" href="@Model.BaseUrl?folder=@node.Id" aria-current="@(active ? "page" : null)">@Ui.Icon("folder")<span>@node.Name</span></a>
+    @if (node.Children.Count > 0)
+    {
+        <ul class="mn-tree__list">
+            @foreach (var child in node.Children)
+            {
+                <partial name="_PublicTree" model="(child, Model.Active, Model.BaseUrl)" />
+            }
+        </ul>
+    }
+</li>

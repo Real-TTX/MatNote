@@ -67,6 +67,8 @@ src/MatNote
                              note at the end of one of the person's own text notes or of a new one (POST Notes/Reference, JSON; the target must be the person's own text note, Lookup?mine=true lists them); the page and
                              the export show the current text of the snippet where the link is. The target picked last is offered first (localStorage mn.compose.target).
   Controls/                  ONE code base per control: <mn-field>, <mn-buttons>, <mn-table>, <mn-tabs>/<mn-tab>; partials _Toolbar, _Pager, _FormSummary in Pages/Shared
+                             A link to a FOLDER (Public/Share) looks like a file explorer: folder tree of the share at the left (_PublicTree, only folders inside the shared one; hidden below 900 px), an address bar, then
+                             the content of the open folder, folders first, then the notes (.mn-files; the type and date move under the name on a phone); a note opens beside the same tree. ?folder= outside the share falls back to its top.
   Pages/                     Razor Pages: Account/ (sign-in, TOTP step, setup, account, security), Notes/, Folders/, Tags/, Shares/, Trash/, Public/ (link shares, anonymous), Admin/ (Users/, Backups/, Settings/ = the System page; the folder is not called System because the namespace would hide System.*)
   wwwroot/matui/             the toolkit (copied from MatDesign: never edit by hand, update by copying again)
   wwwroot/css/app.css        the accent (orange) and the few app-only styles (prefix mn-);  wwwroot/js/app.js, editor.js: the few app-only behaviours

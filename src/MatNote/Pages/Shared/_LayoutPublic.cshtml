@@ -23,7 +23,7 @@
 <body>
     <a class="mat-skip" href="#main">Skip to the content</a>
     @Html.Raw(Toolkit.Sprite)
-    <div class="mn-public">
+    <div class="mn-public@(ViewData["Wide"] is true ? " mn-public--wide" : "")">
         <header class="mn-public__head">
             <a href="/" aria-label="@Ui.AppName">@Ui.Logo()</a>
             <div>
