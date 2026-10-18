@@ -31,7 +31,7 @@ Priority: **P1** soon, **P2** next, **P3** some day.
 
 | Prio | What | Notes |
 |---|---|---|
-| P1 | Create the GitHub repository, push `main` and `dev`, check the first run of the GitHub action | `.github/workflows/build.yml` never ran; the compose file in the README needs the image `ghcr.io/real-ttx/matnote` |
+| P1 | Check why a push to `main` / `dev` starts no run of the GitHub action | The first run (started by hand on 2026-10-18, `workflow_dispatch`) built, tested and pushed the image; runs started by a push were not seen before |
 | P1 | Make the package `ghcr.io/real-ttx/matnote` public (or add a pull secret) | Otherwise `docker compose up` cannot pull it |
 | P2 | Test a restore of a backup on a second, empty machine (with and without the keys) | Verified in the dev stack and against Samba, not yet across machines |
 | P2 | Check the licence of QuestPDF (Community) for the intended use | Named in the README |
