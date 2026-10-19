@@ -77,6 +77,11 @@ src/MatNote
                              Drag OUT (dragout.js): a note row or a folder of the menu starts a drag with DownloadURL (Chromium saves the file on the desktop / in a folder: a text note as .html/.md/.txt through
                              Notes/Export?raw=true, a file note as itself, a folder as <name>.matnotes.zip through Folders/Export?download=true&mode=Archive) and the address as text/uri-list. Dropped on a list
                              (filedrop.js) a .matnotes.zip is imported there, other files become notes. Between two MatNotes instances the file on the desktop is the vehicle (a page cannot read the other instance).
+                             Parameters: {{name}} / {{name|default}} in a text (Services/Export/Parameters.cs, params.js). Copy (the text as shown, linked notes included), export as a file (the dialog asks, the values go
+                             as p_<name>=value into ExportOptions.Parameters and are written into every format incl. the copied-in notes) and Copy to clipboard ask for the values first (last values offered again,
+                             localStorage mn.params; cancel = nothing happens). A note without placeholders is not touched; a placeholder split by formatting (bold inside) is not found. The export dialog opens with Markdown
+                             and remembers format, linked and attachments (localStorage mn.export). The rich text editor (editor.js) keeps the kind of the block whose text stays when a deletion joins two blocks, and Backspace
+                             at the start of a heading/quote/code block makes it a paragraph.
   Pages/                     Razor Pages: Account/ (sign-in, TOTP step, setup, account, security), Notes/, Folders/, Tags/, Shares/, Trash/, Public/ (link shares, anonymous), Admin/ (Users/, Backups/, Settings/ = the System page; the folder is not called System because the namespace would hide System.*)
   wwwroot/matui/             the toolkit (copied from MatDesign: never edit by hand, update by copying again)
   wwwroot/css/app.css        the accent (orange) and the few app-only styles (prefix mn-);  wwwroot/js/app.js, editor.js: the few app-only behaviours

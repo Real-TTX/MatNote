@@ -26,7 +26,7 @@ public sealed class ExportModel(PublicShareAccess pub, INoteExporter exporter) :
             return NotFound();
         }
 
-        var result = await exporter.ExportAsync(note, format, new ExportOptions(linked, IncludeAttachments: attachments), id => pub.NoteAsync(share, id), HttpContext.RequestAborted);
+        var result = await exporter.ExportAsync(note, format, new ExportOptions(linked, IncludeAttachments: attachments, Parameters: Parameters.FromQuery(Request.Query)), id => pub.NoteAsync(share, id), HttpContext.RequestAborted);
         return File(result.Data, result.ContentType, result.FileName);
     }
 }

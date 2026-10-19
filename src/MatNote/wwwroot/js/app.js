@@ -42,10 +42,38 @@
     if (button) { button.hidden = TEXT_FORMATS.indexOf(chosenFormat(form)) === -1; }
   }
 
+  // the export dialog remembers what was chosen last (the format, the linked notes, the attachments): Markdown to begin with, which is what a prompt wants
+  var EXPORT_KEY = 'mn.export';
+
+  function restoreExport(form) {
+    var saved = null;
+    try { saved = JSON.parse(localStorage.getItem(EXPORT_KEY) || 'null'); } catch (e) { saved = null; }
+    if (!saved) { return; }
+    var radio = saved.format && form.querySelector('input[name="format"][value="' + saved.format + '"]');
+    if (radio) { radio.checked = true; }
+    ['linked', 'attachments'].forEach(function (name) {
+      var box = form.querySelector('input[type=checkbox][name="' + name + '"]');
+      if (box && typeof saved[name] === 'boolean') { box.checked = saved[name]; }
+    });
+  }
+
+  function rememberExport(form) {
+    var saved = {};
+    try { saved = JSON.parse(localStorage.getItem(EXPORT_KEY) || '{}') || {}; } catch (e) { saved = {}; }
+    var radio = form.querySelector('input[name="format"]:checked');
+    if (radio) { saved.format = radio.value; }
+    ['linked', 'attachments'].forEach(function (name) {
+      var box = form.querySelector('input[type=checkbox][name="' + name + '"]');
+      if (box) { saved[name] = box.checked; }
+    });
+    try { localStorage.setItem(EXPORT_KEY, JSON.stringify(saved)); } catch (e) { /* ignore */ }
+  }
+
   Array.prototype.forEach.call(document.querySelectorAll('form [data-export-copy]'), function (button) {
     var form = button.closest('form');
+    restoreExport(form);
     syncExportCopy(form);
-    form.addEventListener('change', function () { syncExportCopy(form); });
+    form.addEventListener('change', function () { syncExportCopy(form); rememberExport(form); });
   });
 
   document.addEventListener('click', function (e) {
@@ -60,13 +88,18 @@
       if (!r.ok) { throw new Error('http ' + r.status); }
       return r.text();
     }).then(function (text) {
+      // a note with places to fill in ({{name}}) asks for the values first (params.js); cancel = nothing is copied
+      return window.mnParams ? window.mnParams.fill(text) : text;
+    }).then(function (text) {
+      if (text === null) { return false; }
       if (format === 'Html' && window.ClipboardItem && navigator.clipboard && navigator.clipboard.write && window.isSecureContext) {
         // the content of the page only (its style block would be run by the browser when it prepares the clipboard); the whole page as the plain text
         var body = new DOMParser().parseFromString(text, 'text/html').body.innerHTML;
         return navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([body], { type: 'text/html' }), 'text/plain': new Blob([text], { type: 'text/plain' }) })]);
       }
       return copyText(text);
-    }).then(function () {
+    }).then(function (cancelled) {
+      if (cancelled === false) { return; }
       toast('Copied to the clipboard.');
       var dialog = button.closest('dialog');
       if (dialog && dialog.close) { dialog.close(); }

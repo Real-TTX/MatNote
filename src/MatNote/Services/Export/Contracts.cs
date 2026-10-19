@@ -37,7 +37,8 @@ public enum ExportFormat
 /// The files attached to the note go along: a single note becomes a zip (the exported file and a directory <c>attachments</c>), in a zip of a folder every note gets a directory next to it.
 /// The attachments of a linked note that is copied in are not part of it.
 /// </param>
-public sealed record ExportOptions(bool IncludeLinkedNotes = true, int MaxDepth = 3, bool IncludeAttachments = false);
+/// <param name="Parameters">The values of the <c>{{name}}</c> placeholders of the text (<see cref="Export.Parameters"/>), or <c>null</c> to leave every placeholder as it is.</param>
+public sealed record ExportOptions(bool IncludeLinkedNotes = true, int MaxDepth = 3, bool IncludeAttachments = false, IReadOnlyDictionary<string, string>? Parameters = null);
 
 public sealed record ExportResult(byte[] Data, string FileName, string ContentType);
 

@@ -72,7 +72,7 @@ else if (!Model.IsNew)
                         <div class="mn-editor" data-editor>
                             <textarea class="mat-textarea mn-editor__source mat-mono" id="RichContent" name="Content" rows="14" aria-label="Text of the note">@Model.Content</textarea>
                         </div>
-                        <span class="mat-hint mn-hint-note">Type <kbd>[[</kbd> or use the link button in the bar to link another note: when you export this note, the linked note is copied into it. <kbd>Ctrl</kbd> + click opens a link.</span>
+                        <span class="mat-hint mn-hint-note">Type <kbd>[[</kbd> or use the link button in the bar to link another note: when you export this note, the linked note is copied into it. <kbd>Ctrl</kbd> + click opens a link. Write <code>{{name}}</code> (or <code>{{name|default}}</code>) for a value that is asked when the note is copied or exported.</span>
                         <span class="mat-error" aria-live="polite">@Model.ErrorFor("Content")</span>
                     </div>
                 }
@@ -91,7 +91,8 @@ else if (!Model.IsNew)
                         <div class="mn-links" id="TextContent-links" aria-label="Linked notes" hidden></div>
                         <span class="mat-hint mn-hint-note">
                             Type <kbd>[[</kbd> to link a note (written as <code>[Title](note:ID)</code>), or
-                            <button type="button" class="mat-btn mat-btn--ghost mat-btn--sm" data-note-link-open="#TextContent">@Ui.Icon("note-link")<span>choose a note</span></button>
+                            <button type="button" class="mat-btn mat-btn--ghost mat-btn--sm" data-note-link-open="#TextContent">@Ui.Icon("note-link")<span>choose a note</span></button>.
+                            Write <code>{{name}}</code> (or <code>{{name|default}}</code>) for a value that is asked when the note is copied or exported.
                         </span>
                         <span class="mat-error" aria-live="polite">@Model.ErrorFor("Content")</span>
                     </div>

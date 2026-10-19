@@ -34,7 +34,7 @@ public sealed class ExportModel(AccessService access, INoteExporter exporter) : 
             return BadRequest("This note cannot be exported in that format.");
         }
 
-        var result = await exporter.ExportAsync(note, format, new ExportOptions(linked, IncludeAttachments: attachments), async noteId => (await access.FindNoteAsync(noteId)).Note, HttpContext.RequestAborted);
+        var result = await exporter.ExportAsync(note, format, new ExportOptions(linked, IncludeAttachments: attachments, Parameters: Parameters.FromQuery(Request.Query)), async noteId => (await access.FindNoteAsync(noteId)).Note, HttpContext.RequestAborted);
         return File(result.Data, result.ContentType, result.FileName);
     }
 }

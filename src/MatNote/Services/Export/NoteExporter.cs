@@ -133,8 +133,15 @@ public sealed class NoteExporter(INoteFileStore store) : INoteExporter
 
         var inliner = new LinkInliner(resolver, options, markdownSource: format == ExportFormat.Markdown, note.Id);
         var blocks = await inliner.ProcessAsync(NoteDocs.Blocks(note, format == ExportFormat.Markdown), ct);
-        var doc = new Doc(note.Title ?? string.Empty, blocks);
-        return Render(doc, format, note.Title);
+        var title = note.Title ?? string.Empty;
+        if (options.Parameters is { } values)
+        {
+            blocks = Parameters.Fill(blocks, values);
+            title = Parameters.Fill(title, values);
+        }
+
+        var doc = new Doc(title, blocks);
+        return Render(doc, format, title);
     }
 
     private static ExportResult Render(Doc doc, ExportFormat format, string? title) => format switch

@@ -153,7 +153,62 @@
       });
     }
 
-    area.addEventListener('input', sync);
+    // Deleting at the edge of a block: the browser joins the next block into the first one and the first one's kind wins, so the line below a deleted heading becomes a heading.
+    // What stays is the kind of the block whose text stays: it is noted before the deletion and set again after it. Backspace at the start of a heading, quote or code block makes
+    // it a paragraph first (as in a word processor) instead of pulling it into the block above.
+    var BLOCKS = 'h1,h2,h3,h4,h5,h6,p,blockquote,pre,li,div';
+    var KEEP = null;
+
+    function blockOf(node) {
+      var el = node && (node.nodeType === 1 ? node : node.parentElement);
+      var block = el && el.closest(BLOCKS);
+      return block && block !== area && area.contains(block) ? block : null;
+    }
+
+    function startsBlock(range, block) {
+      var before = doc.createRange();
+      before.setStart(block, 0);
+      before.setEnd(range.startContainer, range.startOffset);
+      return before.toString() === '' && !before.cloneContents().querySelector('img,hr,table');
+    }
+
+    function emptyBlock(block) { return block.textContent.replace(/​/g, '').trim() === '' && !block.querySelector('img,hr,table'); }
+
+    area.addEventListener('beforeinput', function (e) {
+      KEEP = null;
+      var kind = e.inputType;
+      if (kind !== 'deleteContentBackward' && kind !== 'deleteContentForward' && kind !== 'deleteByCut') { return; }
+      var selection = doc.getSelection();
+      if (!selection.rangeCount) { return; }
+      var range = selection.getRangeAt(0);
+      var first = blockOf(range.startContainer);
+      var last = blockOf(range.endContainer);
+      if (!first || !last) { return; }
+      var plain = function (b) { return b.tagName !== 'LI' && b.tagName !== 'DIV'; };
+      if (!range.collapsed) {
+        // from the start of a block into another one: what stays is the text of the last block, with its kind
+        if (first !== last && !first.contains(last) && !last.contains(first) && plain(first) && plain(last) && first.tagName !== last.tagName && startsBlock(range, first)) { KEEP = last.tagName.toLowerCase(); }
+      } else if (kind === 'deleteContentForward') {
+        var next = first.nextElementSibling;
+        if (next && emptyBlock(first) && plain(first) && plain(next) && first.tagName !== next.tagName) { KEEP = next.tagName.toLowerCase(); }
+      } else if (kind === 'deleteContentBackward' && /^(H[1-6]|BLOCKQUOTE|PRE)$/.test(first.tagName) && startsBlock(range, first)) {
+        e.preventDefault();
+        doc.execCommand('formatBlock', false, 'p');
+        sync();
+        mark();
+      }
+    });
+
+    area.addEventListener('input', function () {
+      if (KEEP) {
+        var kind = KEEP;
+        KEEP = null;
+        var selection = doc.getSelection();
+        var block = selection.rangeCount ? blockOf(selection.getRangeAt(0).startContainer) : null;
+        if (block && block.tagName.toLowerCase() !== kind) { doc.execCommand('formatBlock', false, kind); }
+      }
+      sync();
+    });
     area.addEventListener('keyup', mark);
     area.addEventListener('mouseup', mark);
     doc.addEventListener('selectionchange', function () { if (doc.activeElement === area) { mark(); } });

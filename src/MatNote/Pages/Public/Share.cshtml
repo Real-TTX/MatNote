@@ -112,10 +112,11 @@
                     <fieldset class="mat-field mat-fieldset">
                         <legend class="mat-label">Format</legend>
                         <div class="mat-options">
-                            @for (var i = 0; i < Model.Formats.Count; i++)
+                            @{ var defaultFormat = Math.Max(0, Model.Formats.ToList().IndexOf(ExportFormat.Markdown)); }
+                    @for (var i = 0; i < Model.Formats.Count; i++)
                             {
                                 var format = Model.Formats[i];
-                                <label class="mat-option"><input type="radio" name="format" value="@format" checked="@(i == 0)" /><span>@MatNote.Pages.Notes.ViewModel.FormatName(format)</span></label>
+                                <label class="mat-option"><input type="radio" name="format" value="@format" checked="@(i == defaultFormat)" /><span>@MatNote.Pages.Notes.ViewModel.FormatName(format)</span></label>
                             }
                         </div>
                     </fieldset>
