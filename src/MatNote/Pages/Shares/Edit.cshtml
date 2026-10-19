@@ -100,7 +100,7 @@ else if (Model.FolderId is { } tabFolder)
                 <a class="mat-btn mat-btn--secondary mat-btn--sm mn-head-action" href="@Model.NewShareUrl">@Ui.Icon("plus")<span>Another link or person</span></a>
             }
         </div>
-        <div class="mat-card__body">
+        <div class="mat-card__body@(Model.Others.Count == 0 ? " mn-pad" : "")">
             @if (Model.Others.Count == 0)
             {
                 <p class="mat-muted">No other shares yet. Every link has its own address, password and end date: make one per person or per purpose, and stop each one on its own.</p>

@@ -101,7 +101,8 @@ a.mn-stat:hover { border-color: var(--mat-border-strong); }
 
 /* [hidden] must win over any display set above */
 .mn-editor__source[hidden], .mn-editor__area[hidden] { display: none; }
-.mn-pad { padding: var(--mat-space-4); }
+/* text in a card whose body is flush (a list or table runs edge to edge): the toolkit sets the padding to 0, a text needs it */
+.mn-pad, .mat-card--flush > .mat-card__body.mn-pad { padding: var(--mat-space-4); }
 .mat-auth .mat-footer { text-align: center; }
 
 /* ---- The notes list with the note beside it (Notes/Index "split" layout, and the pages inside the pane) ----------------- */

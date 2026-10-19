@@ -102,6 +102,7 @@ tests/MatNote.Tests          unit tests
   it (`_Pager`), then the list actions left-aligned (`mat-actions`). **Delete lives on the edit page**, separated by `mat-btn-row__spacer`. Buttons: positive to negative (`Save`, `Back`, space, `Delete`) via `<mn-buttons>`.
 - **Tabs or buttons?** What is a part of one item and has a page of its own is a **tab** (`_ItemTabs`: a note has View | Edit | Sharing, a folder Folder | Sharing; in the note pane the same three are the switch of
   the pane bar). What only does something (copy, export, favorite, download, delete, back) is a **button**. Never a button that really opens another aspect of the item.
+- A card with `mat-card--flush` (a list or table runs edge to edge) has NO padding in its body: text in it (an empty message) needs `mn-pad` on the body, or a `mat-empty` block.
 - Every `td` has `data-label` (rows become cards on a phone). Use icons (`Ui.Icon("name")`, names in `wwwroot/matui/matui-icons.svg` and `wwwroot/img/app-icons.svg`; a missing name is a bug).
 - Dependent fields only appear when needed (`show-if` / `data-show-if`). Account, sign out and the theme button are at the bottom left of the menu.
 - Controls have one code base and can appear several times on a page (ids come from the model: `ToolbarModel.Id`, `mn-field id=`).
