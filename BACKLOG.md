@@ -31,12 +31,9 @@ Priority: **P1** soon, **P2** next, **P3** some day.
 
 | Prio | What | Notes |
 |---|---|---|
-| P1 | Check why a push to `main` / `dev` starts no run of the GitHub action | The first run (started by hand on 2026-10-18, `workflow_dispatch`) built, tested and pushed the image; runs started by a push were not seen before |
-| P1 | Make the package `ghcr.io/real-ttx/matnote` public (or add a pull secret) | Otherwise `docker compose up` cannot pull it |
 | P2 | Test a restore of a backup on a second, empty machine (with and without the keys) | Verified in the dev stack and against Samba, not yet across machines |
 | P2 | Check the licence of QuestPDF (Community) for the intended use | Named in the README |
 | P2 | Check the side by side layout with a PDF, Word and Excel note in the pane | Tried: rich text, plain text, a new note, dark mode, 1200 / 1360 / 1920 px, a phone, the list layout |
 | P2 | Tests for `View?handler=Body` (only readable notes, files have no text) and the `[[` / inline link scripts (browser test) | Only checked by hand in the browser so far |
 | P2 | Tests for the autosave handler (stamp conflict, new note with and without title) and for the layout cookie | Only checked by hand in the browser so far |
-| P3 | Tests in the GitHub action (`dotnet test`) before the image is built | 482 tests pass locally |
 | P3 | Update `README.md` screenshots when the UI changes | `docs/images`, see the `screenshots` skill |

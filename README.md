@@ -132,8 +132,11 @@ Ready-made images are published to the GitHub Container Registry:
 
 | Tag | Built from | Use it for |
 |---|---|---|
-| `ghcr.io/real-ttx/matnote:latest` | `main` | releases |
+| `ghcr.io/real-ttx/matnote:latest` (also `:release`) | `main` | releases |
+| `ghcr.io/real-ttx/matnote:<major>.<minor>.<build>-<yyyyMMdd>` | `main` | one fixed release, e.g. `0.1.3-20261018` |
 | `ghcr.io/real-ttx/matnote:nightly` | `dev` | the newest features |
+
+The images are public (no sign-in to pull) and exist for `linux/amd64` and `linux/arm64`.
 
 ### 1. Just run it
 
