@@ -101,7 +101,8 @@
       '-',
       { icon: 'edit', text: 'Edit folder', href: '/Folders/Edit?id=' + id },
       { icon: 'share', text: 'Share', href: '/Shares/Edit?folderId=' + id },
-      { icon: 'upload', text: 'Export as zip', href: '/Folders/Export?id=' + id },
+      { icon: 'download', text: 'Export as zip', href: '/Folders/Export?id=' + id },
+      { icon: 'upload', text: 'Import into this folder', href: '/Folders/Import?into=' + id },
       '-',
       { icon: 'settings', text: 'Manage all folders', href: '/Folders' },
     ];

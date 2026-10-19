@@ -20,7 +20,7 @@ Priority: **P1** soon, **P2** next, **P3** some day.
 | P3 | Attachments in a copy of a note and in the exports of linked notes | A single export and a folder zip take the attachments of the notes themselves along |
 | P3 | Paste an image into the rich text editor as an attachment shown in the text | Today images are attachments only |
 | P3 | Context menu on a phone (long press) and for the notes of the list layout table on touch | Right click and the menu key work |
-| P3 | Import: a folder or a zip of files/markdown at once | The reverse of the folder export |
+| P3 | Import: keep the dates of the notes, import shares, import into a folder that was shared with edit rights | Today an import makes new notes of the person, with today's date, in their own folders |
 | P3 | Autosave for the title and tags of file notes (Word, Excel, PDF) | Today they have the Save button only |
 | P3 | Keep the toolbar count and the unread state of the list in step while typing in the pane | The rows refresh after each save; the count in the toolbar is updated, filters are not re-applied to a title that no longer matches |
 | P3 | Notes can be moved between folders by drag and drop | Today through the edit page |

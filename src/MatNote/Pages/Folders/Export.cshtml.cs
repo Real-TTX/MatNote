@@ -7,12 +7,23 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MatNote.Pages.Folders;
 
-/// <summary>Exports a folder with everything inside it as one zip: the notes in the chosen format, in directories like the folders.</summary>
-public sealed class ExportModel(AppDbContext db, AccessService access, FolderService folders, INoteExporter exporter) : AppPageModel
+/// <summary>
+/// Exports a folder with everything inside it as one zip: the notes in the chosen format, in directories like the folders, or as a MatNotes archive that can be imported again
+/// (<see cref="FolderArchive"/>: the notes as they are kept, with their types, tags, favorites, attachments and links).
+/// </summary>
+public sealed class ExportModel(AppDbContext db, CurrentUser me, AccessService access, FolderService folders, INoteExporter exporter, INoteFileStore store) : AppPageModel
 {
     public static readonly ExportFormat[] Formats = [ExportFormat.Markdown, ExportFormat.Txt, ExportFormat.Html, ExportFormat.Docx, ExportFormat.Pdf, ExportFormat.Rtf];
 
     [BindProperty(SupportsGet = true)] public long Id { get; set; }
+
+    public static readonly Choice[] Modes =
+    [
+        new("Files", "Readable files", "In the format you choose, to open anywhere"),
+        new("Archive", "MatNotes archive", "To import it again later: keeps types, tags, favorites, attachments and links"),
+    ];
+
+    [BindProperty(SupportsGet = true)] public string Mode { get; set; } = "Files";
 
     [BindProperty(SupportsGet = true)] public ExportFormat Format { get; set; } = ExportFormat.Markdown;
 
@@ -53,6 +64,15 @@ public sealed class ExportModel(AppDbContext db, AccessService access, FolderSer
         }
 
         var items = await ItemsAsync(folder);
+        if (Mode == "Archive")
+        {
+            var refs = await folders.RefsAsync(folder.OwnerId);
+            var ids = FolderTree.SelfAndDescendants(refs, folder.Id);
+            var tree = await db.Folders.AsNoTracking().Where(f => ids.Contains(f.Id)).Select(f => new ArchiveFolder(f.Id, f.ParentId, f.Name, f.Color)).ToListAsync();
+            var archive = await FolderArchive.WriteAsync(folder.Name, folder.Id, tree, items.Select(i => i.Note).ToList(), store, me.RequiredId, HttpContext.RequestAborted);
+            return File(archive.Data, archive.ContentType, archive.FileName);
+        }
+
         var result = await exporter.ExportManyAsync(folder.Name, items, Format, new ExportOptions(Linked, IncludeAttachments: Attachments), async noteId => (await access.FindNoteAsync(noteId)).Note, HttpContext.RequestAborted);
         return File(result.Data, result.ContentType, result.FileName);
     }

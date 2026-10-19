@@ -69,6 +69,11 @@ src/MatNote
   Controls/                  ONE code base per control: <mn-field>, <mn-buttons>, <mn-table>, <mn-tabs>/<mn-tab>; partials _Toolbar, _Pager, _FormSummary in Pages/Shared
                              A link to a FOLDER (Public/Share) looks like a file explorer: folder tree of the share at the left (_PublicTree, only folders inside the shared one; hidden below 900 px), an address bar, then
                              the content of the open folder, folders first, then the notes (.mn-files; the type and date move under the name on a phone); a note opens beside the same tree. ?folder= outside the share falls back to its top.
+                             Folder export / import (Folders/Export, Folders/Import; Services/Export/FolderArchive + Services/FolderImporter): "MatNotes archive" = the readable zip (notes as .html/.md/.txt, files as they are,
+                             "<Note> - attachments/") + matnotes-folder.json (ids, parents, types, tags, favorites, attachments). FolderArchive.Read turns ANY zip into an ImportPlan (pure, tested: with the manifest it
+                             restores, without it directories = folders, files = notes; limits: 20000 entries, 1 GB, one file up to the upload limit; names with .. or a leading dot are refused); FolderImporter writes the
+                             plan as NEW notes of the signed-in person (SaveAsync: sanitized, searchable, tags), links point at the new ids in a second step, links out of the archive lose their target, a folder deeper
+                             than 12 levels is merged into the one above, a plain zip with loose files goes into a folder named like the zip. Dates are not kept (the import is a new save).
   Pages/                     Razor Pages: Account/ (sign-in, TOTP step, setup, account, security), Notes/, Folders/, Tags/, Shares/, Trash/, Public/ (link shares, anonymous), Admin/ (Users/, Backups/, Settings/ = the System page; the folder is not called System because the namespace would hide System.*)
   wwwroot/matui/             the toolkit (copied from MatDesign: never edit by hand, update by copying again)
   wwwroot/css/app.css        the accent (orange) and the few app-only styles (prefix mn-);  wwwroot/js/app.js, editor.js: the few app-only behaviours

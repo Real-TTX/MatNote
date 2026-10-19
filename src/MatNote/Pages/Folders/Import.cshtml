@@ -1,0 +1,52 @@
+@page "/Folders/Import"
+@model MatNote.Pages.Folders.ImportModel
+@{
+    ViewData["Width"] = "narrow";
+    ViewData["PageSub"] = "Bring a folder or a zip of files into your notes.";
+}
+
+@if (Model.Result is { } result)
+{
+    <div class="mat-alert mat-alert--success">@Ui.Icon("check-circle")<div class="mat-alert__body">
+        <strong>Done.</strong>
+        @result.Folders @(result.Folders == 1 ? "folder" : "folders"), @result.Notes @(result.Notes == 1 ? "note" : "notes")@(result.Attachments > 0 ? $", {result.Attachments} attachments" : "") imported.
+        @if (result.OpenFolderId is { } open)
+        {
+            <a href="/Notes?folder=@open">Open the folder</a>
+        }
+        else
+        {
+            <a href="/Notes">Open your notes</a>
+        }
+    </div></div>
+    @if (result.Skipped.Count > 0)
+    {
+        <div class="mat-alert mat-alert--warning">@Ui.Icon("alert")<div class="mat-alert__body">
+            <strong>Left out (@result.Skipped.Count)</strong>
+            <ul>@foreach (var line in result.Skipped.Take(30)) { <li>@line</li> }@if (result.Skipped.Count > 30) { <li>and @(result.Skipped.Count - 30) more</li> }</ul>
+        </div></div>
+    }
+}
+
+<form class="mat-form" method="post" enctype="multipart/form-data" novalidate>
+    <partial name="_FormSummary" model="ViewData.ModelState" />
+    <div class="mat-card">
+        <div class="mat-card__head">@Ui.Icon("upload")<span class="mat-card__title">Import</span></div>
+        <div class="mat-card__body">
+            <div class="mat-form__grid">
+                <div class="mat-field mat-field--full@(Model.ErrorFor("Archive") is null ? "" : " is-invalid")">
+                    <label class="mat-label" for="Archive">Zip file <span class="mat-req" aria-hidden="true">*</span></label>
+                    <input class="mat-input" type="file" id="Archive" name="Archive" accept=".zip,application/zip" required aria-describedby="Archive-hint Archive-error" />
+                    <span class="mat-hint" id="Archive-hint">
+                        A folder that was exported as a <strong>MatNotes archive</strong> comes back as it was: types, tags, favorites, attachments and the links between the notes.
+                        Any other zip works too: directories become folders, files become notes (.txt, .md and .html as text, everything else as a file). Files up to @Model.MaxEntryMb MB.
+                    </span>
+                    <span class="mat-error" id="Archive-error" aria-live="polite">@Model.ErrorFor("Archive")</span>
+                </div>
+                <mn-field name="Into" kind="picker" label="Into the folder" optional full value="@Model.Into" options="Model.FolderChoices" placeholder="No folder (top level)" picker="search clearable"
+                          hint="Everything is added as new notes; nothing that is there is changed." />
+            </div>
+        </div>
+    </div>
+    <mn-buttons save="Import" save-icon="upload" back="/Folders" />
+</form>

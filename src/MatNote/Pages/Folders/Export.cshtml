@@ -11,9 +11,10 @@
         <div class="mat-card__head">@Ui.Icon("upload")<span class="mat-card__title">Export</span></div>
         <div class="mat-card__body">
             <div class="mat-form__grid">
-                <mn-field name="Format" kind="select" label="Format of the notes" full value="@Model.Format.ToString()" options="Model.FormatChoices" hint="Files (Word, Excel, PDF ...) are added as they are." />
-                <mn-field name="Linked" kind="switch" label="Copy linked notes into the notes that link to them" full value="@Model.Linked.ToString()" />
-                <mn-field name="Attachments" kind="switch" label="Include the attachments" full value="@Model.Attachments.ToString()" hint="A directory next to each note that has attachments." />
+                <mn-field name="Mode" kind="select" label="What to make" full value="@Model.Mode" options="ExportModel.Modes" />
+                <mn-field name="Format" kind="select" label="Format of the notes" full value="@Model.Format.ToString()" options="Model.FormatChoices" hint="Files (Word, Excel, PDF ...) are added as they are." show-if="#Mode" show-value="Files" />
+                <mn-field name="Linked" kind="switch" label="Copy linked notes into the notes that link to them" full value="@Model.Linked.ToString()" show-if="#Mode" show-value="Files" />
+                <mn-field name="Attachments" kind="switch" label="Include the attachments" full value="@Model.Attachments.ToString()" hint="A directory next to each note that has attachments." show-if="#Mode" show-value="Files" />
             </div>
         </div>
     </div>
