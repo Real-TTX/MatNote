@@ -37,6 +37,7 @@ ever showing anyone a list of the other people who use the app.
 **Export**
 - One note as `.txt`, `.md`, `.html`, `.rtf`, `.docx`, `.pdf` or `.json`; a workbook as `.csv`; a whole folder as a zip
 - One engine for all formats, so the result looks the same everywhere
+- **Duplicate** a note (with its tags and attachments) or a whole folder – in the right-click menu, in the note ribbon or on the folder page. **Copy** keeps the design of a rich text note (headings, bold, lists, links) when you paste it into a mail or a document
 - **Parameters:** write `{{name}}` or `{{name|default}}` in a note (a prompt with a place for the text it should work on): when the note is copied or exported, MatNotes asks for the values and writes them in – also for the notes that are linked into it. The export dialog opens with Markdown and remembers your last choice
 - Attachments go along (a note becomes a zip with an `attachments` directory), and the text can be copied to the clipboard
 - **Folder export and import:** a folder with everything inside as readable files, or as a **MatNotes archive** that comes back as it was – types, tags, favorites, attachments and the links between the notes. The import also takes any plain zip: directories become folders, files become notes

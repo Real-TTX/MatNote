@@ -1,6 +1,7 @@
 /* MatNotes: the few behaviours that only this app has (the toolkit does the rest).
 
-   data-copy-inner="#id"   copy the text of an element as the person reads it (line breaks of paragraphs and list items kept): the "Copy" button of a rich text note.
+   data-copy-inner="#id"   copy an element as the person reads it: the text (line breaks of paragraphs and list items kept) AND its design (headings, bold, lists, links: it pastes into a mail
+                           or a document as it looks): the "Copy" button of a rich text note.
                            (data-copy="#id" of the toolkit copies the value of a field, which is what plain text and markdown notes use.)
    data-layout="split|list" the switch of the notes list between "list and note side by side" and "list alone" (the server remembers it in a cookie).
    data-open-pane         a link of the notes list: on a wide window the note opens in the pane at the right, otherwise the link works as a link.
@@ -24,6 +25,44 @@
       try { document.execCommand('copy') ? resolve() : reject(new Error('copy failed')); } catch (e) { reject(e); } finally { area.remove(); }
     });
   }
+
+  // the clipboard with a design: the page as html and the text beside it (an editor that takes html keeps the design, a text field takes the text)
+  function copyRich(html, text) {
+    // the links of the page leave the pane layout behind: a link that is pasted elsewhere opens the note as a page
+    var page = new DOMParser().parseFromString(html, 'text/html');
+    Array.prototype.forEach.call(page.querySelectorAll('a[href]'), function (a) {
+      try {
+        var url = new URL(a.getAttribute('href'), location.href);
+        url.searchParams.delete('embed');
+        a.setAttribute('href', url.toString());
+        a.removeAttribute('target');
+        a.removeAttribute('rel');
+      } catch (e) { /* a link that is not an address stays */ }
+    });
+    html = page.body.innerHTML;
+    if (window.ClipboardItem && navigator.clipboard && navigator.clipboard.write && window.isSecureContext) {
+      return navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([html], { type: 'text/html' }), 'text/plain': new Blob([text], { type: 'text/plain' }) })]);
+    }
+    // without the clipboard api (a page that is not https): select a copy of the content and copy the selection
+    return new Promise(function (resolve, reject) {
+      var box = document.createElement('div');
+      box.className = 'mat-sr-only';
+      box.innerHTML = html;
+      document.body.appendChild(box);
+      var range = document.createRange();
+      range.selectNodeContents(box);
+      var selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+      selection.removeAllRanges();
+      box.remove();
+      if (ok) { resolve(); } else { reject(new Error('copy failed')); }
+    });
+  }
+
+  window.mnCopyRich = copyRich;
 
   var auto = document.querySelector('[data-auto-reload]');
   if (auto) { setTimeout(function () { location.reload(); }, parseInt(auto.getAttribute('data-auto-reload'), 10) || 3000); }
@@ -113,7 +152,7 @@
     if (!source) { return; }
     // innerText follows the layout: a paragraph or a list item ends with a line break
     var text = (source.innerText || source.textContent || '').trim();
-    copyText(text).then(function () { toast('Copied to the clipboard.'); }, function () { toast('The text could not be copied.', 'danger'); });
+    copyRich(source.innerHTML, text).then(function () { toast('Copied to the clipboard.'); }, function () { toast('The text could not be copied.', 'danger'); });
   });
 })();
 

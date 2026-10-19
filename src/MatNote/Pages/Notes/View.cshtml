@@ -32,6 +32,10 @@
             <button type="button" class="@btn" data-compose="@note.Id" data-title="@note.Title" data-tip="Put a link to this note into one of your notes: nothing is copied">@Ui.Icon("note-link")<span>Add to a note</span></button>
             @if (Model.IsOwner)
             {
+                <button type="button" class="@btn" data-duplicate="note:@note.Id" data-tip="Make a copy of this note: same folder, tags and attachments">@Ui.Icon("layers")<span>Duplicate</span></button>
+            }
+            @if (Model.IsOwner)
+            {
                 <form method="post" asp-page-handler="Favorite" asp-route-id="@note.Id" asp-route-embed="@Model.EmbedValue" class="mn-inline-form">
                     <button type="submit" class="@btn">@Ui.Icon("star")<span>@(note.IsFavorite ? "Remove favorite" : "Favorite")</span></button>
                 </form>

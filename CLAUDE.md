@@ -82,6 +82,10 @@ src/MatNote
                              localStorage mn.params; cancel = nothing happens). A note without placeholders is not touched; a placeholder split by formatting (bold inside) is not found. The export dialog opens with Markdown
                              and remembers format, linked and attachments (localStorage mn.export). The rich text editor (editor.js) keeps the kind of the block whose text stays when a deletion joins two blocks, and Backspace
                              at the start of a heading/quote/code block makes it a paragraph.
+                             Duplicate (Services/DuplicateService, duplicate.js; POST Notes/Duplicate, Folders/Duplicate, JSON): only what the person OWNS (a shared note is built on with links, not copied). A note: "(copy)" after the
+                             title (then "(copy 2)" ...), same folder, tags, attachments, file bytes; a folder: the road of an export + import kept in memory (FolderArchive + FolderImporter with RootName and KeepOtherLinks: links
+                             inside the folder point at the copies, links to other notes stay). Buttons: note ribbon, folder page, right-click menu. The Copy button of a rich text note copies the DESIGN too (text/html + text/plain,
+                             app.js copyRich: links lose the embed layout; without the clipboard api the selection of an offscreen copy is copied).
   Pages/                     Razor Pages: Account/ (sign-in, TOTP step, setup, account, security), Notes/, Folders/, Tags/, Shares/, Trash/, Public/ (link shares, anonymous), Admin/ (Users/, Backups/, Settings/ = the System page; the folder is not called System because the namespace would hide System.*)
   wwwroot/matui/             the toolkit (copied from MatDesign: never edit by hand, update by copying again)
   wwwroot/css/app.css        the accent (orange) and the few app-only styles (prefix mn-);  wwwroot/js/app.js, editor.js: the few app-only behaviours

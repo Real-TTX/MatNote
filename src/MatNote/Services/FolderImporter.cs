@@ -4,6 +4,9 @@ using Microsoft.AspNetCore.Http;
 
 namespace MatNote.Services;
 
+/// <summary>How an import differs from the usual one: RootName renames the folder that was exported, KeepOtherLinks keeps links to notes that are not part of the import (a copy inside the same app: they still point at the originals).</summary>
+public sealed record ImportOptions(string? RootName = null, bool KeepOtherLinks = false);
+
 /// <summary>What an import made.</summary>
 public sealed record ImportResult(int Folders, int Notes, int Attachments, long? OpenFolderId, IReadOnlyList<string> Skipped);
 
@@ -13,8 +16,10 @@ public sealed record ImportResult(int Folders, int Notes, int Attachments, long?
 /// </summary>
 public sealed class FolderImporter(AppDbContext db, NoteService notes, AttachmentService attachments, FolderService folders)
 {
-    public async Task<ImportResult> ImportAsync(ImportPlan plan, long ownerId, long? targetId)
+    public async Task<ImportResult> ImportAsync(ImportPlan plan, long ownerId, long? targetId, ImportOptions? options = null)
     {
+        options ??= new ImportOptions();
+        var inside = plan.Notes.Where(n => n.OldId > 0).Select(n => n.OldId).ToHashSet();
         var skipped = new List<string>(plan.Skipped);
         var baseDepth = targetId is { } t ? await folders.DepthAsync(t, ownerId) : 0;
 
@@ -64,7 +69,7 @@ public sealed class FolderImporter(AppDbContext db, NoteService notes, Attachmen
                     continue;
                 }
 
-                var row = new Folder { OwnerId = ownerId, ParentId = parentId, Name = folder.Name, Color = folder.Color };
+                var row = new Folder { OwnerId = ownerId, ParentId = parentId, Name = options.RootName is { Length: > 0 } rename && folder.Key == plan.RootKey ? rename : folder.Name, Color = folder.Color };
                 db.Folders.Add(row);
                 pending.Add((folder, row, depth));
             }
@@ -103,7 +108,7 @@ public sealed class FolderImporter(AppDbContext db, NoteService notes, Attachmen
                 Type = source.Type,
                 IsFavorite = source.Favorite,
                 // the links point at ids of the other computer: they are set again when every note has its new id
-                Content = hasLinks ? FolderArchive.RemapLinks(source.Type, source.Content, _ => null) : source.Content,
+                Content = hasLinks ? FolderArchive.RemapLinks(source.Type, source.Content, old => options.KeepOtherLinks && !inside.Contains(old) ? old : null) : source.Content,
             };
 
             try
@@ -144,7 +149,7 @@ public sealed class FolderImporter(AppDbContext db, NoteService notes, Attachmen
 
         foreach (var (note, source) in withLinks)
         {
-            note.Content = FolderArchive.RemapLinks(source.Type, source.Content, old => ids.TryGetValue(old, out var fresh) ? fresh : null);
+            note.Content = FolderArchive.RemapLinks(source.Type, source.Content, old => ids.TryGetValue(old, out var fresh) ? fresh : options.KeepOtherLinks ? old : null);
             await notes.SaveAsync(note, null, null);
         }
 

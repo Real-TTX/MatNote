@@ -176,7 +176,20 @@
     if (!text || !names(text).length) { return; }
     e.preventDefault();
     e.stopImmediatePropagation();
-    fill(text).then(function (filled) { if (filled !== null) { copy(filled); } });
+    var inner = button.getAttribute('data-copy-inner');
+    collect(text).then(function (values) {
+      if (values === null) { return; }
+      if (inner && window.mnCopyRich) {
+        // the design goes along: the values are written into the text of a copy of the page
+        var copyOf = document.querySelector(inner).cloneNode(true);
+        var walker = document.createTreeWalker(copyOf, NodeFilter.SHOW_TEXT);
+        var node;
+        while ((node = walker.nextNode())) { node.nodeValue = apply(node.nodeValue, values); }
+        window.mnCopyRich(copyOf.innerHTML, apply(text, values)).then(function () { toast('Copied to the clipboard.'); }, function () { toast('The text could not be copied.', 'danger'); });
+        return;
+      }
+      copy(apply(text, values));
+    });
   }, true);
 
   // the export dialog of a text note: ask for the values, send them along (p_name=value), then download as usual

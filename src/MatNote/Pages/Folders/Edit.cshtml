@@ -28,6 +28,7 @@
     <mn-buttons save="Save folder" back="/Folders" delete-handler="@(Model.IsNew ? null : "Delete")" delete-label="Delete folder" delete-confirm="@deleteText">
         @if (!Model.IsNew)
         {
+            <button type="button" class="mat-btn mat-btn--secondary" data-duplicate="folder:@Model.Id" data-tip="Make a copy of this folder with everything inside it">@Ui.Icon("layers")<span>Duplicate</span></button>
             <a class="mat-btn mat-btn--secondary" href="/Folders/Export?id=@Model.Id">@Ui.Icon("download")<span>Export as zip</span></a>
         }
     </mn-buttons>
