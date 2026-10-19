@@ -39,6 +39,7 @@ ever showing anyone a list of the other people who use the app.
 - One engine for all formats, so the result looks the same everywhere
 - Attachments go along (a note becomes a zip with an `attachments` directory), and the text can be copied to the clipboard
 - **Folder export and import:** a folder with everything inside as readable files, or as a **MatNotes archive** that comes back as it was – types, tags, favorites, attachments and the links between the notes. The import also takes any plain zip: directories become folders, files become notes
+- **Drag and drop out of the browser** (Edge, Chrome): drag a note or a folder from MatNotes onto the desktop or into a folder – you get the file (a text note as .html/.md/.txt, a folder as a `.matnotes.zip` archive). Drop such a file on the list of another MatNotes (or the same) and it is imported there
 
 **Sharing and privacy**
 - Share a **note or a folder** (with everything inside it)

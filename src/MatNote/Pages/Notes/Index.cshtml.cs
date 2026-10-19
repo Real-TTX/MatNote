@@ -7,7 +7,7 @@ namespace MatNote.Pages.Notes;
 
 public sealed record TagView(string Name, string? Color, long Id = 0);
 
-public sealed record NoteRow(long Id, string Title, NoteType Type, string? FolderName, bool Favorite, DateTime Updated, bool Own, string OwnerName, long FileSize)
+public sealed record NoteRow(long Id, string Title, NoteType Type, string? FolderName, bool Favorite, DateTime Updated, bool Own, string OwnerName, long FileSize, string? FileName = null)
 {
     public List<TagView> Tags { get; set; } = [];
 
@@ -167,7 +167,7 @@ public sealed class IndexModel(AppDbContext db, CurrentUser me, AccessService ac
             notes = notes.Where(n => EF.Functions.ILike(n.Title, pattern) || EF.Functions.ILike(n.SearchText, pattern));
         }
 
-        var rows = notes.Select(n => new { n.Id, n.Title, n.Type, FolderName = n.Folder != null && n.OwnerId == id ? n.Folder.Name : null, Favorite = n.IsFavorite && n.OwnerId == id, Updated = n.UpdateDate, Own = n.OwnerId == id, OwnerName = n.Owner!.DisplayName, n.FileSize });
+        var rows = notes.Select(n => new { n.Id, n.Title, n.Type, FolderName = n.Folder != null && n.OwnerId == id ? n.Folder.Name : null, Favorite = n.IsFavorite && n.OwnerId == id, Updated = n.UpdateDate, Own = n.OwnerId == id, OwnerName = n.Owner!.DisplayName, n.FileSize, n.FileName });
         rows = (sort, descending) switch
         {
             ("title", false) => rows.OrderBy(r => r.Title),
@@ -180,7 +180,7 @@ public sealed class IndexModel(AppDbContext db, CurrentUser me, AccessService ac
 
         var matching = await rows.CountAsync();
         var page = Math.Min(ListQuery.Page(Request), Math.Max(1, (int)Math.Ceiling(matching / (double)PageSize)));
-        Items = (await rows.Skip((page - 1) * PageSize).Take(PageSize).ToListAsync()).Select(r => new NoteRow(r.Id, r.Title, r.Type, r.FolderName, r.Favorite, r.Updated, r.Own, r.OwnerName, r.FileSize)).ToList();
+        Items = (await rows.Skip((page - 1) * PageSize).Take(PageSize).ToListAsync()).Select(r => new NoteRow(r.Id, r.Title, r.Type, r.FolderName, r.Favorite, r.Updated, r.Own, r.OwnerName, r.FileSize, r.FileName)).ToList();
 
         var ids = Items.Where(r => r.Own).Select(r => r.Id).ToList();
         if (ids.Count > 0)

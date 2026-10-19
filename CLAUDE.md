@@ -74,6 +74,9 @@ src/MatNote
                              restores, without it directories = folders, files = notes; limits: 20000 entries, 1 GB, one file up to the upload limit; names with .. or a leading dot are refused); FolderImporter writes the
                              plan as NEW notes of the signed-in person (SaveAsync: sanitized, searchable, tags), links point at the new ids in a second step, links out of the archive lose their target, a folder deeper
                              than 12 levels is merged into the one above, a plain zip with loose files goes into a folder named like the zip. Dates are not kept (the import is a new save).
+                             Drag OUT (dragout.js): a note row or a folder of the menu starts a drag with DownloadURL (Chromium saves the file on the desktop / in a folder: a text note as .html/.md/.txt through
+                             Notes/Export?raw=true, a file note as itself, a folder as <name>.matnotes.zip through Folders/Export?download=true&mode=Archive) and the address as text/uri-list. Dropped on a list
+                             (filedrop.js) a .matnotes.zip is imported there, other files become notes. Between two MatNotes instances the file on the desktop is the vehicle (a page cannot read the other instance).
   Pages/                     Razor Pages: Account/ (sign-in, TOTP step, setup, account, security), Notes/, Folders/, Tags/, Shares/, Trash/, Public/ (link shares, anonymous), Admin/ (Users/, Backups/, Settings/ = the System page; the folder is not called System because the namespace would hide System.*)
   wwwroot/matui/             the toolkit (copied from MatDesign: never edit by hand, update by copying again)
   wwwroot/css/app.css        the accent (orange) and the few app-only styles (prefix mn-);  wwwroot/js/app.js, editor.js: the few app-only behaviours

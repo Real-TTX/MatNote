@@ -70,7 +70,7 @@
             <ul class="mn-notelist" aria-label="Notes">
                 @foreach (var n in Model.Items)
                 {
-                    <li class="mn-note-item@(n.Id == Model.SelectedId ? " is-selected" : "")" data-note-id="@n.Id" data-own="@(n.Own ? "true" : null)" data-can-edit="@(n.Own && Ui.IsText(n.Type) ? "true" : null)" data-fav="@(n.Favorite ? "true" : null)" data-file="@(Ui.IsText(n.Type) ? null : "true")" data-title="@n.Title" data-edit="@(n.Own && Ui.IsText(n.Type) ? "true" : null)">
+                    <li class="mn-note-item@(n.Id == Model.SelectedId ? " is-selected" : "")" data-note-id="@n.Id" data-own="@(n.Own ? "true" : null)" data-can-edit="@(n.Own && Ui.IsText(n.Type) ? "true" : null)" data-fav="@(n.Favorite ? "true" : null)" data-file="@(Ui.IsText(n.Type) ? null : "true")" data-title="@n.Title" data-type="@n.Type" data-filename="@n.FileName" data-edit="@(n.Own && Ui.IsText(n.Type) ? "true" : null)">
                         <a class="mn-note-item__link" href="/Notes/View?id=@n.Id" data-open-pane aria-current="@(n.Id == Model.SelectedId ? "true" : null)">
                             @Ui.Icon(Ui.TypeIcon(n.Type))
                             <span class="mn-note-item__text">
@@ -96,7 +96,7 @@
             <tbody>
                 @foreach (var n in Model.Items)
                 {
-                    <tr data-note-id="@n.Id" data-own="@(n.Own ? "true" : null)" data-can-edit="@(n.Own && Ui.IsText(n.Type) ? "true" : null)" data-fav="@(n.Favorite ? "true" : null)" data-file="@(Ui.IsText(n.Type) ? null : "true")" data-title="@n.Title" class="@(n.Id == Model.SelectedId ? "is-selected" : "")">
+                    <tr data-note-id="@n.Id" data-own="@(n.Own ? "true" : null)" data-can-edit="@(n.Own && Ui.IsText(n.Type) ? "true" : null)" data-fav="@(n.Favorite ? "true" : null)" data-file="@(Ui.IsText(n.Type) ? null : "true")" data-title="@n.Title" data-type="@n.Type" data-filename="@n.FileName" class="@(n.Id == Model.SelectedId ? "is-selected" : "")">
                         <td data-label="Note">
                             <div class="mat-table__name">
                                 @Ui.Icon(Ui.TypeIcon(n.Type))

@@ -32,6 +32,9 @@ public sealed class ExportModel(AppDbContext db, CurrentUser me, AccessService a
     /// <summary>The files attached to the notes go along: a directory next to each note that has some.</summary>
     [BindProperty(SupportsGet = true)] public bool Attachments { get; set; } = true;
 
+    /// <summary>A download at once (a GET without the page): what dragging a folder out of the menu hands over.</summary>
+    [BindProperty(SupportsGet = true)] public bool Download { get; set; }
+
     public string FolderName { get; private set; } = string.Empty;
 
     public int NoteCount { get; private set; }
@@ -40,6 +43,11 @@ public sealed class ExportModel(AppDbContext db, CurrentUser me, AccessService a
 
     public async Task<IActionResult> OnGetAsync()
     {
+        if (Download)
+        {
+            return await OnPostAsync();
+        }
+
         var (folder, _) = await access.FindFolderAsync(Id);
         if (folder is null)
         {
