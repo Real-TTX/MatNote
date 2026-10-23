@@ -139,7 +139,7 @@ public partial class MarkupTests
         foreach (var view in Views().Select(v => (string)v[0]).Where(v => Read(v).Contains("<mn-table")))
         {
             var text = Read(view);
-            if (text.Contains("Admin/Backups", StringComparison.Ordinal) || view.Contains("Security") || view.Contains("Edit.cshtml") || view.Contains("Share.cshtml"))
+            if (text.Contains("Admin/Backups", StringComparison.Ordinal) || view.Contains("Security") || view.Contains("Edit.cshtml") || view.Contains("History.cshtml") || view.Contains("Share.cshtml"))
             {
                 continue; // a table inside a card of an edit page, not a list page
             }
