@@ -21,6 +21,10 @@ else
         {
             <mn-tab href="/Notes/Edit?id=@Model.Id" active="@(Model.Active == "edit")">@Ui.Icon("edit")<span>Edit</span></mn-tab>
         }
+        @if (Model.CanEdit)
+        {
+            <mn-tab href="/Notes/History?id=@Model.Id" active="@(Model.Active == "history")">@Ui.Icon("history")<span>History</span></mn-tab>
+        }
         @if (Model.CanShare)
         {
             <mn-tab href="/Shares/Edit?noteId=@Model.Id" active="@(Model.Active == "share")">@Ui.Icon("share")<span>Sharing</span></mn-tab>

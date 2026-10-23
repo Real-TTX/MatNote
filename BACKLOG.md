@@ -16,7 +16,7 @@ Priority: **P1** soon, **P2** next, **P3** some day.
 | P2 | Search inside the content of notes (not only titles) | The search text of every note already exists (`NotePreview`); needs an index or `ILIKE`/full text search in PostgreSQL |
 | P2 | Mail: password reset and a note of a new share | Needs an SMTP setting on the System page; today an administrator sets a new password |
 | P2 | Create a note from `[[new title` in the editor (like OneNote), a back button for the pane after following a link | Today `[[` only finds existing notes; the browser history of the frame is the way back |
-| P3 | Version history of a note | Restore an older text |
+| P3 | History for file notes (Word, Excel, PDF) and for the title/tags/folder, a trash for single versions, a limit for the size of the history of one note | Today only the text and title of text notes are versioned |
 | P3 | Attachments in a copy of a note and in the exports of linked notes | A single export and a folder zip take the attachments of the notes themselves along |
 | P3 | Paste an image into the rich text editor as an attachment shown in the text | Today images are attachments only |
 | P3 | Context menu on a phone (long press) and for the notes of the list layout table on touch | Right click and the menu key work |

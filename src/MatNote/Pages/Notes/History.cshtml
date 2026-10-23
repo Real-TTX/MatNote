@@ -1,0 +1,115 @@
+@page "/Notes/History"
+@model MatNote.Pages.Notes.HistoryModel
+@inject Clock Clock
+@{
+    var note = Model.Note;
+    ViewData["PageSub"] = "Earlier states of this note.";
+}
+
+@if (Model.Embed)
+{
+    <partial name="_PaneBar" model="new MatNote.Pages.Shared.PaneBarModel(note.Id, note.Title, true, false, CanShare: Model.IsOwnerView, History: true)" />
+}
+else
+{
+    <partial name="_ItemTabs" model='new MatNote.Pages.Shared.ItemTabsModel(false, note.Id, "history", true, Model.IsOwnerView)' />
+}
+
+<p class="mat-muted mn-history__about">
+    MatNotes keeps an earlier state of the note when somebody else changes it, when the change comes after a break of five minutes, and every half hour while somebody keeps writing – not at every autosave.
+    You can also save a version yourself. Putting an old version back keeps what is there now in this list, so it can be undone.
+</p>
+
+<form class="mn-history__save" method="post" asp-page-handler="Checkpoint" asp-route-id="@note.Id" asp-route-embed="@Model.EmbedValue">
+    <input class="mat-input" type="text" name="Label" maxlength="120" placeholder="Name of the version (optional)" aria-label="Name of the version" autocomplete="off" />
+    <button type="submit" class="mat-btn mat-btn--secondary">@Ui.Icon("save")<span>Save a version now</span></button>
+</form>
+
+<div class="mat-card mat-card--flush">
+    <div class="mat-card__head">@Ui.Icon("history")<span class="mat-card__title">Versions</span></div>
+    <div class="mat-card__body">
+        <mn-table caption="Versions of this note">
+            <thead><tr><th scope="col">Saved</th><th scope="col">By</th><th scope="col">What</th><th scope="col" class="mat-hide-sm mat-num">Length</th><th scope="col"><span class="mat-sr-only">Actions</span></th></tr></thead>
+            <tbody>
+                <tr class="mn-history__now">
+                    <td data-label="Saved" class="mat-mono">@Clock.Format(note.UpdateDate)</td>
+                    <td data-label="By">@Model.CurrentWho</td>
+                    <td data-label="What"><span class="mat-pill mat-pill--accent">Now</span> The text as it is</td>
+                    <td data-label="Length" class="mat-hide-sm mat-num mat-mono">@note.Content.Length</td>
+                    <td class="mat-table__cell-actions"></td>
+                </tr>
+                @foreach (var row in Model.Rows)
+                {
+                    var v = row.Version;
+                    <tr class="@(Model.Selected?.Version.Id == v.Id ? "is-selected" : "")">
+                        <td data-label="Saved" class="mat-mono">@Clock.Format(v.StateDate)</td>
+                        <td data-label="By">@row.Who</td>
+                        <td data-label="What">@if (v.Kind == VersionKind.Manual) { <span class="mat-pill mat-pill--info">Saved</span> } @row.What</td>
+                        <td data-label="Length" class="mat-hide-sm mat-num mat-mono">@v.Size</td>
+                        <td class="mat-table__cell-actions">
+                            <div class="mat-table__actions">
+                                <a class="mat-btn mat-btn--ghost mat-btn--sm" href="/Notes/History?id=@note.Id&version=@v.Id@Model.EmbedQuery">@Ui.Icon("eye")<span>Compare</span></a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </mn-table>
+        @if (Model.Rows.Count == 0)
+        {
+            <p class="mat-muted mn-pad">Nothing was kept yet: the note has not been changed since the history exists, or only in one sitting.</p>
+        }
+    </div>
+</div>
+
+@if (Model.SelectedVersion is { } picked && Model.Selected is { } shown)
+{
+    <div class="mat-card mn-history__changes">
+        <div class="mat-card__head">@Ui.Icon("edit")<span class="mat-card__title">Changes since @Clock.Format(picked.StateDate)</span></div>
+        <div class="mat-card__body">
+            @if (Model.TitleBefore is not null)
+            {
+                <p class="mn-history__title">Title then: <strong>@Model.TitleBefore</strong></p>
+            }
+            @if (Model.Changes is null)
+            {
+                <p class="mat-muted">The texts are too long to compare line by line. Look at the old version below.</p>
+            }
+            else if (Model.NoChanges)
+            {
+                <p class="mat-muted">The text is the same as now.</p>
+            }
+            else
+            {
+                <div class="mn-diff" role="region" aria-label="Changes">
+                    @foreach (var line in Model.Changes)
+                    {
+                        if (line.Op == '…')
+                        {
+                            <div class="mn-diff__line mn-diff__line--gap" aria-hidden="true">…</div>
+                        }
+                        else
+                        {
+                            <div class="mn-diff__line@(line.Op == '+' ? " mn-diff__line--add" : line.Op == '-' ? " mn-diff__line--del" : "")"><span class="mn-diff__mark" aria-hidden="true">@(line.Op == ' ' ? " " : line.Op.ToString())</span><span class="mat-sr-only">@(line.Op == '+' ? "Added: " : line.Op == '-' ? "Removed: " : "")</span>@(line.Text.Length == 0 ? " " : line.Text)</div>
+                        }
+                    }
+                </div>
+                <p class="mat-hint">Red: in the old version, gone now. Green: new since then.</p>
+            }
+        </div>
+    </div>
+
+    <div class="mat-card">
+        <div class="mat-card__head">@Ui.Icon("eye")<span class="mat-card__title">How it looked: @picked.Title</span></div>
+        <div class="mat-card__body">
+            <div class="mn-doc">@Html.Raw(Model.PreviewHtml)</div>
+        </div>
+    </div>
+
+    <form method="post" asp-page-handler="Restore" asp-route-id="@note.Id" asp-route-version="@picked.Id" asp-route-embed="@Model.EmbedValue">
+        <div class="mat-btn-row">
+            <button type="submit" class="mat-btn mat-btn--primary" data-confirm="Put this version back as the text of the note? What is there now is kept in the history." data-confirm-ok="Put it back">@Ui.Icon("restore")<span>Put this version back</span></button>
+            <a class="mat-btn mat-btn--secondary" href="/Notes/History?id=@note.Id@Model.EmbedQuery">@Ui.Icon("x")<span>Close</span></a>
+        </div>
+    </form>
+}

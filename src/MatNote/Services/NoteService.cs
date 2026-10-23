@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 namespace MatNote.Services;
 
 /// <summary>Saving, deleting and restoring notes: what has to happen around the text of a note (sanitizing, search text, tags, links, the file).</summary>
-public sealed class NoteService(AppDbContext db, INotePreview preview, ConfigStore<AppConfig> config)
+public sealed class NoteService(AppDbContext db, INotePreview preview, ConfigStore<AppConfig> config, NoteVersionService versions)
 {
     public const int MaxTextLength = 5_000_000;
     public const int MaxTitleLength = 250;
@@ -92,6 +92,12 @@ public sealed class NoteService(AppDbContext db, INotePreview preview, ConfigSto
         }
 
         await using var transaction = await db.Database.BeginTransactionAsync();
+        if (!isNew && Ui.IsText(note.Type))
+        {
+            // the state that this save replaces is kept when it is worth keeping (the history of a note, not every autosave)
+            await versions.SnapshotBeforeSaveAsync(note);
+        }
+
         await db.SaveChangesAsync();
 
         if (bytes is not null)

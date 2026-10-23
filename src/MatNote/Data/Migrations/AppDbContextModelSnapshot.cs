@@ -403,6 +403,61 @@ namespace MatNote.Data.Migrations
                     b.ToTable("NoteTag", (string)null);
                 });
 
+            modelBuilder.Entity("MatNote.Data.NoteVersion", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long?>("AuthorId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreateDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long?>("CreateUserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Label")
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<long>("NoteId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("Size")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("StateDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("character varying(250)");
+
+                    b.Property<DateTime>("UpdateDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long?>("UpdateUserId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NoteId", "StateDate");
+
+                    b.ToTable("NoteVersion", (string)null);
+                });
+
             modelBuilder.Entity("MatNote.Data.Share", b =>
                 {
                     b.Property<long>("Id")
@@ -754,6 +809,17 @@ namespace MatNote.Data.Migrations
                     b.Navigation("Note");
 
                     b.Navigation("Tag");
+                });
+
+            modelBuilder.Entity("MatNote.Data.NoteVersion", b =>
+                {
+                    b.HasOne("MatNote.Data.Note", "Note")
+                        .WithMany()
+                        .HasForeignKey("NoteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Note");
                 });
 
             modelBuilder.Entity("MatNote.Data.Share", b =>

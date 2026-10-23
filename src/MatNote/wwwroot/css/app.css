@@ -287,3 +287,17 @@ a.mn-stat:hover { border-color: var(--mat-border-strong); }
   .mn-explorer { grid-template-columns: minmax(0, 1fr); }
   .mn-explorer__tree { display: none; }
 }
+
+/* ---- The history of a note ---- */
+.mn-history__about { margin: 0; max-width: 70ch; }
+.mn-history__save { display: flex; flex-wrap: wrap; gap: var(--mat-space-2); align-items: center; }
+.mn-history__save .mat-input { flex: 1 1 14rem; max-width: 26rem; }
+.mn-history__now td { background: var(--mat-accent-soft); }
+.mn-history__title { margin: 0 0 var(--mat-space-2); }
+.mn-diff { font-family: var(--mat-font-mono, ui-monospace, monospace); font-size: var(--mat-fs-sm); border: 1px solid var(--mat-border); border-radius: var(--mat-radius); overflow: auto; max-height: 28rem; }
+.mn-diff__line { display: flex; gap: var(--mat-space-2); padding: 1px var(--mat-space-3); white-space: pre-wrap; overflow-wrap: anywhere; }
+.mn-diff__mark { flex: none; width: 1ch; color: var(--mat-text-muted); user-select: none; }
+.mn-diff__line--add { background: var(--mat-success-bg, rgba(46, 160, 67, .15)); }
+.mn-diff__line--del { background: var(--mat-danger-bg, rgba(248, 81, 73, .15)); text-decoration: line-through; text-decoration-color: color-mix(in srgb, currentColor 35%, transparent); }
+.mn-diff__line--gap { color: var(--mat-text-muted); background: var(--mat-surface-2, transparent); justify-content: center; }
+.mn-embed .mn-history__about { margin-top: var(--mat-space-3); }

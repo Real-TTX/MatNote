@@ -86,6 +86,11 @@ src/MatNote
                              title (then "(copy 2)" ...), same folder, tags, attachments, file bytes; a folder: the road of an export + import kept in memory (FolderArchive + FolderImporter with RootName and KeepOtherLinks: links
                              inside the folder point at the copies, links to other notes stay). Buttons: note ribbon, folder page, right-click menu. The Copy button of a rich text note copies the DESIGN too (text/html + text/plain,
                              app.js copyRich: links lose the embed layout; without the clipboard api the selection of an offscreen copy is copied).
+                             History (Services/NoteVersionService + VersionPolicy, Pages/Notes/History; table NoteVersion): the state a save of a TEXT note replaces is kept as a version when the policy says so - the first
+                             change, somebody else is about to replace it, a pause of 5 minutes came before this change (= a new sitting), 30 minutes since the last snapshot; never twice within a minute; NOT at every
+                             autosave. Kept: 80 automatic + 50 saved-on-purpose per note. A person can save a version with a name, compare one with the text now (line diff of the plain text, TextDiff), see how it
+                             looked and put it back (what is there now is kept first as "before a restore"; the usual save runs, so editors see a 409 and reload). Only for someone who may edit; "who" is You / the
+                             owner by name / "Another editor" (editors never learn each other's names; the owner sees names). History is a TAB (and an icon in the pane bar), never a button.
   Pages/                     Razor Pages: Account/ (sign-in, TOTP step, setup, account, security), Notes/, Folders/, Tags/, Shares/, Trash/, Public/ (link shares, anonymous), Admin/ (Users/, Backups/, Settings/ = the System page; the folder is not called System because the namespace would hide System.*)
   wwwroot/matui/             the toolkit (copied from MatDesign: never edit by hand, update by copying again)
   wwwroot/css/app.css        the accent (orange) and the few app-only styles (prefix mn-);  wwwroot/js/app.js, editor.js: the few app-only behaviours

@@ -187,6 +187,44 @@ public sealed class NoteFile : Entity
     public string Sha256 { get; set; } = string.Empty;
 }
 
+public enum VersionKind
+{
+    /// <summary>Kept by MatNotes before a change replaced it (the first change, a new editor, a new sitting, a long sitting).</summary>
+    Auto = 0,
+
+    /// <summary>Saved by a person on purpose, with an optional name.</summary>
+    Manual = 1,
+
+    /// <summary>The state that a restore replaced.</summary>
+    BeforeRestore = 2,
+}
+
+/// <summary>An earlier state of a text note: its title and text as they were, who saved that state and when. Deleted for good together with the note.</summary>
+public sealed class NoteVersion : Entity
+{
+    public long NoteId { get; set; }
+
+    public Note? Note { get; set; }
+
+    public string Title { get; set; } = string.Empty;
+
+    public string Content { get; set; } = string.Empty;
+
+    public VersionKind Kind { get; set; }
+
+    /// <summary>The name a person gave a version they saved on purpose.</summary>
+    public string? Label { get; set; }
+
+    /// <summary>Who saved this state (not who triggered the snapshot).</summary>
+    public long? AuthorId { get; set; }
+
+    /// <summary>When this state was saved (the snapshot itself was made later, see <see cref="Entity.CreateDate"/>).</summary>
+    public DateTime StateDate { get; set; }
+
+    /// <summary>Length of the text, for the list.</summary>
+    public int Size { get; set; }
+}
+
 /// <summary>A file attached to a note (of any type: a note can carry any number of them). The bytes are in <see cref="NoteAttachmentFile"/>. Deleted for good, together with its note.</summary>
 public sealed class NoteAttachment : Entity
 {

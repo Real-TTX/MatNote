@@ -23,6 +23,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, Current
 
     public DbSet<NoteAttachmentFile> NoteAttachmentFiles => Set<NoteAttachmentFile>();
 
+    public DbSet<NoteVersion> NoteVersions => Set<NoteVersion>();
+
     public DbSet<Tag> Tags => Set<Tag>();
 
     public DbSet<NoteTag> NoteTags => Set<NoteTag>();
@@ -87,6 +89,15 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, Current
             e.HasIndex(x => x.NoteId).IsUnique();
             e.HasOne(x => x.Note).WithMany().HasForeignKey(x => x.NoteId).OnDelete(DeleteBehavior.Cascade);
             e.Property(x => x.Sha256).HasMaxLength(64);
+        });
+
+        b.Entity<NoteVersion>(e =>
+        {
+            e.ToTable("NoteVersion");
+            e.HasIndex(x => new { x.NoteId, x.StateDate });
+            e.HasOne(x => x.Note).WithMany().HasForeignKey(x => x.NoteId).OnDelete(DeleteBehavior.Cascade);
+            e.Property(x => x.Title).HasMaxLength(250);
+            e.Property(x => x.Label).HasMaxLength(120);
         });
 
         b.Entity<NoteAttachment>(e =>

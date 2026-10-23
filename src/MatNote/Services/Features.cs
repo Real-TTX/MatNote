@@ -11,6 +11,7 @@ public static class FeatureRegistration
         services.AddScoped<MenuService>();
         services.AddScoped<UserService>();
         services.AddScoped<FolderService>();
+        services.AddScoped<NoteVersionService>();
         services.AddScoped<NoteService>();
         services.AddScoped<AttachmentService>();
         services.AddScoped<FolderImporter>();
