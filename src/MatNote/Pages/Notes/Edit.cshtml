@@ -127,7 +127,12 @@ else if (!Model.IsNew)
         }
 
         <mn-buttons save="Save note" back="@back" delete-handler="@(Model.IsNew || !Model.IsOwner ? null : "Delete")" delete-label="Delete note" delete-ok="Move to trash"
-                    delete-confirm="Move this note to the trash? You can restore it from there." />
+                    delete-confirm="Move this note to the trash? You can restore it from there.">
+            @if (!Model.IsNew && Model.IsOwner)
+            {
+                <button type="button" class="mat-btn mat-btn--secondary" data-duplicate="note:@Model.Id" data-tip="Make a copy of this note: same folder, tags and attachments">@Ui.Icon("layers")<span>Duplicate</span></button>
+            }
+        </mn-buttons>
     }
 </form>
 

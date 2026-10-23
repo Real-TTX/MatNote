@@ -219,12 +219,19 @@
         if (e.key.toLowerCase() === 'k') { e.preventDefault(); askLink(); }
       }
     });
-    // pasted text comes in as plain text: the formatting of another page or program would bring its own styles
+    // Ctrl+V keeps the formatting, in the editor's own terms (pasteHtml); Ctrl+Shift+V pastes plain text
+    var plainNext = false;
+    area.addEventListener('keydown', function (e) {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'v') { plainNext = true; }
+    });
     area.addEventListener('paste', function (e) {
       var data = e.clipboardData || window.clipboardData;
       if (!data) { return; }
       e.preventDefault();
-      doc.execCommand('insertText', false, data.getData('text/plain'));
+      var html = plainNext ? '' : data.getData('text/html');
+      plainNext = false;
+      var clean = html ? pasteHtml(html) : '';
+      if (clean) { doc.execCommand('insertHTML', false, clean); } else { doc.execCommand('insertText', false, data.getData('text/plain')); }
       sync();
     });
     var form = source.form;
@@ -232,6 +239,77 @@
     attachPicker(area);
     attachLinkTip(area);
     box.noteLinkTarget = area;
+  }
+
+  // ---- paste: the formatting comes along, in the editor's own terms ------------------------------------------------------------------
+  // What another note, a web page, Word or Google Docs puts on the clipboard as HTML keeps what the editor itself can do: bold, italic, underline, strikethrough,
+  // headings, lists, quotes, code, links, tables and dividers. Fonts, colours, sizes, classes, pictures and scripts go. Word and Google Docs write bold, italic,
+  // underline and strikethrough as a style of a span: that becomes the tag (the server keeps no style). A link to a note stays a link to a note. The server
+  // sanitizes the same subset again when the note is saved (NoteSanitizer).
+  var PASTE_KEEP = { P: 1, DIV: 1, BR: 1, H1: 1, H2: 1, H3: 1, H4: 1, B: 1, STRONG: 1, I: 1, EM: 1, U: 1, S: 1, STRIKE: 1, DEL: 1, UL: 1, OL: 1, LI: 1, BLOCKQUOTE: 1, PRE: 1, CODE: 1, A: 1, HR: 1,
+    TABLE: 1, THEAD: 1, TBODY: 1, TFOOT: 1, TR: 1, TH: 1, TD: 1 };
+  var PASTE_DROP = { SCRIPT: 1, STYLE: 1, META: 1, LINK: 1, TITLE: 1, HEAD: 1, NOSCRIPT: 1, TEMPLATE: 1, IFRAME: 1, OBJECT: 1, EMBED: 1, SVG: 1, MATH: 1, IMG: 1, PICTURE: 1, VIDEO: 1,
+    AUDIO: 1, CANVAS: 1, INPUT: 1, BUTTON: 1, SELECT: 1, TEXTAREA: 1, FORM: 1 };
+  // a block of the source that the editor does not have still ends its line
+  var PASTE_LINE = /^(SECTION|ARTICLE|HEADER|FOOTER|MAIN|ASIDE|NAV|FIGURE|ADDRESS|DT|DD)$/;
+
+  function pasteHtml(html) {
+    var body = new DOMParser().parseFromString(html, 'text/html').body;
+    if (!body) { return ''; }
+    var out = doc.createElement('div');
+    pasteInto(body, out, false);
+    return out.textContent.trim() || out.querySelector('hr, table') ? out.innerHTML : '';
+  }
+
+  function pasteInto(from, to, pre) {
+    Array.prototype.forEach.call(from.childNodes, function (node) {
+      if (node.nodeType === 3) {
+        // the line breaks and indentation between the blocks of the source are not text
+        if (!pre && /^\s*$/.test(node.nodeValue) && /\n/.test(node.nodeValue)) { return; }
+        to.appendChild(doc.createTextNode(node.nodeValue));
+        return;
+      }
+      if (node.nodeType !== 1) { return; }
+      var tag = node.tagName.toUpperCase();
+      if (PASTE_DROP[tag]) { return; }
+      var style = node.getAttribute('style') || '';
+      var name = tag === 'H5' || tag === 'H6' ? 'H4' : tag;
+      // Google Docs wraps everything in a <b style="font-weight:normal">: that is no bold
+      if ((name === 'B' || name === 'STRONG') && /font-weight\s*:\s*(normal|[1-5]00)\b/i.test(style)) { name = 'SPAN'; }
+      var el = PASTE_KEEP[name] ? pasteElement(node, name) : null;
+      var host = to;
+      if (el) { to.appendChild(el); host = el; }
+      if (name === 'BR' || name === 'HR') { return; }
+      // what a style says (Word, Google Docs, a web page) becomes the tag, inside the element
+      if (!/^H[1-4]$/.test(name) && name !== 'B' && name !== 'STRONG' && /font-weight\s*:\s*(bold|bolder|[6-9]00)\b/i.test(style)) { host = wrap(host, 'b'); }
+      if (name !== 'I' && name !== 'EM' && /font-style\s*:\s*italic/i.test(style)) { host = wrap(host, 'i'); }
+      if (name !== 'U' && name !== 'A' && /text-decoration[^;]*underline/i.test(style)) { host = wrap(host, 'u'); }
+      if (name !== 'S' && name !== 'STRIKE' && name !== 'DEL' && /text-decoration[^;]*line-through/i.test(style)) { host = wrap(host, 's'); }
+      pasteInto(node, host, pre || name === 'PRE');
+      if (!el && PASTE_LINE.test(tag)) { to.appendChild(doc.createElement('br')); }
+    });
+  }
+
+  function wrap(host, tag) {
+    var x = doc.createElement(tag);
+    host.appendChild(x);
+    return x;
+  }
+
+  function pasteElement(node, name) {
+    if (name !== 'A') { return doc.createElement(name.toLowerCase()); }
+    var a = doc.createElement('a');
+    var noteId = node.getAttribute('data-note-id');
+    if (noteId && /^\d+$/.test(noteId)) {
+      a.className = 'mn-note-link';
+      a.setAttribute('data-note-id', noteId);
+      a.setAttribute('href', '/Notes/View?id=' + noteId);
+      return a;
+    }
+    var href = (node.getAttribute('href') || '').trim();
+    if (!/^(https?:|mailto:)/i.test(href)) { return null; } // a link that would not be kept: its text stays
+    a.setAttribute('href', href);
+    return a;
   }
 
   // ---- links to notes -----------------------------------------------------------------------------------------------------------------

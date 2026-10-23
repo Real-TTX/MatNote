@@ -37,11 +37,17 @@
   }
 
   function duplicate(kind, id) {
+    // in the edit mode: a note that was new when the page opened has its id since its first save (autosave.js writes it on the body)
+    if (kind === 'note' && !id) { id = document.body.getAttribute('data-note-id') || ''; }
     if (busy || !id) { return; }
     busy = true;
     var body = new URLSearchParams();
     body.set('__RequestVerificationToken', token());
-    fetch((kind === 'folder' ? '/Folders/Duplicate' : '/Notes/Duplicate') + '?id=' + encodeURIComponent(id), { method: 'POST', credentials: 'same-origin', body: body })
+    // what is typed and not saved yet goes into the copy too: save it first (the edit mode; elsewhere there is nothing to save)
+    var saved = kind === 'note' && window.mnSaveNow ? window.mnSaveNow() : Promise.resolve();
+    saved.then(function () {
+      return fetch((kind === 'folder' ? '/Folders/Duplicate' : '/Notes/Duplicate') + '?id=' + encodeURIComponent(id), { method: 'POST', credentials: 'same-origin', body: body });
+    })
       .then(function (r) { if (!r.ok) { throw new Error('http ' + r.status); } return r.json(); })
       .then(function (answer) { busy = false; show(kind, answer); })
       .catch(function () { busy = false; toast('It could not be duplicated.', 'danger'); });

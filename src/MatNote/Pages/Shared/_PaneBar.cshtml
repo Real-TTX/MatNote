@@ -40,6 +40,8 @@
     }
     @if (Model.TitleField && Model.CanDelete)
     {
+        @* duplicate in the edit mode too (duplicate.js saves what is unsaved first); a new note gets its id with the first save *@
+        <button type="button" class="mat-btn mat-btn--ghost mat-btn--icon" hidden="@(fresh ? "hidden" : null)" data-after-create="@(fresh ? "true" : null)" data-duplicate="note:@(fresh ? "" : Model.Id.ToString(System.Globalization.CultureInfo.InvariantCulture))" aria-label="Duplicate" data-tip="Make a copy of this note: same folder, tags and attachments">@Ui.Icon("layers")</button>
         <button type="submit" form="note-form" class="mat-btn mat-btn--ghost mat-btn--icon mn-danger" hidden="@(fresh ? "hidden" : null)" data-after-create="@(fresh ? "true" : null)" formnovalidate formaction="?handler=Delete" data-confirm="Move this note to the trash? You can restore it from there." data-confirm-ok="Move to trash" aria-label="Delete note" data-tip="Delete note">@Ui.Icon("trash")</button>
     }
 </div>
